@@ -255,13 +255,16 @@ function GoogleLinkCard({ user }: { user: User }) {
   const linked = (user.identities ?? []).some((i) => i.provider === 'google');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [detail, setDetail] = useState('');
 
   // Uygulamaya dönüşte bağlama başarısız olduysa AuthGate kodu buraya bırakır.
   useEffect(() => {
     try {
       const code = sessionStorage.getItem('d-zimem-google-error');
       if (code) {
+        setDetail(sessionStorage.getItem('d-zimem-google-error-detail') || '');
         sessionStorage.removeItem('d-zimem-google-error');
+        sessionStorage.removeItem('d-zimem-google-error-detail');
         setError(t(`auth.err_google_${code}`));
       }
     } catch {}
@@ -291,7 +294,12 @@ function GoogleLinkCard({ user }: { user: User }) {
           {busy ? t('common.loading') : t('security.google_link_btn')}
         </button>
       )}
-      {error && <Msg kind="error">{error}</Msg>}
+      {error && (
+        <Msg kind="error">
+          {error}
+          {detail && <div className="text-[10px] opacity-60 mt-1 break-words">{detail}</div>}
+        </Msg>
+      )}
     </div>
   );
 }

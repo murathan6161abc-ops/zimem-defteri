@@ -116,9 +116,10 @@ const ar: Dict = {
     err_google_not_configured: 'تسجيل الدخول عبر Google غير مفعّل بعد. يجب على المسؤول إكمال إعدادات Supabase.',
     err_google_cancelled: 'أُلغي تسجيل الدخول عبر Google.',
     err_google_network: 'تعذّر الوصول إلى الخادم. تحقّق من اتصال الإنترنت.',
-    err_google_generic: 'تعذّر إكمال تسجيل الدخول عبر Google. حاول مجددًا.',
+    err_google_generic: 'تعذّر إكمال تسجيل الدخول عبر Google. إذا أضفت هذا البريد كبريد استرداد لحساب ما، فسجّل الدخول إلى ذلك الحساب باسم المستخدم أولًا واضغط الملف الشخصي ← «اربط حساب Google».',
     err_too_many_attempts: 'محاولات فاشلة كثيرة. حاول مجددًا بعد 15 دقيقة.',
     err_google_already_linked: 'حساب Google هذا مرتبط بحساب D-Zimem آخر.',
+    err_google_account_exists: 'عنوان Gmail هذا مسجّل في حساب D-Zimem أُنشئ باسم مستخدم، لكن Google غير مرتبط به. سجّل الدخول أولًا باسم المستخدم (أو البريد) وكلمة المرور، ثم اضغط الملف الشخصي ← حساب Google ← «اربط حساب Google». بعد الربط مرة واحدة يمكنك الدخول عبر Google.',
   },
   debt: {
     full_pay: 'سداد الدين',
@@ -447,9 +448,9 @@ const ar: Dict = {
   },
   // Google ile ilk girişte profil tamamlama
   complete: {
-    title: 'أكمل ملفك الشخصي',
-    subtitle: 'سجّلت الدخول بحساب Google. اختر دورك واسمًا مستعارًا مجهولًا للمتابعة. لا يُستخدم اسمك الحقيقي في Google.',
-    save: 'احفظ وابدأ',
+    title: 'أكمل التسجيل',
+    subtitle: 'لا يوجد حساب D-Zimem لحساب Google هذا بعد. اختر دورك واسمًا مستعارًا مجهولًا للتسجيل. لا يُستخدم اسمك الحقيقي في Google.',
+    save: 'أكمل التسجيل',
     cancel: 'إلغاء',
   },
   levels: {

@@ -118,9 +118,10 @@ const tr = {
     err_google_not_configured: 'Google ile giriş henüz etkinleştirilmemiş. Yönetici Supabase ayarlarını tamamlamalı.',
     err_google_cancelled: 'Google ile giriş iptal edildi.',
     err_google_network: 'Sunucuya ulaşılamıyor. İnternet bağlantını kontrol et.',
-    err_google_generic: 'Google ile giriş tamamlanamadı. Tekrar dene.',
+    err_google_generic: 'Google ile giriş tamamlanamadı. Bu Gmail adresini daha önce bir hesaba kurtarma e-postası olarak eklediysen, önce o hesaba kullanıcı adınla gir ve Profil → “Google hesabını bağla”ya bas.',
     err_too_many_attempts: 'Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene.',
     err_google_already_linked: 'Bu Google hesabı başka bir D-Zimem hesabına bağlı.',
+    err_google_account_exists: 'Bu Gmail adresi, kullanıcı adıyla açılmış bir D-Zimem hesabına kayıtlı ama Google o hesaba bağlı değil. Önce kullanıcı adın (ya da e-postan) ve şifrenle giriş yap, sonra Profil → Google hesabı → “Google hesabını bağla”ya bas. Bir kez bağladıktan sonra Google ile girebilirsin.',
   },
   // Borç kartları + liste
   debt: {
@@ -461,9 +462,9 @@ const tr = {
   },
   // Google ile ilk girişte profil tamamlama
   complete: {
-    title: 'Profilini tamamla',
-    subtitle: 'Google hesabınla giriş yaptın. Uygulamayı kullanmak için rolünü ve anonim bir takma ad seç. Google\'daki gerçek adın kullanılmaz.',
-    save: 'Kaydet ve başla',
+    title: 'Kaydını tamamla',
+    subtitle: 'Bu Google hesabıyla henüz bir D-Zimem hesabın yok. Kayıt olmak için rolünü ve anonim bir takma ad seç. Google\'daki gerçek adın kullanılmaz.',
+    save: 'Kaydı tamamla',
     cancel: 'Vazgeç',
   },
   // Seviye adları

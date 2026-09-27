@@ -77,7 +77,7 @@ export default function CompleteProfilePage() {
     <div className="min-h-[80vh] flex items-center justify-center py-4">
       <div className="glass-strong w-full max-w-lg p-5 sm:p-8">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-2">👋</div>
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-purple-500 to-blue-500 grid place-items-center text-3xl shadow-lg shadow-indigo-500/40 ring-1 ring-white/10 mb-3">📖</div>
           <h1 className="heading-lg">{t('complete.title')}</h1>
           <p className="text-sm text-muted-c mt-1">{t('complete.subtitle')}</p>
         </div>

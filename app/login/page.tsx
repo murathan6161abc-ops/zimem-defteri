@@ -9,7 +9,7 @@ import { needsMfa } from '@/lib/accountSecurity';
 import { getSupabase } from '@/lib/supabase';
 import MfaCodeForm from '@/components/auth/MfaCodeForm';
 import GoogleButton from '@/components/auth/GoogleButton';
-import { completeWebOAuthIfPresent, googleErrorKey } from '@/lib/googleAuth';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,19 +24,20 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
   // Şifre doğru ama hesapta 2 adımlı doğrulama açık → kod adımı.
   const [mfaStep, setMfaStep] = useState(false);
+  // Google hatalarında Supabase'in teknik açıklaması (teşhis için küçük yazıyla)
+  const [errorDetail, setErrorDetail] = useState('');
 
   useEffect(() => {
     setMounted(true);
     void (async () => {
-      // Web: Google'dan /login/?code=… ile dönüldüyse oturumu tamamla.
-      const google = await completeWebOAuthIfPresent();
-      if (google && !google.ok) setError(t(googleErrorKey(google.error)));
       // APK: Google dönüşü başarısız olduysa AuthGate ?google=hata ile buraya yollar.
       if (new URLSearchParams(window.location.search).get('google') === 'hata') {
         let code = 'generic';
         try {
           code = sessionStorage.getItem('d-zimem-google-error') || 'generic';
+          setErrorDetail(sessionStorage.getItem('d-zimem-google-error-detail') || '');
           sessionStorage.removeItem('d-zimem-google-error');
+          sessionStorage.removeItem('d-zimem-google-error-detail');
         } catch {}
         setError(t(`auth.err_google_${code}`));
         window.history.replaceState(null, '', window.location.pathname);
@@ -58,6 +59,7 @@ export default function LoginPage() {
     if (!canSubmit) return;
     setBusy(true);
     setError('');
+    setErrorDetail('');
     let r: Awaited<ReturnType<typeof signIn>>;
     try {
       r = await signIn(username, password);
@@ -164,6 +166,7 @@ export default function LoginPage() {
           {error && (
             <div className="mt-4 text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
               {error}
+              {errorDetail && <div className="text-[10px] text-red-200/60 mt-1.5 break-words">{errorDetail}</div>}
             </div>
           )}
 

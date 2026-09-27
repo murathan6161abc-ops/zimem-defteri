@@ -115,9 +115,10 @@ const en: Dict = {
     err_google_not_configured: 'Google sign-in is not enabled yet. The administrator must finish the Supabase setup.',
     err_google_cancelled: 'Google sign-in was cancelled.',
     err_google_network: 'Cannot reach the server. Check your internet connection.',
-    err_google_generic: 'Google sign-in could not be completed. Please try again.',
+    err_google_generic: 'Google sign-in could not be completed. If you added this Gmail as a recovery email to an account, sign in to that account with your username first and tap Profile → “Link Google account”.',
     err_too_many_attempts: 'Too many failed attempts. Try again in 15 minutes.',
     err_google_already_linked: 'This Google account is already linked to another D-Zimem account.',
+    err_google_account_exists: 'This Gmail address belongs to a D-Zimem account created with a username, but Google is not linked to it. Sign in with your username (or email) and password first, then tap Profile → Google account → “Link Google account”. After linking once you can sign in with Google.',
   },
   debt: {
     full_pay: 'Close Debt',
@@ -447,9 +448,9 @@ const en: Dict = {
   },
   // Google ile ilk girişte profil tamamlama
   complete: {
-    title: 'Complete your profile',
-    subtitle: 'You signed in with Google. Choose your role and an anonymous nickname to continue. Your real Google name is never used.',
-    save: 'Save and start',
+    title: 'Finish signing up',
+    subtitle: 'There is no D-Zimem account for this Google account yet. Choose your role and an anonymous nickname to sign up. Your real Google name is never used.',
+    save: 'Finish sign-up',
     cancel: 'Cancel',
   },
   levels: {
