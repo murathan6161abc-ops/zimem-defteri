@@ -1,0 +1,20 @@
+-- Supabase SQL Editor'de çalıştırmadan önce hedef e-postayı kontrol edin.
+-- Eski kullanıcı-adı hesabı: admin -> admin@dzimem.app
+-- E-postayla (kodla) ya da Google ile açılmış hesap: doğrudan o e-posta adresi.
+
+do $assign_admin$
+declare
+  target_email text := 'admin@dzimem.app';
+  changed_rows integer;
+begin
+  update auth.users
+  set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+    || '{"role":"admin"}'::jsonb
+  where email = target_email;
+
+  get diagnostics changed_rows = row_count;
+  if changed_rows <> 1 then
+    raise exception 'Beklenen tek admin hesabı bulunamadı: %', target_email;
+  end if;
+end
+$assign_admin$;

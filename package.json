@@ -1,26 +1,48 @@
 {
   "name": "zimem-defteri",
-  "version": "0.1.0",
+  "version": "2.5.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3939",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run build",
+    "android:sync": "npm run build && cap sync android",
+    "android:debug": "npm run android:sync && node scripts/run-gradle.cjs assembleDebug",
+    "delivery:debug": "npm run android:debug && node scripts/package-debug-apk.cjs",
+    "tarama": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs",
+    "tarama:kurulum": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs --kurulum"
   },
   "dependencies": {
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@capacitor/android": "8.4.2",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/browser": "8.0.4",
+    "@capacitor/core": "8.4.2",
+    "@supabase/supabase-js": "2.110.7",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "uuid": "14.0.1",
+    "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@capacitor/cli": "8.4.2",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "20.19.43",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/uuid": "10.0.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.2.10",
+    "sharp": "0.34.5",
+    "supabase": "2.109.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "postcss": "8.5.20",
+    "tar": "7.5.20"
   }
 }

@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# D-Zimem
 
-## Getting Started
+Kadim zimem defteri geleneğini dijital bir iyilik ve araştırma deneyimine
+dönüştüren Next.js + Capacitor uygulaması. Bu depo web uygulaması, Android
+kaynağı, Supabase göçleri ve teslim belgeleri için tek kaynak kabul edilir.
 
-First, run the development server:
+## Uygulama
+
+- Vatandaş: anonim borç havuzu, ön test, tam/kısmi ödeme, son test, XP ve geçmiş
+- Esnaf: borç ekleme ve kendi defterini izleme
+- Araştırma: PANAS-SF, WHO-5 ve ön/son test ölçümleri
+- Yönetim: yalnızca Supabase `app_metadata.role=admin` yetkisiyle veri okuma,
+  CSV/JSON dışa aktarma ve cihaz dışına veri göndermeyen yerel araştırma özeti
+- Teslim: statik Next.js export, Capacitor Android ve checksum'lı APK paketi
+
+## Hızlı başlangıç
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Uygulama `http://localhost:3939` adresinde açılır. Supabase kurulumu ve yönetici
+ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
+[SECURITY.md](./docs/SECURITY.md), APK teslimi için
+[RELEASE.md](./docs/RELEASE.md) kullanılır.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Komutlar
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Komut | Amaç |
+| --- | --- |
+| `npm run dev` | Geliştirme sunucusu (`3939`) |
+| `npm run lint` | ESLint kontrolü |
+| `npm run typecheck` | TypeScript kontrolü |
+| `npm run build` | Statik web çıktısı (`out/`) |
+| `npm run check` | Lint + tip + üretim build'i |
+| `npm run android:sync` | Web build'i ve Capacitor senkronizasyonu |
+| `npm run android:debug` | Debug APK üretimi |
+| `npm run delivery:debug` | APK + SHA-256 + teslim manifesti (`dist/`) |
 
-## Learn More
+## Kaynak düzeni
 
-To learn more about Next.js, take a look at the following resources:
+| Yol | Sorumluluk |
+| --- | --- |
+| `app/` | Next.js sayfaları |
+| `components/` | Arayüz ve akış bileşenleri |
+| `lib/` | Auth, Supabase, analiz ve iş kuralları |
+| `store/` | Zustand uygulama durumu |
+| `supabase/migrations/` | Tek ve sıralı veritabanı şema kaynağı |
+| `android/` | Capacitor Android projesi |
+| `docs/` | Güvenlik ve teslim belgeleri |
+| `scripts/` | Varlık ve teslim yardımcıları |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Sürüm
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Geçerli uygulama sürümü `2.1.1`'dir. Sürüm artırırken `package.json`,
+`lib/version.ts` ve `android/app/build.gradle` birlikte güncellenir.

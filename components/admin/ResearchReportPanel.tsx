@@ -1,0 +1,131 @@
+'use client';
+import { useState } from 'react';
+import type { SubmissionRow } from '@/app/admin/page';
+import type { Category } from '@/types';
+
+const CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
+
+function average(values: Array<number | null>): number | null {
+  const measured = values.filter((value): value is number => value !== null);
+  if (measured.length === 0) return null;
+  return measured.reduce((sum, value) => sum + value, 0) / measured.length;
+}
+
+function formatAverage(value: number | null): string {
+  return value === null ? 'ölçüm yok' : value.toFixed(2);
+}
+
+function percent(part: number, total: number): string {
+  return total === 0 ? '0.0' : ((part / total) * 100).toFixed(1);
+}
+
+function buildResearchReport(rows: SubmissionRow[]): string {
+  const total = rows.length;
+  const participants = new Set(rows.map((row) => row.user_id)).size;
+  const totalAmount = rows.reduce((sum, row) => sum + row.debt_amount, 0);
+  const repeatYes = rows.filter((row) => row.will_repeat === 'evet').length;
+  const avgPreHuzur = average(rows.map((row) => row.pre_huzur));
+  const avgPostHuzur = average(rows.map((row) => row.post_huzur));
+  const avgPreLikert = average(rows.map((row) => row.pre_likert));
+  const avgPostLikert = average(rows.map((row) => row.post_likert));
+  const avgPanasNeg = average(rows.map((row) => row.panas_neg_total));
+  const avgPanasPos = average(rows.map((row) => row.panas_pos_total));
+
+  const categoryLines = CATEGORIES.map((category) => {
+    const categoryRows = rows.filter((row) => row.debt_category === category);
+    const categoryAmount = categoryRows.reduce((sum, row) => sum + row.debt_amount, 0);
+    return `- ${category}: ${categoryRows.length} işlem (%${percent(categoryRows.length, total)}), ${categoryAmount} TL`;
+  }).join('\n');
+
+  const huzurChange =
+    avgPreHuzur !== null && avgPostHuzur !== null
+      ? (avgPostHuzur - avgPreHuzur).toFixed(2)
+      : 'hesaplanamadı';
+  const likertChange =
+    avgPreLikert !== null && avgPostLikert !== null
+      ? (avgPostLikert - avgPreLikert).toFixed(2)
+      : 'hesaplanamadı';
+
+  return `# D-Zimem Araştırma Özeti
+
+Oluşturulma: ${new Date().toLocaleString('tr-TR')}
+
+## Kapsam
+
+- Gönderim: ${total}
+- Katılımcı: ${participants}
+- Toplam işlem tutarı: ${totalAmount} TL
+- Yeniden iyilik yapma niyeti (evet): ${repeatYes} (%${percent(repeatYes, total)})
+
+## Ön Test / Son Test
+
+- Huzur ortalaması: ${formatAverage(avgPreHuzur)} -> ${formatAverage(avgPostHuzur)} (fark: ${huzurChange})
+- Likert ortalaması: ${formatAverage(avgPreLikert)} -> ${formatAverage(avgPostLikert)} (fark: ${likertChange})
+- PANAS negatif ön test ortalaması: ${formatAverage(avgPanasNeg)}
+- PANAS pozitif son test ortalaması: ${formatAverage(avgPanasPos)}
+
+## Kategori Dağılımı
+
+${categoryLines}
+
+## Yorumlama Notu
+
+Bu çıktı betimsel istatistiktir. Nedensellik veya istatistiksel anlamlılık iddiası içermez. Küçük örneklem, öz-seçim ve öz-bildirim yanlılığı raporlanmalıdır.
+`;
+}
+
+export default function ResearchReportPanel({ rows, isCapacitor }: { rows: SubmissionRow[]; isCapacitor?: boolean }) {
+  const [report, setReport] = useState<string | null>(null);
+
+  function generate() {
+    if (rows.length === 0) return;
+    setReport(buildResearchReport(rows));
+  }
+
+  function download() {
+    if (!report) return;
+    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `zimem-arastirma-ozeti-${new Date().toISOString().slice(0, 10)}.md`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="heading-lg mb-3">Araştırma Özeti</h2>
+      <div className="glass-strong p-5">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={generate}
+            disabled={rows.length === 0}
+          >
+            Özeti oluştur
+          </button>
+          {/* Capacitor/APK'da blob + <a download> güvenilir çalışmıyor; orada
+              yalnızca "Kopyala" (panoya) sunuluyor. */}
+          {report && !isCapacitor && (
+            <button type="button" className="btn" onClick={download}>
+              Markdown indir
+            </button>
+          )}
+          {report && (
+            <button type="button" className="btn" onClick={() => navigator.clipboard.writeText(report)}>
+              Kopyala
+            </button>
+          )}
+        </div>
+
+        {report && (
+          <div className="mt-5 glass p-5 max-h-[600px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
+            {report}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

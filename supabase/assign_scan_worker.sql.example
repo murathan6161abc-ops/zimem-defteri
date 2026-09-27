@@ -1,0 +1,20 @@
+-- Tarama bilgisayarı hesabına "scan_worker" rolü ver.
+-- Hesabı `npm run tarama:kurulum` oluşturur (kullanıcı adı: tarama_bilgisayari).
+-- SQL Editor'de çalıştır; ardından tarama programını yeniden başlat.
+
+do $assign_worker$
+declare
+  target_email text := 'tarama_bilgisayari@dzimem.app';
+  changed_rows integer;
+begin
+  update auth.users
+  set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+    || '{"role":"scan_worker"}'::jsonb
+  where email = target_email;
+
+  get diagnostics changed_rows = row_count;
+  if changed_rows <> 1 then
+    raise exception 'Tarama bilgisayarı hesabı bulunamadı: %', target_email;
+  end if;
+end
+$assign_worker$;
