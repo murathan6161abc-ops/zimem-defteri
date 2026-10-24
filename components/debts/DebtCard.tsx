@@ -1,7 +1,7 @@
 'use client';
 import { memo, useState } from 'react';
 import type { Debt } from '@/types';
-import { CATEGORY_META } from '@/lib/debts';
+import { CATEGORY_META, parsePartialAmount } from '@/lib/debts';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 
@@ -28,8 +28,8 @@ function DebtCard({
   const handleFullPay = () => onSelect(debt.id, null);
 
   const handlePartialSubmit = () => {
-    const amount = parseFloat(partialValue);
-    if (!amount || amount <= 0 || amount > debt.amount) {
+    const amount = parsePartialAmount(partialValue, debt.amount);
+    if (amount === null) {
       // Native alert yerine satır içi hata — APK'da kesintisiz, erişilebilir UX
       setPartialError(t('debt.partial_error', { max: debt.amount }));
       return;
@@ -137,6 +137,7 @@ function DebtCard({
               type="number"
               inputMode="numeric"
               min="1"
+              step="1"
               max={debt.amount}
               value={partialValue}
               onChange={(e) => {

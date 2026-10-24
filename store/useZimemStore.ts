@@ -11,8 +11,10 @@ import type {
 } from '@/types';
 import { calculateXP } from '@/lib/xp';
 import { checkUnlocks } from '@/lib/achievements';
+import { computeStreak } from '@/lib/streak';
 import { syncSurveySubmission, syncDeviceSnapshot } from '@/lib/sync';
 import { deleteMerchantDebt, insertMerchantDebt } from '@/lib/supabaseDebts';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { signOut, type AccountData } from '@/lib/auth';
 import { tStatic } from '@/lib/i18n';
 
@@ -62,7 +64,8 @@ interface ZimemState {
   setOpenDebts: (debts: Debt[]) => void;
   applyRemoteDebtInsert: (debt: Debt) => void;
   applyRemoteDebtUpdate: (debt: Debt) => void;
-  applyRemoteDebtClose: (id: string) => void;
+  // true → borç bu cihazın listesinde hâlâ açıktı (başka biri kapattı ya da sildi).
+  applyRemoteDebtClose: (id: string) => boolean;
 
   startFlow: (debtId: string, partialAmount?: number | null) => void;
   submitPretest: (data: PreTestData) => void;
@@ -70,8 +73,14 @@ interface ZimemState {
   submitPosttest: (data: PostTestData) => void;
   closeModal: () => void;
 
-  // synced=false → Supabase'e yazılamadı, yalnızca bu cihazda yerel kayıt var.
-  addMerchantDebt: (input: Omit<Debt, 'id'>) => Promise<{ id: string; synced: boolean }>;
+  // Esnafın defterini sunucudaki listeyle değiştirir.
+  setMerchantDebts: (debts: MerchantDebt[]) => void;
+  // Sunucudan gelen tek borç değişikliğini deftere uygular; true → borç bu değişiklikle kapandı.
+  applyMerchantDebtChange: (debt: MerchantDebt) => boolean;
+
+  // null → Supabase'e yazılamadı, hiçbir yere kaydedilmedi (esnaf tekrar dener).
+  // synced=false → Supabase ayarlanmamış (çevrimdışı demo); kayıt yalnızca bu cihazda.
+  addMerchantDebt: (input: Omit<Debt, 'id'>) => Promise<{ id: string; synced: boolean } | null>;
   // false → sunucuda silinemedi (bağlantı yok ya da borç artık açık değil); liste değişmez.
   removeMerchantDebt: (id: string) => Promise<boolean>;
 
@@ -104,23 +113,17 @@ const initialState = {
   toasts: [] as ToastMsg[],
 };
 
-function dayKey(d: Date) {
-  // Yerel takvim günü (UTC değil) — UTC+3'te gece yarısı sonrası
-  // serinin yanlış sayılmasını önler.
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function computeStreak(prevDate: string | null, prevStreak: number, today: Date) {
-  const todayKey = dayKey(today);
-  if (!prevDate) return { streak: 1, dateKey: todayKey };
-  if (prevDate === todayKey) return { streak: Math.max(1, prevStreak), dateKey: todayKey };
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  if (prevDate === dayKey(yesterday)) return { streak: prevStreak + 1, dateKey: todayKey };
-  return { streak: 1, dateKey: todayKey };
+// Sunucu kapanan borcun tutarını 0 yapar ve ilk tutarı saklamaz. Bu cihaz borcu daha
+// önce açıkken gördüyse son bilinen tutar "hibe edilen" olarak korunur (arada kısmi
+// ödeme olduysa bu, son kalan tutardır). İkon sunucuda tutulmadığı için esnafın seçtiği
+// ikon da korunur.
+function mergeMerchantDebt(incoming: MerchantDebt, known: MerchantDebt | undefined): MerchantDebt {
+  if (!known) return incoming;
+  return {
+    ...incoming,
+    icon: known.icon,
+    amount: incoming.closed && incoming.amount === 0 ? known.amount : incoming.amount,
+  };
 }
 
 export const useZimemStore = create<ZimemState>()(
@@ -189,48 +192,71 @@ export const useZimemStore = create<ZimemState>()(
           openDebts: s.openDebts.map((d) => (d.id === debt.id ? { ...d, ...debt } : d)),
         })),
 
-      applyRemoteDebtClose: (id) =>
+      applyRemoteDebtClose: (id) => {
+        const wasOpen = get().openDebts.some((d) => d.id === id);
+        if (wasOpen) set((s) => ({ openDebts: s.openDebts.filter((d) => d.id !== id) }));
+        return wasOpen;
+      },
+
+      setMerchantDebts: (debts) =>
+        set((s) => {
+          const known = new Map(s.merchantDebts.map((d) => [d.id, d]));
+          return { merchantDebts: debts.map((d) => mergeMerchantDebt(d, known.get(d.id))) };
+        }),
+
+      applyMerchantDebtChange: (debt) => {
+        const known = get().merchantDebts.find((d) => d.id === debt.id);
+        const merged = mergeMerchantDebt(debt, known);
         set((s) => ({
-          openDebts: s.openDebts.filter((d) => d.id !== id),
-        })),
+          merchantDebts: known
+            ? s.merchantDebts.map((d) => (d.id === debt.id ? merged : d))
+            : [merged, ...s.merchantDebts],
+        }));
+        return !!known && !known.closed && !!merged.closed;
+      },
 
       // ─── Merchant (esnaf) borç ekleme — Supabase write sync.ts'te ──
 
       addMerchantDebt: async (input) => {
         const profile = get().profile;
         const merchantName = profile?.shopName || profile?.displayName || 'Anonim Esnaf';
+        const online = isSupabaseConfigured();
 
-        // 1. Önce Supabase'e yaz (Realtime ile diğer cihazlara yayılır)
-        const remote = await insertMerchantDebt({
-          title: input.title,
-          description: input.description,
-          category: input.category,
-          amount: input.amount,
-          urgency: input.urgency,
-          merchantName,
-          city: profile?.city,
-        });
-
-        // 2. ID: Supabase başarılıysa UUID, değilse local fallback
-        const id = remote?.id ?? `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
-        const debt: MerchantDebt = {
-          ...input,
-          id,
-          addedBy: merchantName,
-          addedAt: remote?.addedAt || new Date().toISOString(),
-        };
-
-        // 3. Yerel state'e ekle (anında UI feedback)
-        set((s) => {
-          // Realtime aynı borcu geri gönderebilir — duplikasyonu önle
-          if (s.openDebts.some((d) => d.id === id)) return s;
-          return {
-            merchantDebts: [debt, ...s.merchantDebts],
-            openDebts: [debt, ...s.openDebts],
+        let debt: MerchantDebt;
+        if (online) {
+          // Supabase'e yaz (Realtime ile diğer cihazlara yayılır). Yazılamazsa yerel
+          // kayıt OLUŞTURULMAZ: sonraki girişte kaybolan, kimsenin göremediği bir borç
+          // yerine esnaf hatayı görür ve tekrar dener.
+          const remote = await insertMerchantDebt({
+            title: input.title,
+            description: input.description,
+            category: input.category,
+            amount: input.amount,
+            urgency: input.urgency,
+            merchantName,
+            city: profile?.city,
+          });
+          if (!remote) return null;
+          // Sunucunun temizlediği metin esas alınır; ikon sunucuda tutulmadığı için
+          // esnafın seçtiği ikon bu cihazda korunur.
+          debt = { ...remote, icon: input.icon };
+        } else {
+          // Supabase ayarlanmamış (çevrimdışı demo): kayıt yalnızca bu cihazda tutulur.
+          debt = {
+            ...input,
+            id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            addedBy: merchantName,
+            addedAt: new Date().toISOString(),
           };
-        });
-        return { id, synced: !!remote };
+        }
+
+        // Yerel state'e ekle (anında UI feedback). Realtime aynı borcu daha önce
+        // getirmiş olabilir — iki listede de duplikasyonu önle.
+        set((s) => ({
+          merchantDebts: s.merchantDebts.some((d) => d.id === debt.id) ? s.merchantDebts : [debt, ...s.merchantDebts],
+          openDebts: s.openDebts.some((d) => d.id === debt.id) ? s.openDebts : [debt, ...s.openDebts],
+        }));
+        return { id: debt.id, synced: online };
       },
 
       removeMerchantDebt: async (id) => {

@@ -155,12 +155,12 @@ export default function ScanLedgerPage() {
     setProgress({ done: 0, count: toSave.length });
 
     let saved = 0;
-    let failed = 0;
+    const failedRows: Row[] = [];
     for (const row of toSave) {
       const description =
         row.description.trim().length >= 3 ? row.description.trim().slice(0, 180) : t('scan.desc_default');
       try {
-        const { id, synced } = await addDebt({
+        const result = await addDebt({
           category: row.category,
           icon: CATEGORY_ICONS[row.category][0],
           title: t(`scan.title_${row.category}`),
@@ -168,17 +168,21 @@ export default function ScanLedgerPage() {
           amount: parseAmount(row.amountText),
           urgency: row.urgency,
         });
-        if (row.ref) saveLedgerRef(id, row.ref);
-        if (synced) saved += 1;
-        else failed += 1;
+        if (result) {
+          if (row.ref) saveLedgerRef(result.id, row.ref);
+          saved += 1;
+        } else {
+          failedRows.push(row);
+        }
       } catch {
-        failed += 1;
+        failedRows.push(row);
       }
       setProgress((p) => ({ ...p, done: p.done + 1 }));
     }
 
-    setResult({ saved, failed });
-    setRows([]);
+    setResult({ saved, failed: failedRows.length });
+    // Kaydedilemeyen satırlar listede kalır; esnaf bağlantı düzelince tekrar dener.
+    setRows(failedRows);
     setPhase('done');
   }
 
@@ -448,7 +452,19 @@ export default function ScanLedgerPage() {
           <div className="text-5xl">✅</div>
           <div className="font-bold text-lg">{t('scan.done_title', { count: result.saved })}</div>
           {result.failed > 0 && (
-            <p className="text-sm text-amber-300">{t('scan.done_failed', { count: result.failed })}</p>
+            <>
+              <p className="text-sm text-amber-300">{t('scan.done_failed', { count: result.failed })}</p>
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                onClick={() => {
+                  setError('');
+                  setPhase('review');
+                }}
+              >
+                {t('scan.retry_failed', { count: result.failed })}
+              </button>
+            </>
           )}
           <div className="grid grid-cols-2 gap-2 pt-2">
             <button type="button" className="btn" onClick={() => { setError(''); setPhase('pick'); }}>

@@ -62,13 +62,20 @@ export default function DebtList() {
         onUpdate: (debt) => {
           applyRemoteDebtUpdate(debt);
         },
+        onClose: (id) => {
+          // Kendi ödememizle kapanan borç listeden zaten çıkmıştır; bildirim
+          // yalnızca borcu başka biri kapattığında gösterilir.
+          if (applyRemoteDebtClose(id)) {
+            pushToast({
+              emoji: '✅',
+              title: tStatic('debt.toast_closed_title'),
+              desc: tStatic('debt.toast_closed_desc'),
+            });
+          }
+        },
         onDelete: (id) => {
+          // Esnaf borcu sildi: "kapandı" demek yanlış olur, listeden sessizce çıkar.
           applyRemoteDebtClose(id);
-          pushToast({
-            emoji: '✅',
-            title: tStatic('debt.toast_closed_title'),
-            desc: tStatic('debt.toast_closed_desc'),
-          });
         },
       });
     }
