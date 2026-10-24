@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { CATEGORY_ICONS, CATEGORY_META } from '@/lib/debts';
+import { CATEGORY_ICONS, CATEGORY_META, MAX_DEBT_AMOUNT } from '@/lib/debts';
+import { parseAmount } from '@/lib/ledgerParse';
 import type { Category } from '@/types';
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
@@ -20,24 +21,36 @@ export default function NewMerchantDebtPage() {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [urgency, setUrgency] = useState<1 | 2 | 3>(2);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const amountNum = Number(amount.replace(/,/g, '.'));
+  // Türkçe yazım: "1.250" bin iki yüz elli, "12,50" on iki buçuk (taramayla aynı kural).
+  const amountNum = parseAmount(amount);
+  const amountInRange = amountNum >= 1 && amountNum <= MAX_DEBT_AMOUNT;
   const canSubmit =
     title.trim().length >= 3 &&
     description.trim().length >= 3 &&
-    !Number.isNaN(amountNum) &&
-    amountNum > 0;
+    amountInRange &&
+    !busy;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
-    addDebt({
+    setBusy(true);
+    setError('');
+    const saved = await addDebt({
       category,
       icon,
       title: title.trim(),
       description: description.trim(),
-      amount: Math.round(amountNum),
+      amount: amountNum,
       urgency,
     });
+    if (!saved) {
+      // Kayıt hiçbir yere yazılmadı; form dolu kalır, esnaf tekrar dener.
+      setError(t('merchant.save_failed'));
+      setBusy(false);
+      return;
+    }
     router.push('/esnaf/');
   };
 
@@ -145,6 +158,11 @@ export default function NewMerchantDebtPage() {
               placeholder="180"
               className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
             />
+            {amount && !amountInRange && (
+              <div className="text-[11px] text-rose-300 mt-1" role="alert">
+                {t('merchant.amount_range')}
+              </div>
+            )}
           </label>
           <div>
             <div className="text-sm font-medium mb-1">{t('merchant.step_urgency')}</div>
@@ -168,6 +186,15 @@ export default function NewMerchantDebtPage() {
           </div>
         </section>
 
+        {error && (
+          <div
+            className="text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2">
           <Link href="/esnaf" className="btn flex-1 text-center">
             {t('common.give_up')}
@@ -176,9 +203,9 @@ export default function NewMerchantDebtPage() {
             type="button"
             className="btn btn-primary flex-1"
             disabled={!canSubmit}
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
           >
-            {t('merchant.add_to_book')}
+            {busy ? t('common.loading') : t('merchant.add_to_book')}
           </button>
         </div>
       </div>

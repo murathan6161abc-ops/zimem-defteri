@@ -19,6 +19,7 @@ import type { User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import { getDeviceId } from './deviceId';
 import { clearLedgerRefs } from './ledgerScan';
+import { dayKey } from './streak';
 import type {
   Category,
   HistoryEntry,
@@ -392,7 +393,9 @@ export async function fetchAccountData(userId: string): Promise<AccountData> {
         willRepeat: (r.will_repeat as HistoryEntry['willRepeat']) || 'belki',
         urgency: Number(r.debt_urgency || 2),
       }));
-      empty.lastActionDate = empty.history[0]?.date.slice(0, 10) ?? null;
+      // Seri yerel takvim günüyle sayılır. ISO tarihinin ilk 10 karakteri UTC günüdür ve
+      // Türkiye'de 00:00-03:00 arasındaki iyiliği bir önceki güne yazar.
+      empty.lastActionDate = empty.history[0] ? dayKey(new Date(empty.history[0].date)) : null;
     }
   } catch {}
 

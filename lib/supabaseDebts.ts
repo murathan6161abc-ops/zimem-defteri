@@ -19,6 +19,7 @@ import {
   sanitizeName,
   sanitizeCity,
 } from './sanitize';
+import { MAX_DEBT_AMOUNT } from './debts';
 import type { Category, MerchantDebt } from '@/types';
 
 const ICON_BY_CATEGORY: Record<Category, string> = {
@@ -128,8 +129,10 @@ export async function insertMerchantDebt(args: {
     return null;
   }
 
-  // Minimum doğrulama
-  if (title.length < 3 || description.length < 3 || amount < 1) {
+  // Minimum doğrulama. Aralık dışı tutar kırpılmaz, reddedilir: esnaf yazdığından
+  // farklı bir borç kaydedilmesin.
+  const amountInRange = Number.isInteger(args.amount) && args.amount >= 1 && args.amount <= MAX_DEBT_AMOUNT;
+  if (title.length < 3 || description.length < 3 || !amountInRange) {
     console.warn('[supabaseDebts] Geçersiz borç verisi');
     return null;
   }
@@ -175,10 +178,57 @@ export async function deleteMerchantDebt(id: string): Promise<boolean> {
   }
 }
 
+/** Esnafın kendi defteri (eklediği tüm borçlar). Hata olursa null: eldeki defter silinmesin. */
+export async function fetchMyMerchantDebts(userId: string): Promise<MerchantDebt[] | null> {
+  const client = getSupabase();
+  if (!client || !userId) return null;
+
+  const { data, error } = await client
+    .from('merchant_debts')
+    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.warn('[supabaseDebts] fetchMyMerchantDebts hatası:', error.message);
+    return null;
+  }
+  return (data || []).map(rowToDebt);
+}
+
+/** Esnafın kendi borçlarındaki değişiklikleri (hayırseverin ödemesi, kapanma) dinler. */
+export function subscribeToMyDebts(userId: string, onChange: (debt: MerchantDebt) => void): () => void {
+  const client = getSupabase();
+  if (!client || !userId) return () => {};
+
+  const filter = `user_id=eq.${userId}`;
+  // Kanal adı "merchant_debts" içermez: subscribeToDebts'in kanal temizliği bunu kapatmasın.
+  const channel = client
+    .channel(`my_debts_${Date.now()}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'merchant_debts', filter },
+      (payload) => onChange(rowToDebt(payload.new as Record<string, unknown>)),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'merchant_debts', filter },
+      (payload) => onChange(rowToDebt(payload.new as Record<string, unknown>)),
+    )
+    .subscribe();
+
+  return () => {
+    void client.removeChannel(channel);
+  };
+}
+
 // ─── Realtime channel kurulumu ───────────────────────────────
 export function subscribeToDebts(handlers: {
   onInsert?: (debt: MerchantDebt) => void;
   onUpdate?: (debt: MerchantDebt) => void;
+  // Borç ödenerek kapandı (bakiye sıfırlandı).
+  onClose?: (id: string) => void;
+  // Esnaf borcu sildi.
   onDelete?: (id: string) => void;
 }): () => void {
   const client = getSupabase();
@@ -212,7 +262,7 @@ export function subscribeToDebts(handlers: {
       (payload) => {
         const row = payload.new as Record<string, unknown>;
         if (row?.closed) {
-          handlers.onDelete?.(String(row.id));
+          handlers.onClose?.(String(row.id));
         } else {
           handlers.onUpdate?.(rowToDebt(row));
         }

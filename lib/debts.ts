@@ -18,6 +18,18 @@ export const CATEGORY_META: Record<
   saglik: { label: 'Sağlık', color: '#ec4899', emoji: '💊' },
 };
 
+/** Bir borcun alabileceği en yüksek tutar (₺); veritabanı kuralıyla aynı. */
+export const MAX_DEBT_AMOUNT = 100000;
+
+/** Kısmi katkı tutarı: 1 ile kalan tutar arasında tam sayı ₺; geçersizse null. */
+export function parsePartialAmount(text: string, max: number): number | null {
+  // Sunucu tutarı tam sayıya yuvarlar; küsuratı burada reddetmek ekranla sunucuyu aynı tutar.
+  const trimmed = text.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const amount = Number(trimmed);
+  return amount >= 1 && amount <= max ? amount : null;
+}
+
 export const SAMPLE_DEBTS: Debt[] = [
   {
     id: 'd1',
