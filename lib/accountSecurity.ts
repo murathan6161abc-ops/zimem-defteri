@@ -1,8 +1,6 @@
-// ============================================================
 // Hesap güvenliği: 2 adımlı doğrulama (TOTP) + kurtarma e-postası + şifre sıfırlama
-// ────────────────────────────────────────────────────────────
 // Hesaplar kullanıcı-adı@dzimem.app sentetik e-postasıyla açılır; bu adrese
-// posta gitmez. Şifre kurtarma isteyen kullanıcı Profil'den GERÇEK bir e-posta
+// posta gitmez. Şifre kurtarma isteyen kullanıcı Profil'den gerçek bir e-posta
 // ekler; auth e-postası o adrese geçer ve Supabase'in kendi e-posta sistemi
 // 6 haneli kod gönderir (bağlantı yok → APK'da derin bağlantı gerekmez).
 //
@@ -12,7 +10,6 @@
 // 2 adımlı doğrulama açıksa: şifre (veya e-posta kodu) yalnızca aal1 oturum
 // verir. Veritabanı kuralları aal2 olmadan hiçbir veriye erişime izin vermez;
 // yani e-posta ile şifre sıfırlamak 2FA'yı atlatmaz.
-// ============================================================
 
 import type { Factor, User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
@@ -92,7 +89,7 @@ export function isValidEmailCode(code: string): boolean {
   return /^\d{6,10}$/.test(code.trim());
 }
 
-// ─── 2 adımlı doğrulama (TOTP) ───────────────────────────────
+// 2 adımlı doğrulama (TOTP)
 
 /** Oturum şifreyle açılmış ama hesabın 2FA'sı var ve henüz kod girilmemiş mi? */
 export async function needsMfa(): Promise<boolean> {
@@ -218,7 +215,7 @@ export async function disableTotp(code: string): Promise<SecurityResult> {
   }
 }
 
-// ─── Kurtarma e-postası ──────────────────────────────────────
+// Kurtarma e-postası
 
 export interface RecoveryEmailState {
   email: string | null; // null → yalnızca kullanıcı adıyla giriş (kurtarma yok)
@@ -238,9 +235,9 @@ export function recoveryEmailState(user: User | null | undefined): RecoveryEmail
 }
 
 // 'email_change'→ Supabase değişikliği onaya bağladı (canlı projedeki durum): kod
-//                 YENİ adrese gider, doğrulanana dek auth e-postası değişmez. Böylece
-//                 sahiplik, adres hesaba bağlanmadan ÖNCE kanıtlanır.
-//                 ("Secure email change" KAPALI olmalı; açıksa eski — sentetik —
+//                 yeni adrese gider, doğrulanana dek auth e-postası değişmez. Böylece
+//                 sahiplik, adres hesaba bağlanmadan önce kanıtlanır.
+//                 ("Secure email change" kapalı olmalı; açıksa eski — sentetik —
 //                 adrese de onay gider ve değişiklik hiç tamamlanamaz.)
 // 'recovery'    → Bazı yapılandırmalarda değişiklik hemen uygulanır; o zaman
 //                 sahipliği şifre-sıfırlama koduyla doğrularız.
@@ -327,7 +324,7 @@ export async function removeRecoveryEmail(username: string): Promise<SecurityRes
   }
 }
 
-// ─── Şifremi unuttum ─────────────────────────────────────────
+// Şifremi unuttum
 
 /** Her durumda "gönderildi" gibi davranır — kayıtlı e-postaları ele vermemek için. */
 export async function requestPasswordReset(emailInput: string): Promise<SecurityResult> {
@@ -382,7 +379,7 @@ export async function setNewPassword(password: string): Promise<SecurityResult> 
   }
 }
 
-// ─── Senkron AAL okuma (onAuthStateChange içinde güvenli) ────
+// Senkron AAL okuma (onAuthStateChange içinde güvenli)
 // onAuthStateChange geri çağrısı içinde başka bir auth metodu beklemek
 // supabase-js'in iç kilidinde kilitlenmeye yol açabilir. Bu yüzden AuthGate
 // oturum nesnesinin kendisinden karar verir (getAuthenticatorAssuranceLevel
@@ -410,15 +407,15 @@ export function sessionNeedsMfa(
   return decodeJwtClaim(session.access_token, 'aal') !== 'aal2';
 }
 
-// ─── E-postayla kayıt (6 haneli kod) ─────────────────────────
-// Kayıt artık e-posta + kodla yapılır; e-posta sahipliği hesap açılmadan önce
+// E-postayla kayıt (6 haneli kod)
+// Kayıt e-posta + kodla yapılır; e-posta sahipliği hesap açılmadan önce
 // kanıtlanır ve her yeni hesap şifre kurtarmayı baştan kullanabilir.
 //   1) startEmailSignUp  → signInWithOtp: Supabase kullanıcıyı (rastgele şifreyle)
 //      oluşturur ve e-postaya kod gönderir. Hesap "signupCompleted: false".
 //   2) verifySignUpCode  → kod doğrulanır, oturum açılır.
 //   3) finishEmailSignUp → şifre + profil yazılır, hesap "signupCompleted: true".
 // Yarım kalan kayıt (2-3 yapılmadı) e-postanın gerçek sahibi tarafından kod ile
-// devralınabilir; TAMAMLANMIŞ hesaba bu yoldan girilemez (kullanıcı girişe/şifre
+// devralınabilir; tamamlanmış hesaba bu yoldan girilemez (kullanıcı girişe/şifre
 // sıfırlamaya yönlendirilir). Eski kullanıcı-adı hesaplarında bu alan hiç yoktur
 // → tamamlanmış sayılır.
 

@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useZimemStore } from '@/store/useZimemStore';
 import { tStatic, useI18n, type Locale } from '@/lib/i18n';
-import { CATEGORY_META } from '@/lib/debts';
+import { formatTL } from '@/lib/debts';
+import CategoryIcon from '@/components/debts/CategoryIcon';
 import { forgetLedgerRef, readLedgerRefs } from '@/lib/ledgerScan';
 import { getSupabase } from '@/lib/supabase';
 import { fetchMyMerchantDebts, subscribeToMyDebts } from '@/lib/supabaseDebts';
@@ -63,7 +64,7 @@ export default function EsnafHomePage() {
       if (!active) return;
       unsubscribe = subscribeToMyDebts(userId, (debt) => {
         if (applyMerchantDebtChange(debt)) {
-          pushToast({ emoji: '✅', title: tStatic('debt.toast_closed_title'), desc: debt.title });
+          pushToast({ title: tStatic('debt.toast_closed_title'), desc: debt.title });
         }
       });
       document.addEventListener('visibilitychange', onVisible);
@@ -90,16 +91,14 @@ export default function EsnafHomePage() {
           <div>
             <div className="section-title">{t('merchant.panel')}</div>
             <h1 className="heading-xl">{profile?.shopName || t('merchant.default_book')}</h1>
-            {profile?.city && (
-              <div className="text-sm text-muted-c mt-1">📍 {profile.city}</div>
-            )}
+            {profile?.city && <div className="text-sm text-muted-c mt-1">{profile.city}</div>}
           </div>
           <div className="flex gap-2 flex-wrap">
             <Link href="/esnaf/tara" className="btn">
               {t('merchant.scan_btn')}
             </Link>
             <Link href="/esnaf/yeni" className="btn btn-primary">
-              ➕ {t('merchant.add_new')}
+              {t('merchant.add_new')}
             </Link>
           </div>
         </div>
@@ -115,7 +114,7 @@ export default function EsnafHomePage() {
         <div className="stat-card">
           <div className="stat-label">{t('merchant.open_amount')}</div>
           <div className="stat-value text-amber-300" suppressHydrationWarning>
-            {totalOpen} ₺
+            {formatTL(totalOpen, locale)}
           </div>
         </div>
         <div className="stat-card">
@@ -127,7 +126,7 @@ export default function EsnafHomePage() {
         <div className="stat-card">
           <div className="stat-label">{t('merchant.granted')}</div>
           <div className="stat-value text-emerald-300" suppressHydrationWarning>
-            {totalClosed} ₺
+            {formatTL(totalClosed, locale)}
           </div>
         </div>
       </div>
@@ -135,7 +134,6 @@ export default function EsnafHomePage() {
       <h2 className="heading-lg mb-3">{t('merchant.open_debts')}</h2>
       {open.length === 0 ? (
         <div className="glass p-10 text-center mb-6">
-          <div className="text-5xl mb-3">📒</div>
           <div className="font-bold text-lg mb-1">{t('merchant.empty_title')}</div>
           <div className="text-sm text-muted-c mb-4">
             {t('merchant.empty_desc')}
@@ -152,34 +150,24 @@ export default function EsnafHomePage() {
       ) : (
         <div className="grid gap-3 mb-6">
           {open.map((d) => {
-            const meta = CATEGORY_META[d.category];
             return (
               <div key={d.id} className="debt-card !cursor-default">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-                  style={{ background: `${meta.color}22`, border: `1px solid ${meta.color}55` }}
-                >
-                  {d.icon}
-                </div>
+                <CategoryIcon category={d.category} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`category-chip cat-${d.category}`}>
-                      {meta.emoji} {t(`debt.cat_${d.category}`)}
-                    </span>
+                    <span className={`category-chip cat-${d.category}`}>{t(`debt.cat_${d.category}`)}</span>
                     <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-c">
                       <span className={`urgency-dot urgency-${d.urgency}`} />
                       {t(URGENCY_KEY[d.urgency])} {t('debt.urgency_suffix')}
                     </span>
                     <span className="text-[11px] text-muted-c">· {fmtDate(d.addedAt, locale)}</span>
-                    {refs[d.id] && (
-                      <span className="text-[11px] text-amber-200/90">· 🔒 {refs[d.id]}</span>
-                    )}
+                    {refs[d.id] && <span className="text-[11px] text-amber-200/90">· {refs[d.id]}</span>}
                   </div>
                   <div className="font-semibold text-[15px] truncate">{d.title}</div>
                   <div className="text-xs text-muted-c truncate">{d.description}</div>
                 </div>
                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <div className="font-bold text-lg text-amber-200">{d.amount} ₺</div>
+                  <div className="font-bold text-lg text-amber-200 tabular-nums">{formatTL(d.amount, locale)}</div>
                   <button
                     type="button"
                     className="text-[11px] text-muted-c hover:text-red-400 transition"
@@ -191,7 +179,7 @@ export default function EsnafHomePage() {
                       });
                     }}
                   >
-                    🗑️ {t('common.delete')}
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -210,25 +198,22 @@ export default function EsnafHomePage() {
           </h2>
           <div className="grid gap-3">
             {closed.map((d) => {
-              const meta = CATEGORY_META[d.category];
               return (
                 <div key={d.id} className="debt-card !cursor-default opacity-70">
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 grayscale"
-                    style={{ background: `${meta.color}11` }}
-                  >
-                    {d.icon}
+                  <div className="grayscale">
+                    <CategoryIcon category={d.category} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-muted-c mb-1">
-                      ✓ {t('merchant.closed_label')} · {d.closedAt && fmtDate(d.closedAt, locale)}
-                      {refs[d.id] && <span className="text-amber-200/90"> · 🔒 {refs[d.id]}</span>}
+                      {t('merchant.closed_label')}
+                      {d.closedAt && ` · ${fmtDate(d.closedAt, locale)}`}
+                      {refs[d.id] && <span className="text-amber-200/90"> · {refs[d.id]}</span>}
                     </div>
                     <div className="font-semibold text-sm truncate line-through opacity-70">
                       {d.title}
                     </div>
                   </div>
-                  <div className="font-bold text-emerald-300">{d.amount} ₺</div>
+                  <div className="font-bold text-emerald-300 tabular-nums">{formatTL(d.amount, locale)}</div>
                 </div>
               );
             })}

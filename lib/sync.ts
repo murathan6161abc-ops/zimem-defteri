@@ -1,6 +1,5 @@
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
-import { payMerchantDebtRemote } from './supabaseDebts';
 import { panasTotal } from './scales';
 import { APP_VERSION } from './version';
 import type {
@@ -13,8 +12,8 @@ import type {
 } from '@/types';
 
 /**
- * Anketi Supabase'e gönderir VE Supabase'teki borç durumunu günceller.
- * Borç durumu güncellemesi Realtime ile diğer cihazlara yayılır.
+ * Ön test + son test cevaplarını kaydeder. Ödeme bundan önce, onay adımında
+ * pay_merchant_debt ile yapılmıştır; entry.amount sunucunun düştüğü tutardır.
  */
 export async function syncSurveySubmission(args: {
   debt: Debt | MerchantDebt;
@@ -22,33 +21,13 @@ export async function syncSurveySubmission(args: {
   post: PostTestData;
   entry: HistoryEntry;
   profile: UserProfile | null;
-  payAmount?: number;
-  isPartial?: boolean;
 }): Promise<void> {
   const client = getSupabase();
   if (!client) return;
-  const { debt, pre, post, entry, profile, payAmount } = args;
+  const { debt, pre, post, entry, profile } = args;
 
-  // Borç bakiyesini yalnızca atomik RPC günceller. Doğrudan tablo UPDATE izni
-  // yoktur; eşzamanlı ödemelerde gerçek uygulanan tutar sunucudan gelir.
-  const requestedAmount = payAmount ?? debt.amount;
-  let effectiveAmount = requestedAmount;
-  try {
-    const payment = await payMerchantDebtRemote(debt.id, requestedAmount);
-    if (!payment) {
-      console.warn('[sync] Borç artık açık değil; anket kaydı oluşturulmadı.');
-      return;
-    }
-    effectiveAmount = payment.paidAmount;
-  } catch (e) {
-    console.warn('[sync] Borç ödemesi uygulanamadı:', e);
-    return;
-  }
-
-  // Anket gönderimi
-  // NOT: .insert() hata fırlatmaz, { error } döndürür — bu yüzden hatayı
-  // açıkça kontrol edip loglarız. Aksi halde şema uyumsuzluğu (örn. eksik
-  // PANAS kolonu) TÜM araştırma verisini sessizce kaybettirir.
+  // insert() hata fırlatmaz, { error } döndürür; kontrol edilmezse şema uyumsuzluğu
+  // araştırma verisini sessizce kaybettirir.
   try {
     const { error } = await client.from('survey_submissions').insert({
       user_id: getCurrentUserId(),
@@ -57,7 +36,7 @@ export async function syncSurveySubmission(args: {
       debt_id: debt.id,
       debt_title: debt.title,
       debt_category: debt.category,
-      debt_amount: effectiveAmount,
+      debt_amount: entry.amount,
       debt_urgency: debt.urgency,
       debt_added_by: 'addedBy' in debt ? debt.addedBy : null,
       pre_huzur: pre.huzur,

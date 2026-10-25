@@ -17,6 +17,7 @@ import {
 } from '@/lib/accountSecurity';
 import type { Role } from '@/types';
 import GoogleButton from '@/components/auth/GoogleButton';
+import LogoMark from '@/components/layout/LogoMark';
 
 // Supabase varsa gerçek hesap (e-posta + 6 haneli kod + şifre); yoksa yerel profil.
 const authMode = isSupabaseConfigured();
@@ -150,7 +151,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // Legacy (Supabase yapılandırılmamış) — yerel profil
+    // Supabase ayarlı değil: profil yalnızca bu cihazda tutulur. Bayrak olmadan AuthGate,
+    // kayıt sayfasında profil görünce "yeni hesap açılıyor" sayıp çıkış yapar.
+    try { sessionStorage.setItem('d-zimem-skip-register-logout', '1'); } catch {}
     setProfile({
       role,
       displayName: displayName.trim(),
@@ -170,8 +173,8 @@ export default function RegisterPage() {
 
         <div className="relative">
           <div className="flex flex-col items-center text-center mb-7">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-500 grid place-items-center text-3xl shadow-lg shadow-indigo-500/40 ring-1 ring-white/10 mb-3">
-              📖
+            <div className="mb-3">
+              <LogoMark size="lg" />
             </div>
             <h1 className="heading-xl mb-1">{t('register.welcome')}</h1>
             <p className="text-sm text-muted-c">{t('register.subtitle')}</p>
@@ -186,7 +189,6 @@ export default function RegisterPage() {
                   onClick={() => setRole('vatandas')}
                   className={`emotion-card !p-4 sm:!p-6 ${role === 'vatandas' ? 'selected' : ''}`}
                 >
-                  <div className="text-4xl sm:text-5xl mb-2">🤝</div>
                   <div className="font-bold text-base mb-1">{t('register.citizen')}</div>
                   <div className="text-[11px] sm:text-xs text-muted-c leading-relaxed">
                     {t('register.citizen_desc')}
@@ -197,7 +199,6 @@ export default function RegisterPage() {
                   onClick={() => setRole('esnaf')}
                   className={`emotion-card !p-4 sm:!p-6 ${role === 'esnaf' ? 'selected' : ''}`}
                 >
-                  <div className="text-4xl sm:text-5xl mb-2">🏪</div>
                   <div className="font-bold text-base mb-1">{t('register.merchant')}</div>
                   <div className="text-[11px] sm:text-xs text-muted-c leading-relaxed">
                     {t('register.merchant_desc')}
@@ -299,7 +300,7 @@ export default function RegisterPage() {
                   aria-expanded={kvkkOpen}
                 >
                   <span className="text-[13px] font-semibold flex items-center gap-2">
-                    🔒 {t('register.consent_title')}
+                    {t('register.consent_title')}
                   </span>
                   <span className={`text-muted-c transition-transform ${kvkkOpen ? 'rotate-180' : ''}`}>
                     ▼
@@ -369,7 +370,6 @@ export default function RegisterPage() {
           {step === 'verify' && role && (
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-4xl mb-2">📧</div>
                 <div className="font-bold">{t('register.verify_title')}</div>
                 {info && <p className="text-sm text-muted-c mt-1">{info}</p>}
               </div>

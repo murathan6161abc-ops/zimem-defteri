@@ -1,25 +1,21 @@
 import type { Debt, Category } from '@/types';
 
-// Esnafın borç kaydında seçebileceği ikonlar (ilk öğe varsayılan).
-export const CATEGORY_ICONS: Record<Category, string[]> = {
-  gida: ['🍞', '🥫', '🍼', '🥛', '🥚', '🍎', '🥬'],
-  egitim: ['📚', '✏️', '🚌', '🎒', '📓', '🖍️'],
-  fatura: ['💡', '🔥', '💧', '📱', '📺'],
-  saglik: ['💊', '👓', '🩹', '🦷', '🩺'],
-};
+export const CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
 
-export const CATEGORY_META: Record<
-  Category,
-  { label: string; color: string; emoji: string }
-> = {
-  gida: { label: 'Temel Gıda', color: '#10b981', emoji: '🍞' },
-  egitim: { label: 'Eğitim', color: '#3b82f6', emoji: '📚' },
-  fatura: { label: 'Fatura', color: '#f59e0b', emoji: '💡' },
-  saglik: { label: 'Sağlık', color: '#ec4899', emoji: '💊' },
+export const CATEGORY_META: Record<Category, { label: string; color: string }> = {
+  gida: { label: 'Temel Gıda', color: '#10b981' },
+  egitim: { label: 'Eğitim', color: '#3b82f6' },
+  fatura: { label: 'Fatura', color: '#f59e0b' },
+  saglik: { label: 'Sağlık', color: '#ec4899' },
 };
 
 /** Bir borcun alabileceği en yüksek tutar (₺); veritabanı kuralıyla aynı. */
 export const MAX_DEBT_AMOUNT = 100000;
+
+/** Tutarı binlik ayırıcıyla yazar: 1250 → "1.250 ₺". */
+export function formatTL(amount: number, locale = 'tr'): string {
+  return `${Math.round(amount).toLocaleString(locale === 'tr' ? 'tr-TR' : locale)} ₺`;
+}
 
 /** Kısmi katkı tutarı: 1 ile kalan tutar arasında tam sayı ₺; geçersizse null. */
 export function parsePartialAmount(text: string, max: number): number | null {
@@ -30,6 +26,16 @@ export function parsePartialAmount(text: string, max: number): number | null {
   return amount >= 1 && amount <= max ? amount : null;
 }
 
+/**
+ * Esnafın yazdığı borç tutarı: "1250" ya da "1.250" → 1250. Küsuratlı ya da geçersiz
+ * girişte NaN döner; sunucu tam sayı sakladığı için tutar sessizce yuvarlanmaz.
+ */
+export function parseWholeAmount(text: string): number {
+  const trimmed = text.trim();
+  if (/^\d{1,3}(\.\d{3})+$/.test(trimmed)) return Number(trimmed.replace(/\./g, ''));
+  return /^\d+$/.test(trimmed) ? Number(trimmed) : NaN;
+}
+
 export const SAMPLE_DEBTS: Debt[] = [
   {
     id: 'd1',
@@ -38,7 +44,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: '5 günlük temel gıda ihtiyacı için mahalle bakkalına olan borç.',
     amount: 180,
     urgency: 3,
-    icon: '🍞',
   },
   {
     id: 'd2',
@@ -47,7 +52,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'İlkokul öğrencisi için kırtasiye malzemeleri.',
     amount: 120,
     urgency: 2,
-    icon: '📚',
   },
   {
     id: 'd3',
@@ -56,7 +60,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Geciken elektrik faturası, kesilme riskinde.',
     amount: 350,
     urgency: 3,
-    icon: '💡',
   },
   {
     id: 'd4',
@@ -65,7 +68,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Kronik hasta için reçeteli ilaç ihtiyacı.',
     amount: 95,
     urgency: 3,
-    icon: '💊',
   },
   {
     id: 'd5',
@@ -74,7 +76,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: '7 aylık bebek için aylık mama ihtiyacı.',
     amount: 220,
     urgency: 3,
-    icon: '🍼',
   },
   {
     id: 'd6',
@@ -83,7 +84,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Kış ayı doğalgaz faturası.',
     amount: 280,
     urgency: 2,
-    icon: '🔥',
   },
   {
     id: 'd7',
@@ -92,7 +92,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Lise öğrencisi için bir aylık okul servis ücreti.',
     amount: 450,
     urgency: 2,
-    icon: '🚌',
   },
   {
     id: 'd8',
@@ -101,7 +100,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Pirinç, bulgur, yağ gibi temel kuru gıda.',
     amount: 400,
     urgency: 2,
-    icon: '🥫',
   },
   {
     id: 'd9',
@@ -110,7 +108,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'Numarası değişen öğrenci için yeni gözlük camı.',
     amount: 320,
     urgency: 1,
-    icon: '👓',
   },
   {
     id: 'd10',
@@ -119,6 +116,5 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: 'İki dönemlik birikmiş su faturası.',
     amount: 140,
     urgency: 2,
-    icon: '💧',
   },
 ];

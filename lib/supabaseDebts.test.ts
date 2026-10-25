@@ -159,4 +159,31 @@ describe('insertMerchantDebt', () => {
     expect(inserted[0]).toMatchObject({ title: 'Ekmek borcu', amount: 180, closed: false });
     expect(result).toMatchObject({ id: 'srv-1', title: 'Ekmek borcu', amount: 180 });
   });
+
+  it('temizlik sonrası boş kalan dükkan adı ve şehri boş bırakır, kaydı engellemez', async () => {
+    await insertMerchantDebt({
+      title: 'Ekmek borcu',
+      description: 'Temel gıda',
+      category: 'gida',
+      amount: 180,
+      urgency: 2,
+      merchantName: '🏪',
+      city: '34',
+    });
+
+    expect(inserted[0]).toMatchObject({ merchant_name: null, city: null });
+  });
+
+  it('şehirde virgül ve eğik çizgiyi korur', async () => {
+    await insertMerchantDebt({
+      title: 'Ekmek borcu',
+      description: 'Temel gıda',
+      category: 'gida',
+      amount: 180,
+      urgency: 2,
+      city: 'Fatih, İstanbul',
+    });
+
+    expect(inserted[0]).toMatchObject({ city: 'Fatih, İstanbul' });
+  });
 });

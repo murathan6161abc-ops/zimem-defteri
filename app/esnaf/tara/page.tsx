@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { CATEGORY_ICONS, CATEGORY_META } from '@/lib/debts';
+import { CATEGORIES, MAX_DEBT_AMOUNT, parseWholeAmount as parseAmount } from '@/lib/debts';
 import {
   getScannerStatus,
   readLedgerRefs,
@@ -14,7 +14,6 @@ import {
   type ScannedEntry,
   type ScanStage,
 } from '@/lib/ledgerScan';
-import type { Category } from '@/types';
 
 type Phase = 'pick' | 'scanning' | 'review' | 'saving' | 'done';
 
@@ -28,15 +27,9 @@ interface Row extends ScannedEntry {
 }
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
-const CATEGORIES = Object.keys(CATEGORY_META) as Category[];
-
-function parseAmount(text: string): number {
-  const n = Math.round(Number(text.replace(/\./g, '').replace(',', '.')));
-  return Number.isFinite(n) ? n : 0;
-}
 
 function isValidAmount(n: number) {
-  return n >= 1 && n <= 100000;
+  return n >= 1 && n <= MAX_DEBT_AMOUNT;
 }
 
 export default function ScanLedgerPage() {
@@ -162,7 +155,6 @@ export default function ScanLedgerPage() {
       try {
         const result = await addDebt({
           category: row.category,
-          icon: CATEGORY_ICONS[row.category][0],
           title: t(`scan.title_${row.category}`),
           description,
           amount: parseAmount(row.amountText),
@@ -212,7 +204,7 @@ export default function ScanLedgerPage() {
     </>
   );
 
-  // Bilgisayarın kapalı olduğu KESİN biliniyorsa fotoğraf göndermeyi engelle;
+  // Bilgisayarın kapalı olduğu kesin biliniyorsa fotoğraf göndermeyi engelle;
   // durum okunamadıysa (null) denemeye izin ver, kuyruk zaman aşımı zaten yakalar.
   const scannerOffline = scanner?.online === false;
 
@@ -282,7 +274,7 @@ export default function ScanLedgerPage() {
               <li>{t('scan.tip_3')}</li>
             </ul>
           </div>
-          <p className="text-[11px] text-muted-c opacity-80">🔒 {t('scan.privacy')}</p>
+          <p className="text-[11px] text-muted-c opacity-80">{t('scan.privacy')}</p>
         </div>
       )}
 
@@ -292,8 +284,7 @@ export default function ScanLedgerPage() {
             // eslint-disable-next-line @next/next/no-img-element -- yerel blob önizlemesi
             <img src={preview} alt="" className="max-h-64 mx-auto rounded-xl mb-4 opacity-80" />
           )}
-          <div className="text-3xl mb-2 animate-pulse">📖</div>
-          <div className="font-semibold">
+          <div className="font-semibold animate-pulse">
             {stage === 'uploading' ? t('scan.stage_uploading') : stage === 'queued' ? t('scan.stage_queued') : t('scan.scanning')}
           </div>
           <div className="text-xs text-muted-c mt-1">{t('scan.scanning_hint')}</div>
@@ -305,7 +296,7 @@ export default function ScanLedgerPage() {
           <div className="glass p-5">
             <div className="font-bold">{t('scan.review_title')}</div>
             <p className="text-xs text-muted-c mt-1">{t('scan.review_desc')}</p>
-            {warning && <p className="text-xs text-amber-300 mt-2">⚠️ {warning}</p>}
+            {warning && <p className="text-xs text-amber-300 mt-2">{warning}</p>}
           </div>
 
           {rows.length === 0 && (
@@ -328,9 +319,7 @@ export default function ScanLedgerPage() {
                       onChange={(e) => updateRow(r.key, { selected: e.target.checked })}
                       className="w-5 h-5 accent-amber-400"
                     />
-                    <span className="text-sm font-semibold">
-                      {r.ref ? `🔒 ${r.ref}` : '—'}
-                    </span>
+                    <span className="text-sm font-semibold">{r.ref || '—'}</span>
                   </label>
                   {r.date && <span className="text-[11px] text-muted-c">{r.date}</span>}
                   {r.paid && (
@@ -364,8 +353,9 @@ export default function ScanLedgerPage() {
                       type="button"
                       onClick={() => updateRow(r.key, { category: c })}
                       className={`category-chip cat-${c} ${r.category === c ? 'ring-2 ring-white/40' : 'opacity-50'}`}
+                      aria-pressed={r.category === c}
                     >
-                      {CATEGORY_META[c].emoji} {t(`debt.cat_${c}`)}
+                      {t(`debt.cat_${c}`)}
                     </button>
                   ))}
                 </div>
@@ -434,14 +424,13 @@ export default function ScanLedgerPage() {
             {scannerBadge}
             {pickButtons}
           </div>
-          <p className="text-[11px] text-muted-c text-center opacity-80">🔒 {t('scan.privacy')}</p>
+          <p className="text-[11px] text-muted-c text-center opacity-80">{t('scan.privacy')}</p>
         </div>
       )}
 
       {phase === 'saving' && (
         <div className="glass p-6 text-center">
-          <div className="text-3xl mb-2 animate-pulse">📒</div>
-          <div className="font-semibold">
+          <div className="font-semibold animate-pulse">
             {t('scan.saving', { done: progress.done, count: progress.count })}
           </div>
         </div>
@@ -449,8 +438,9 @@ export default function ScanLedgerPage() {
 
       {phase === 'done' && (
         <div className="glass p-6 text-center space-y-3">
-          <div className="text-5xl">✅</div>
-          <div className="font-bold text-lg">{t('scan.done_title', { count: result.saved })}</div>
+          <div className="font-bold text-lg">
+            {result.saved > 0 ? t('scan.done_title', { count: result.saved }) : t('scan.done_none')}
+          </div>
           {result.failed > 0 && (
             <>
               <p className="text-sm text-amber-300">{t('scan.done_failed', { count: result.failed })}</p>

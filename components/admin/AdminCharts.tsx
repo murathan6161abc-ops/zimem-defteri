@@ -1,9 +1,15 @@
 'use client';
-import { CATEGORY_META } from '@/lib/debts';
+import { CATEGORY_META, formatTL } from '@/lib/debts';
 import type { Category } from '@/types';
 import type { SubmissionRow } from '@/app/admin/page';
 
 const CATS: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
+
+// Boş (null) değerler ortalamaya 0 olarak katılmaz.
+function average(values: Array<number | null>): string {
+  const measured = values.filter((v): v is number => v !== null);
+  return measured.length ? (measured.reduce((a, b) => a + b, 0) / measured.length).toFixed(2) : '–';
+}
 
 export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
   const total = rows.length;
@@ -14,13 +20,9 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
   const willRepeatYes = rows.filter((r) => r.will_repeat === 'evet').length;
   const repeatRate = total ? Math.round((willRepeatYes / total) * 100) : 0;
 
-  // Pre→Post Likert
-  const avgPreLikert = total
-    ? (rows.reduce((a, b) => a + (b.pre_likert || 0), 0) / total).toFixed(2)
-    : '0';
-  const avgPostLikert = total
-    ? (rows.reduce((a, b) => a + (b.post_likert || 0), 0) / total).toFixed(2)
-    : '0';
+  // Huzur ön ve son testte aynı soruyla ölçülür; karşılaştırılabilir.
+  const avgPreHuzur = average(rows.map((r) => r.pre_huzur));
+  const avgPostHuzur = average(rows.map((r) => r.post_huzur));
 
   // Kategori dağılımı
   const catCounts = CATS.map(
@@ -28,10 +30,8 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
   );
   const catMax = Math.max(1, ...catCounts);
 
-  // Günlük zaman serisi (son 30 gün)
-  // created_at UTC ISO; yerel güne göre grupla — aksi halde toISOString
-  // UTC+3'te günü kaydırıp etiketleri veriyle uyumsuz yapıyor ve bugünün
-  // gönderimlerini hiçbir kovaya düşürmüyordu.
+  // Son 30 gün, yerel takvim gününe göre. (UTC gününe göre gruplamak Türkiye'de
+  // gece 00:00-03:00 arasındaki gönderimleri bir önceki güne yazar.)
   const localDayKey = (dt: Date) =>
     `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
   const buckets: { day: string; count: number; xp: number }[] = [];
@@ -60,20 +60,20 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
   return (
     <div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <Stat label="Toplam Anket" value={total} color="text-amber-300" />
+        <Stat label="Anket" value={total} color="text-amber-300" />
         <Stat label="Katılımcı" value={uniqueParticipants} color="text-blue-300" />
-        <Stat label="Toplam Bağış" value={`${totalAmount} ₺`} color="text-emerald-300" />
-        <Stat label="Ort. XP / Anket" value={avgXP} color="text-purple-300" />
-        <Stat label="Pre Likert (Ort)" value={avgPreLikert} color="text-pink-300" />
-        <Stat label="Post Likert (Ort)" value={avgPostLikert} color="text-pink-300" />
-        <Stat label="Tekrar Niyeti" value={`${repeatRate}% evet`} color="text-amber-300" />
+        <Stat label="Toplam tutar" value={formatTL(totalAmount)} color="text-emerald-300" />
+        <Stat label="Anket başına XP" value={avgXP} color="text-purple-300" />
+        <Stat label="Huzur, ön test (ort.)" value={avgPreHuzur} color="text-pink-300" />
+        <Stat label="Huzur, son test (ort.)" value={avgPostHuzur} color="text-pink-300" />
+        <Stat label="Tekrar niyeti" value={`%${repeatRate} evet`} color="text-amber-300" />
         <Stat label="Toplam XP" value={totalXP} color="text-amber-300" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-3 mb-5">
         {/* Günlük gönderim */}
         <div className="glass p-4">
-          <div className="section-title">Günlük Anket Gönderimi (30 gün)</div>
+          <div className="section-title">Günlük anket sayısı (30 gün)</div>
           <svg viewBox="0 0 720 180" className="w-full">
             {buckets.map((b, i) => {
               const h = (b.count / bucketMax) * 140;
@@ -93,9 +93,8 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
           </svg>
         </div>
 
-        {/* Kategori dağılımı */}
         <div className="glass p-4">
-          <div className="section-title">Kategori Dağılımı</div>
+          <div className="section-title">Kategoriler</div>
           <div className="space-y-3 mt-2">
             {CATS.map((c, i) => {
               const meta = CATEGORY_META[c];
@@ -105,9 +104,7 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
                 <div key={c}>
                   <div className="flex justify-between text-xs mb-1">
                     <span>
-                      <span className={`category-chip cat-${c}`}>
-                        {meta.emoji} {meta.label}
-                      </span>
+                      <span className={`category-chip cat-${c}`}>{meta.label}</span>
                     </span>
                     <span className="text-muted-c">
                       {value} ({total ? Math.round((value / total) * 100) : 0}%)
@@ -128,12 +125,12 @@ export default function AdminCharts({ rows }: { rows: SubmissionRow[] }) {
 
       <div className="grid md:grid-cols-2 gap-3 mb-5">
         <EmotionPanel
-          title="Pre-test duyguları (Niyet)"
+          title="Ön testte seçilen duygu"
           counts={preEmotionCounts}
           color="#a855f7"
         />
         <EmotionPanel
-          title="Post-test duyguları (Etki)"
+          title="Son testte seçilen duygu"
           counts={postEmotionCounts}
           color="#10b981"
         />

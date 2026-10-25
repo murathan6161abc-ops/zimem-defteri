@@ -1,17 +1,30 @@
 # D-Zimem
 
-Kadim zimem defteri geleneğini dijital bir iyilik ve araştırma deneyimine
-dönüştüren Next.js + Capacitor uygulaması. Bu depo web uygulaması, Android
-kaynağı, Supabase göçleri ve teslim belgeleri için tek kaynak kabul edilir.
+Zimem defteri geleneğinde varlıklı biri bakkalın veresiye defterine gidip
+tanımadığı birinin borcunu öder; kimin ödediği de kimin borcu olduğu da
+bilinmez. D-Zimem bunu bir uygulamaya taşır ve bir TÜBİTAK 2204 projesi
+kapsamında borç kapatmanın kişinin duygu durumuna etkisini ölçer.
 
-## Uygulama
+Uygulama Next.js ile yazılmıştır, Android'e Capacitor ile paketlenir, veriler
+Supabase'te durur.
 
-- Vatandaş: anonim borç havuzu, ön test, tam/kısmi ödeme, son test, XP ve geçmiş
-- Esnaf: borç ekleme ve kendi defterini izleme
-- Araştırma: PANAS-SF, WHO-5 ve ön/son test ölçümleri
-- Yönetim: yalnızca Supabase `app_metadata.role=admin` yetkisiyle veri okuma,
-  CSV/JSON dışa aktarma ve cihaz dışına veri göndermeyen yerel araştırma özeti
-- Teslim: statik Next.js export, Capacitor Android ve checksum'lı APK paketi
+## Kim ne yapar
+
+- Vatandaş: açık borçları görür, bir borcu tamamen ya da kısmen kapatır.
+  Ödemeden önce üç, sonra dört kısa soru cevaplar; puan, seviye ve geçmiş tutulur.
+- Esnaf: borç ekler (elle ya da veresiye defterinin fotoğrafından), kendi
+  defterini izler, borç kapanınca bildirim alır.
+- Araştırma: ön/son test soruları, isteğe bağlı PANAS maddeleri ve haftalık WHO-5.
+- Yönetim: Supabase `app_metadata.role=admin` yetkisiyle anket verisini okuma,
+  CSV/JSON dışa aktarma ve betimsel araştırma özeti.
+
+## Ödeme akışı
+
+1. "Borcu kapat" ya da "Bir kısmını öde" → ön test.
+2. Onay penceresi → `pay_merchant_debt` sunucuda bakiyeyi atomik olarak düşer.
+   Borç bu arada kapanmışsa kullanıcıya söylenir, puan verilmez; bağlantı
+   yoksa adımda kalınır ve tekrar denenir.
+3. Son test → puan, geçmiş ve anket kaydı yazılır.
 
 ## Hızlı başlangıç
 
@@ -55,5 +68,5 @@ ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
 
 ## Sürüm
 
-Geçerli uygulama sürümü `2.1.1`'dir. Sürüm artırırken `package.json`,
+Geçerli uygulama sürümü `2.6.0`'dır. Sürüm artırırken `package.json`,
 `lib/version.ts` ve `android/app/build.gradle` birlikte güncellenir.

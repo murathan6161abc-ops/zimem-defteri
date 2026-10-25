@@ -1,13 +1,6 @@
-// ============================================================
-// Supabase merchant_debts CRUD ve seed yardımcıları
-// ─────────────────────────────────────────────
-// merchant_debts tablosu artık ortak borç havuzudur:
-//   - Esnaf rolündeki cihazlar borç ekler
-//   - Vatandaş rolündeki cihazlar borç kapatır
-//   - SAMPLE_DEBTS ilk açılışta seed olarak yüklenir
-//   - closed=false olanlar listede gösterilir
-//   - Realtime ile tüm cihazlarda anlık güncellenir
-// ============================================================
+// merchant_debts ortak borç havuzudur: esnaf ekler, vatandaş kapatır, açık olanlar
+// listede görünür ve değişiklikler Realtime ile diğer cihazlara gider. Örnek borçlar
+// veritabanı göçüyle eklenir.
 
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
@@ -19,42 +12,17 @@ import {
   sanitizeName,
   sanitizeCity,
 } from './sanitize';
-import { MAX_DEBT_AMOUNT } from './debts';
+import { CATEGORIES, MAX_DEBT_AMOUNT } from './debts';
+import { DEBT_COLUMNS, rowToDebt } from './debtRows';
 import type { Category, MerchantDebt } from '@/types';
 
-const ICON_BY_CATEGORY: Record<Category, string> = {
-  gida: '🛒',
-  egitim: '📚',
-  fatura: '💡',
-  saglik: '💊',
-};
-
-// ─── Supabase satır → MerchantDebt dönüştürücü ────────────────
-function rowToDebt(row: Record<string, unknown>): MerchantDebt {
-  const category = (row.category as Category) || 'gida';
-  return {
-    id: String(row.id),
-    category,
-    title: String(row.title || ''),
-    description: String(row.description || ''),
-    amount: Number(row.amount || 0),
-    urgency: (Number(row.urgency || 2) as 1 | 2 | 3),
-    icon: ICON_BY_CATEGORY[category] || '📦',
-    addedBy: String(row.merchant_name || 'Anonim Esnaf'),
-    addedAt: String(row.created_at || new Date().toISOString()),
-    closed: Boolean(row.closed),
-    closedAt: row.closed_at ? String(row.closed_at) : undefined,
-  };
-}
-
-// ─── Açık borçları çek (closed=false) ────────────────────────
 export async function fetchOpenDebts(): Promise<MerchantDebt[]> {
   const client = getSupabase();
   if (!client) return [];
 
   const { data, error } = await client
     .from('merchant_debts')
-    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
+    .select(DEBT_COLUMNS)
     .eq('closed', false)
     .order('urgency', { ascending: false })
     .order('created_at', { ascending: false });
@@ -100,8 +68,7 @@ export async function payMerchantDebtRemote(
   };
 }
 
-// ─── Esnaf borç ekle (Supabase'e INSERT) ──────────────────────
-// Input sanitization uygulanır — XSS/zararlı veri engellenir.
+// Metinler sunucuya yazılmadan önce temizlenir.
 export async function insertMerchantDebt(args: {
   title: string;
   description: string;
@@ -114,17 +81,16 @@ export async function insertMerchantDebt(args: {
   const client = getSupabase();
   if (!client) return null;
 
-  // Tüm input'ları sanitize et
   const title = sanitizeTitle(args.title);
   const description = sanitizeDescription(args.description);
   const amount = sanitizeAmount(args.amount);
   const urgency = sanitizeUrgency(args.urgency);
-  const merchantName = args.merchantName ? sanitizeName(args.merchantName) : null;
-  const city = args.city ? sanitizeCity(args.city) : null;
+  // Temizlik sonrası boş ya da çok kısa kalan ad/şehir, veritabanı kuralına takılıp
+  // borcun hiç kaydedilmemesine yol açmasın: bu durumda alan boş bırakılır.
+  const merchantName = sanitizeName(args.merchantName ?? '');
+  const city = sanitizeCity(args.city ?? '');
 
-  // Kategori whitelist kontrolü
-  const VALID_CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
-  if (!VALID_CATEGORIES.includes(args.category)) {
+  if (!CATEGORIES.includes(args.category)) {
     console.warn('[supabaseDebts] Geçersiz kategori:', args.category);
     return null;
   }
@@ -141,8 +107,8 @@ export async function insertMerchantDebt(args: {
     .from('merchant_debts')
     .insert({
       user_id: getCurrentUserId(),
-      merchant_name: merchantName,
-      city,
+      merchant_name: merchantName.length >= 2 ? merchantName : null,
+      city: city || null,
       title,
       description,
       category: args.category,
@@ -151,7 +117,7 @@ export async function insertMerchantDebt(args: {
       closed: false,
       is_sample: false,
     })
-    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
+    .select(DEBT_COLUMNS)
     .single();
 
   if (error) {
@@ -185,7 +151,7 @@ export async function fetchMyMerchantDebts(userId: string): Promise<MerchantDebt
 
   const { data, error } = await client
     .from('merchant_debts')
-    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
+    .select(DEBT_COLUMNS)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -222,7 +188,6 @@ export function subscribeToMyDebts(userId: string, onChange: (debt: MerchantDebt
   };
 }
 
-// ─── Realtime channel kurulumu ───────────────────────────────
 export function subscribeToDebts(handlers: {
   onInsert?: (debt: MerchantDebt) => void;
   onUpdate?: (debt: MerchantDebt) => void;

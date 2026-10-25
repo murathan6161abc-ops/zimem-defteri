@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { CATEGORY_ICONS, CATEGORY_META, MAX_DEBT_AMOUNT } from '@/lib/debts';
-import { parseAmount } from '@/lib/ledgerParse';
+import { CATEGORIES, CATEGORY_META, MAX_DEBT_AMOUNT, parseWholeAmount } from '@/lib/debts';
+import CategoryIcon from '@/components/debts/CategoryIcon';
 import type { Category } from '@/types';
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
+
+const inputCls =
+  'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all';
 
 export default function NewMerchantDebtPage() {
   const router = useRouter();
@@ -16,7 +19,6 @@ export default function NewMerchantDebtPage() {
   const { t } = useI18n();
 
   const [category, setCategory] = useState<Category>('gida');
-  const [icon, setIcon] = useState<string>('🍞');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<string>('');
@@ -24,8 +26,7 @@ export default function NewMerchantDebtPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Türkçe yazım: "1.250" bin iki yüz elli, "12,50" on iki buçuk (taramayla aynı kural).
-  const amountNum = parseAmount(amount);
+  const amountNum = parseWholeAmount(amount);
   const amountInRange = amountNum >= 1 && amountNum <= MAX_DEBT_AMOUNT;
   const canSubmit =
     title.trim().length >= 3 &&
@@ -39,7 +40,6 @@ export default function NewMerchantDebtPage() {
     setError('');
     const saved = await addDebt({
       category,
-      icon,
       title: title.trim(),
       description: description.trim(),
       amount: amountNum,
@@ -61,58 +61,30 @@ export default function NewMerchantDebtPage() {
           {t('merchant.back_to_book')}
         </Link>
         <h1 className="heading-xl mt-2">{t('merchant.new_record')}</h1>
-        <p className="text-sm text-muted-c">
-          {t('merchant.new_record_desc')}
-        </p>
+        <p className="text-sm text-muted-c">{t('merchant.new_record_desc')}</p>
       </div>
 
       <div className="glass p-6 space-y-5">
         <section>
           <div className="section-title">{t('merchant.step_category')}</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
-              const meta = CATEGORY_META[c];
+            {CATEGORIES.map((c) => {
               const active = category === c;
+              const color = CATEGORY_META[c].color;
               return (
                 <button
                   key={c}
                   type="button"
-                  onClick={() => {
-                    setCategory(c);
-                    setIcon(CATEGORY_ICONS[c][0]);
-                  }}
-                  className={`emotion-card ${active ? 'selected' : ''}`}
-                  style={
-                    active
-                      ? { borderColor: meta.color, background: `${meta.color}22` }
-                      : undefined
-                  }
+                  onClick={() => setCategory(c)}
+                  className={`emotion-card flex flex-col items-center gap-2 ${active ? 'selected' : ''}`}
+                  style={active ? { borderColor: color, background: `${color}22` } : undefined}
+                  aria-pressed={active}
                 >
-                  <div className="emotion-emoji">{meta.emoji}</div>
+                  <CategoryIcon category={c} size={36} />
                   <div className="emotion-label">{t(`debt.cat_${c}`)}</div>
                 </button>
               );
             })}
-          </div>
-        </section>
-
-        <section>
-          <div className="section-title">{t('merchant.step_icon')}</div>
-          <div className="flex gap-2 flex-wrap">
-            {CATEGORY_ICONS[category].map((i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setIcon(i)}
-                className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center border transition-all ${
-                  icon === i
-                    ? 'border-purple-400 bg-purple-500/20'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
-                }`}
-              >
-                {i}
-              </button>
-            ))}
           </div>
         </section>
 
@@ -125,7 +97,7 @@ export default function NewMerchantDebtPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t(`merchant.title_ph_${category}`)}
               maxLength={48}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
+              className={inputCls}
             />
           </label>
         </section>
@@ -139,11 +111,9 @@ export default function NewMerchantDebtPage() {
               placeholder={t('merchant.desc_ph')}
               rows={3}
               maxLength={180}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all resize-none"
+              className={`${inputCls} resize-none`}
             />
-            <div className="text-[11px] text-muted-c text-right">
-              {description.length}/180
-            </div>
+            <div className="text-[11px] text-muted-c text-right">{description.length}/180</div>
           </label>
         </section>
 
@@ -152,11 +122,11 @@ export default function NewMerchantDebtPage() {
             <div className="text-sm font-medium mb-1">{t('merchant.step_amount')}</div>
             <input
               type="text"
-              inputMode="decimal"
+              inputMode="numeric"
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
               placeholder="180"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
+              className={inputCls}
             />
             {amount && !amountInRange && (
               <div className="text-[11px] text-rose-300 mt-1" role="alert">
@@ -177,6 +147,7 @@ export default function NewMerchantDebtPage() {
                       ? 'border-amber-400 bg-amber-400/20 text-amber-200'
                       : 'border-white/10 bg-white/5 text-muted-c hover:bg-white/10'
                   }`}
+                  aria-pressed={urgency === u}
                 >
                   <span className={`urgency-dot urgency-${u}`} />
                   <span>{t(URGENCY_KEY[u])}</span>
@@ -210,9 +181,7 @@ export default function NewMerchantDebtPage() {
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-c text-center mt-4 opacity-70">
-        {t('merchant.new_footer')}
-      </p>
+      <p className="text-[11px] text-muted-c text-center mt-4 opacity-70">{t('merchant.new_footer')}</p>
     </div>
   );
 }

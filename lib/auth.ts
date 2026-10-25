@@ -1,25 +1,23 @@
-// ============================================================
 // Kullanıcı adı + şifre ile hesap sistemi (Supabase Auth)
-// ────────────────────────────────────────────────────────────
 // Supabase Auth e-posta ister; biz kullanıcı adını sentetik bir
 // e-posta diğer adına çeviririz:  kullanici  →  kullanici@dzimem.app
 // Böylece kullanıcı yalnızca "kullanıcı adı + şifre" girer.
 //
-// ÖNEMLİ (tek seferlik kurulum): Supabase panelinde
-//   Authentication → Providers → Email → "Confirm email" KAPALI olmalı.
+// Tek seferlik kurulum: Supabase panelinde
+//   Authentication → Providers → Email → "Confirm email" kapalı olmalı.
 // Aksi halde sentetik e-postaya doğrulama linki gider ve hesap açılmaz.
 //
-// Kimlik: giriş yapan kullanıcının auth.uid()'i artık tüm verilerde
+// Kimlik: giriş yapan kullanıcının auth.uid()'i tüm verilerde
 // (anket, snapshot, esnaf borçları) user_id kolonuna yazılan sabit
 // kimliktir. Böylece aynı tarayıcıyı paylaşan kişilerin verileri
 // birbirine karışmaz.
-// ============================================================
 
 import type { User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import { getDeviceId } from './deviceId';
 import { clearLedgerRefs } from './ledgerScan';
 import { dayKey } from './streak';
+import { DEBT_COLUMNS, rowToDebt } from './debtRows';
 import type {
   Category,
   HistoryEntry,
@@ -30,14 +28,12 @@ import type {
 
 const USERNAME_DOMAIN = 'dzimem.app';
 const USER_ID_KEY = 'd-zimem-user-id';
-// Kalıcı hesap kimliği: kayıt/giriş başarısında yazılır, YALNIZCA explicit
-// çıkışta (signOut) silinir. AuthGate, oturum bootstrap'ı sırasında getSession()
-// geçici olarak null döndürdüğünde USER_ID_KEY'i siliyor ve kimlik cihaz id'sine
-// düşüyordu (kayıt sonrası ilk işlem cihaza yazılıp girişte "XP 0" oluyordu).
-// Bu anahtar o yarıştan etkilenmez.
+// Kalıcı hesap kimliği: kayıt/giriş başarısında yazılır, yalnızca çıkışta (signOut)
+// silinir. Oturum açılırken getSession() kısa süre null dönebilir ve AuthGate o an
+// USER_ID_KEY'i siler; bu anahtar o arada kimliğin cihaz kimliğine düşmesini önler.
 const ACCOUNT_ID_KEY = 'd-zimem-account-id';
 
-// ─── Kullanıcı adı ↔ sentetik e-posta ────────────────────────
+// Kullanıcı adı ↔ sentetik e-posta
 export function normalizeUsername(u: string): string {
   return u.trim().toLowerCase();
 }
@@ -70,7 +66,7 @@ export function identifierToEmail(identifier: string): string {
   return v.includes('@') ? v : usernameToEmail(v);
 }
 
-// ─── Senkron kimlik önbelleği ────────────────────────────────
+// Senkron kimlik önbelleği
 // Store aksiyonları (borç kapatma) senkron çalışır; auth.uid()'i
 // her seferinde async almak yerine önbellekten okuruz.
 let cachedUserId: string | null = null;
@@ -85,13 +81,13 @@ export function setAuthCache(id: string | null): void {
       window.localStorage.setItem(ACCOUNT_ID_KEY, id);
     } else {
       window.localStorage.removeItem(USER_ID_KEY);
-      // ACCOUNT_ID_KEY'i BİLEREK silmiyoruz — geçici null'lar kimliği silmesin.
+      // ACCOUNT_ID_KEY'i bilerek silmiyoruz — geçici null'lar kimliği silmesin.
     }
   } catch {}
 }
 
 /**
- * Kalıcı Supabase oturumundan (sb-<ref>-auth-token) auth uid'i SENKRON okur.
+ * Kalıcı Supabase oturumundan (sb-<ref>-auth-token) auth uid'i senkron okur.
  * Cache veya USER_ID_KEY herhangi bir nedenle kaçırılmış olsa bile, açık bir
  * oturum varken verileri cihaz kimliğine düşürmemek için güvence katmanı.
  */
@@ -127,9 +123,8 @@ export function getCurrentUserId(): string {
       const stored = window.localStorage.getItem(USER_ID_KEY);
       if (stored) return stored;
     } catch {}
-    // Oturum açıkken verileri DAİMA auth uid'e bağla — cihaz kimliğine düşme.
-    // (Aksi halde kayıt sonrası ilk işlem cihaz kimliğiyle yazılıp girişte
-    //  "ilerleme/XP kayboldu" sorununa yol açıyordu.)
+    // Oturum açıksa veri her zaman hesap kimliğine yazılır, cihaz kimliğine değil;
+    // yoksa kayıttan hemen sonraki ilk ödeme girişte kaybolmuş görünür.
     const sessionUid = readAuthUidFromSession();
     if (sessionUid) {
       cachedUserId = sessionUid;
@@ -151,7 +146,7 @@ export function getCurrentUserId(): string {
   return getDeviceId();
 }
 
-// ─── Profil ↔ auth metadata ──────────────────────────────────
+// Profil ↔ auth metadata
 export function profileFromMetadata(user: User): UserProfile {
   const m = (user.user_metadata || {}) as Record<string, unknown>;
   const role = (m.role === 'esnaf' ? 'esnaf' : 'vatandas') as Role;
@@ -179,7 +174,7 @@ export function isAdminUser(user: User | null | undefined): boolean {
   return metadata.role === 'admin';
 }
 
-// ─── Hata eşleme (kullanıcıya gösterilecek i18n anahtarı) ─────
+// Hata eşleme (kullanıcıya gösterilecek i18n anahtarı)
 export type AuthErrorCode =
   | 'not_configured'
   | 'invalid_username'
@@ -215,7 +210,7 @@ function mapError(message: string | undefined): AuthErrorCode {
     return 'network';
   }
   // "email_address_invalid" (DNS kontrolü) ve "rate limit" yalnızca Supabase'de
-  // "Confirm email" AÇIKKEN oluşur — sentetik e-posta hep geçerli biçimdedir.
+  // "Confirm email" açıkken oluşur — sentetik e-posta hep geçerli biçimdedir.
   // İkisi de aynı çözümü işaret eder: panelde e-posta doğrulamasını kapat.
   if (msg.includes('is invalid') || msg.includes('email address') || msg.includes('rate limit')) {
     return 'confirm_off_required';
@@ -254,11 +249,11 @@ export function authErrorKey(code?: AuthErrorCode): string {
   }
 }
 
-// ─── Kayıt ───────────────────────────────────────────────────
+// Kayıt
 // Yeni hesaplar e-posta + 6 haneli kodla açılır: bkz. lib/accountSecurity.ts
 // (startEmailSignUp / verifySignUpCode / finishEmailSignUp).
 
-// ─── Giriş ───────────────────────────────────────────────────
+// Giriş
 // identifier: kullanıcı adı ya da (kurtarma e-postası eklemiş hesaplar için) e-posta.
 export async function signIn(identifier: string, password: string): Promise<AuthResult> {
   if (!identifier.trim() || !password) return { ok: false, error: 'invalid_credentials' };
@@ -280,7 +275,7 @@ export async function signIn(identifier: string, password: string): Promise<Auth
 
     const code = mapError(error.message);
     // Kullanıcı adı yazıldı ama hesap kurtarma e-postasına geçmiş olabilir:
-    // sunucu, ŞİFRE DOĞRUYSA o kullanıcı adının e-postasını döndürür (yanlışsa
+    // sunucu, şifre doğruysa o kullanıcı adının e-postasını döndürür (yanlışsa
     // hiçbir şey döndürmez; deneme sayısı sınırlıdır). Bkz. resolve_login_email.
     if (code !== 'invalid_credentials' || identifier.includes('@')) return { ok: false, error: code };
 
@@ -303,7 +298,7 @@ export async function signIn(identifier: string, password: string): Promise<Auth
   }
 }
 
-// ─── Çıkış ───────────────────────────────────────────────────
+// Çıkış
 export async function signOut(): Promise<void> {
   const client = getSupabase();
   if (client) {
@@ -312,7 +307,7 @@ export async function signOut(): Promise<void> {
     } catch {}
   }
   setAuthCache(null);
-  // Kalıcı hesap kimliğini YALNIZCA burada (explicit çıkışta) temizle.
+  // Kalıcı hesap kimliğini yalnızca burada (explicit çıkışta) temizle.
   if (typeof window !== 'undefined') {
     try {
       window.localStorage.removeItem(ACCOUNT_ID_KEY);
@@ -322,7 +317,7 @@ export async function signOut(): Promise<void> {
   clearLedgerRefs();
 }
 
-// ─── Hesap verilerini sunucudan yükle (giriş / yeni cihaz) ────
+// Hesap verilerini sunucudan yükle (giriş / yeni cihaz)
 export interface AccountData {
   xp: number;
   debtsPaid: number;
@@ -332,13 +327,6 @@ export interface AccountData {
   history: HistoryEntry[];
   merchantDebts: MerchantDebt[];
 }
-
-const ICON_BY_CATEGORY: Record<Category, string> = {
-  gida: '🛒',
-  egitim: '📚',
-  fatura: '💡',
-  saglik: '💊',
-};
 
 export async function fetchAccountData(userId: string): Promise<AccountData> {
   const empty: AccountData = {
@@ -403,27 +391,10 @@ export async function fetchAccountData(userId: string): Promise<AccountData> {
   try {
     const { data: mrows } = await client
       .from('merchant_debts')
-      .select('*')
+      .select(DEBT_COLUMNS)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    if (mrows) {
-      empty.merchantDebts = mrows.map((row: Record<string, unknown>) => {
-        const category = (row.category as Category) || 'gida';
-        return {
-          id: String(row.id),
-          category,
-          title: String(row.title || ''),
-          description: String(row.description || ''),
-          amount: Number(row.amount || 0),
-          urgency: Number(row.urgency || 2) as 1 | 2 | 3,
-          icon: ICON_BY_CATEGORY[category] || '📦',
-          addedBy: String(row.merchant_name || 'Anonim Esnaf'),
-          addedAt: String(row.created_at || new Date().toISOString()),
-          closed: Boolean(row.closed),
-          closedAt: row.closed_at ? String(row.closed_at) : undefined,
-        };
-      });
-    }
+    if (mrows) empty.merchantDebts = mrows.map((row: Record<string, unknown>) => rowToDebt(row));
   } catch {}
 
   return empty;

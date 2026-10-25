@@ -92,7 +92,7 @@ export default function AccountSecurity({ username }: { username: string }) {
   );
 }
 
-// ─── Kurtarma e-postası ─────────────────────────────────────
+// Kurtarma e-postası
 function RecoveryEmailCard({
   user,
   username,
@@ -190,7 +190,7 @@ function RecoveryEmailCard({
   return (
     <div className="space-y-3">
       <div>
-        <div className="font-semibold text-sm">📧 {t('security.email_title')}</div>
+        <div className="font-semibold text-sm">{t('security.email_title')}</div>
         <p className="text-xs text-muted-c mt-1">
           {isValidUsername(username) ? t('security.email_desc') : t('security.email_desc_short')}
         </p>
@@ -200,7 +200,7 @@ function RecoveryEmailCard({
         <div className="flex items-center justify-between gap-2 flex-wrap text-sm">
           <span className="font-mono text-xs truncate">{state.email}</span>
           <span className={`text-[11px] px-2 py-0.5 rounded-full ${state.verified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
-            {state.verified ? `✓ ${t('security.email_verified')}` : t('security.email_unverified')}
+            {state.verified ? t('security.email_verified') : t('security.email_unverified')}
           </span>
         </div>
       ) : (
@@ -249,7 +249,7 @@ function RecoveryEmailCard({
   );
 }
 
-// ─── Google hesabı bağlama ──────────────────────────────────
+// Google hesabı bağlama
 function GoogleLinkCard({ user }: { user: User }) {
   const { t } = useI18n();
   const linked = (user.identities ?? []).some((i) => i.provider === 'google');
@@ -282,11 +282,11 @@ function GoogleLinkCard({ user }: { user: User }) {
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-semibold text-sm">🔗 {t('security.google_title')}</div>
+          <div className="font-semibold text-sm">{t('security.google_title')}</div>
           <p className="text-xs text-muted-c mt-1">{t('security.google_desc')}</p>
         </div>
         <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${linked ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-muted-c'}`}>
-          {linked ? `✓ ${t('security.google_linked')}` : t('security.google_not_linked')}
+          {linked ? t('security.google_linked') : t('security.google_not_linked')}
         </span>
       </div>
       {!linked && (
@@ -304,7 +304,7 @@ function GoogleLinkCard({ user }: { user: User }) {
   );
 }
 
-// ─── İki adımlı doğrulama (TOTP) ────────────────────────────
+// İki adımlı doğrulama (TOTP)
 function TwoFactorCard() {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -389,7 +389,7 @@ function TwoFactorCard() {
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-semibold text-sm">🛡️ {t('security.mfa_title')}</div>
+          <div className="font-semibold text-sm">{t('security.mfa_title')}</div>
           <p className="text-xs text-muted-c mt-1">{t('security.mfa_desc')}</p>
         </div>
         <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${enabled ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-muted-c'}`}>
@@ -415,7 +415,7 @@ function TwoFactorCard() {
           {/* Yalnızca otpauth: şeması — sunucu yanıtı ne olursa olsun javascript: vb. bağlantı basılmaz. */}
           {enrollment.uri.startsWith('otpauth://') && (
             <a href={enrollment.uri} className="btn w-full text-center block no-underline">
-              📲 {t('security.mfa_open_app')}
+              {t('security.mfa_open_app')}
             </a>
           )}
           <div className="text-xs text-muted-c">{t('security.mfa_secret')}</div>

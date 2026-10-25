@@ -1,59 +1,75 @@
 'use client';
-import { useEffect } from 'react';
+import { useState } from 'react';
 import ModalShell from './ModalShell';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
+import { formatTL } from '@/lib/debts';
 
 export default function PaymentModal({ open }: { open: boolean }) {
   const confirmPayment = useZimemStore((s) => s.confirmPayment);
-  const activeDebt = useZimemStore((s) =>
-    s.openDebts.find((d) => d.id === s.activeDebtId),
-  );
-  const activePayAmount = useZimemStore((s) => s.activePayAmount);
-  const { t } = useI18n();
+  const closeModal = useZimemStore((s) => s.closeModal);
+  const debt = useZimemStore((s) => s.activeDebt);
+  const partialAmount = useZimemStore((s) => s.activePayAmount);
+  const { t, locale } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  // Kutlama anı artık kullanıcının dokunuşuyla ilerler (tatmin edici bir beat).
-  // Yine de güvenlik için: kullanıcı uzun süre dokunmazsa akış tıkanmasın.
-  useEffect(() => {
-    if (!open) return;
-    const timer = setTimeout(() => confirmPayment(), 8000);
-    return () => clearTimeout(timer);
-  }, [open, confirmPayment]);
+  if (!debt) return null;
+  const isPartial = partialAmount !== null;
+  const payAmount = partialAmount ?? debt.amount;
 
-  // Kısmi ödeme mi?
-  const isPartial = activePayAmount !== null && activeDebt && activePayAmount < activeDebt.amount;
-  const paidAmount = activePayAmount ?? activeDebt?.amount ?? 0;
+  const handleConfirm = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    const outcome = await confirmPayment();
+    setBusy(false);
+    // 'gone' durumunda akış kapanır ve kullanıcıya bildirim gösterilir.
+    if (outcome === 'error') setError(t('payment.error'));
+  };
+
+  const handleClose = () => {
+    if (busy) return;
+    setError('');
+    closeModal();
+  };
 
   return (
-    <ModalShell open={open}>
-      <div className="text-center py-4">
-        <div className="w-24 h-24 mx-auto mb-5 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-5xl shadow-lg shadow-emerald-500/30 animate-pulse">
-          {isPartial ? '🤲' : '✓'}
+    <ModalShell open={open} onClose={handleClose} title={t('payment.title')}>
+      <div className="space-y-4">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="text-sm font-semibold">{debt.title}</div>
+          <div className="text-xs text-muted-c mt-0.5">{debt.description}</div>
+          <div className="mt-3 flex items-baseline justify-between gap-3">
+            <span className="text-xs text-muted-c">{t('debt.amount')}</span>
+            <span className="text-2xl font-extrabold text-amber-200 tabular-nums">{formatTL(payAmount, locale)}</span>
+          </div>
         </div>
-        <h3 className="heading-lg mb-1">
-          {isPartial ? t('payment.partial_done') : t('payment.full_done')}
-        </h3>
-        <p className="text-sm text-muted-c mb-2">
-          {activeDebt
-            ? `${activeDebt.title} · ${paidAmount} ₺ ${isPartial ? t('payment.contribution') : ''}`
-            : ''}
+
+        <p className="text-sm">
+          {isPartial
+            ? t('payment.partial_desc', {
+                amount: formatTL(payAmount, locale),
+                remaining: formatTL(debt.amount - payAmount, locale),
+              })
+            : t('payment.full_desc', { amount: formatTL(debt.amount, locale) })}
         </p>
-        {isPartial && activeDebt && (
-          <p className="text-xs text-emerald-300 mb-3">
-            {t('payment.remaining', { amount: activeDebt.amount - paidAmount })}
-          </p>
+        <p className="text-xs text-muted-c">{t('payment.note')}</p>
+
+        {error && (
+          <div className="text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3" role="alert">
+            {error}
+          </div>
         )}
-        <p className="text-xs text-muted-c mb-5">
-          {t('payment.next_question')}
-        </p>
-        <button
-          type="button"
-          className="btn btn-primary w-full"
-          onClick={() => confirmPayment()}
-          autoFocus
-        >
-          {t('payment.cta')} →
-        </button>
+
+        <div className="flex gap-2 pt-1">
+          <button type="button" className="btn flex-1" onClick={handleClose} disabled={busy}>
+            {t('common.give_up')}
+          </button>
+          <button type="button" className="btn btn-primary flex-1" onClick={() => void handleConfirm()} disabled={busy}>
+            {busy ? t('payment.saving') : isPartial ? t('payment.confirm_partial') : t('payment.confirm_full')}
+          </button>
+        </div>
       </div>
     </ModalShell>
   );

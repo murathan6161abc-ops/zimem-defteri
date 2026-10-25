@@ -37,13 +37,15 @@ function buildResearchReport(rows: SubmissionRow[]): string {
     return `- ${category}: ${categoryRows.length} işlem (%${percent(categoryRows.length, total)}), ${categoryAmount} TL`;
   }).join('\n');
 
+  // Huzur ön ve son testte aynı soruyla ölçülür. Likert maddeleri ise farklı sorulardır
+  // (ön: dayanışmanın değeri, son: "iyilik şifadır" sözüne katılım); aralarında fark alınmaz.
+  const pairedHuzur = rows.filter((row) => row.pre_huzur !== null && row.post_huzur !== null);
   const huzurChange =
-    avgPreHuzur !== null && avgPostHuzur !== null
-      ? (avgPostHuzur - avgPreHuzur).toFixed(2)
-      : 'hesaplanamadı';
-  const likertChange =
-    avgPreLikert !== null && avgPostLikert !== null
-      ? (avgPostLikert - avgPreLikert).toFixed(2)
+    pairedHuzur.length > 0
+      ? (
+          pairedHuzur.reduce((sum, row) => sum + (row.post_huzur as number) - (row.pre_huzur as number), 0) /
+          pairedHuzur.length
+        ).toFixed(2)
       : 'hesaplanamadı';
 
   return `# D-Zimem Araştırma Özeti
@@ -59,8 +61,10 @@ Oluşturulma: ${new Date().toLocaleString('tr-TR')}
 
 ## Ön Test / Son Test
 
-- Huzur ortalaması: ${formatAverage(avgPreHuzur)} -> ${formatAverage(avgPostHuzur)} (fark: ${huzurChange})
-- Likert ortalaması: ${formatAverage(avgPreLikert)} -> ${formatAverage(avgPostLikert)} (fark: ${likertChange})
+- Huzur (1-10) ortalaması: ön test ${formatAverage(avgPreHuzur)}, son test ${formatAverage(avgPostHuzur)}
+- Huzur farkı (son - ön, ${pairedHuzur.length} eşleşmiş kayıt): ${huzurChange}
+- Ön test "dayanışmanın değeri" maddesi (1-5): ${formatAverage(avgPreLikert)}
+- Son test "iyilik şifadır" maddesi (1-5): ${formatAverage(avgPostLikert)}
 - PANAS negatif ön test ortalaması: ${formatAverage(avgPanasNeg)}
 - PANAS pozitif son test ortalaması: ${formatAverage(avgPanasPos)}
 

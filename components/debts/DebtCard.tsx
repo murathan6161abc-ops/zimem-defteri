@@ -1,9 +1,10 @@
 'use client';
 import { memo, useState } from 'react';
 import type { Debt } from '@/types';
-import { CATEGORY_META, parsePartialAmount } from '@/lib/debts';
+import { formatTL, parsePartialAmount } from '@/lib/debts';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
+import CategoryIcon from './CategoryIcon';
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
 
@@ -14,10 +15,10 @@ function DebtCard({
   debt: Debt;
   onSelect: (id: string, partialAmount?: number | null) => void;
 }) {
-  const { t } = useI18n();
-  const meta = CATEGORY_META[debt.category];
+  const { t, locale } = useI18n();
   const partialPaid = useZimemStore((s) => s.partialPayments[debt.id] || 0);
-  const originalTotal = debt.amount + partialPaid; // başlangıçtaki tutar
+  // Bu cihazdan yapılan katkıların, borcun bu cihazın bildiği ilk tutarına oranı
+  const originalTotal = debt.amount + partialPaid;
   const progressPct =
     partialPaid > 0 ? Math.min(99, Math.round((partialPaid / originalTotal) * 100)) : 0;
 
@@ -25,12 +26,9 @@ function DebtCard({
   const [partialValue, setPartialValue] = useState('');
   const [partialError, setPartialError] = useState('');
 
-  const handleFullPay = () => onSelect(debt.id, null);
-
   const handlePartialSubmit = () => {
     const amount = parsePartialAmount(partialValue, debt.amount);
     if (amount === null) {
-      // Native alert yerine satır içi hata — APK'da kesintisiz, erişilebilir UX
       setPartialError(t('debt.partial_error', { max: debt.amount }));
       return;
     }
@@ -40,31 +38,19 @@ function DebtCard({
     setPartialValue('');
   };
 
-  // Önerilen kısmi tutarlar — yuvarlak tutarlarda (örn. 100₺) yarısı 50'ye
-  // denk gelip tekrar edebilir; Set ile yinelenenleri ayıkla.
+  // 100 ₺'lik borçta yarısı 50'ye denk gelir; aynı öneri iki kez çıkmasın.
   const suggestions = [...new Set([50, 100, Math.floor(debt.amount / 2)])].filter(
     (v) => v > 0 && v < debt.amount,
   );
 
   return (
     <article className="debt-card !cursor-default" style={{ display: 'block' }}>
-      {/* Üst satır: tam kart yapısı */}
       <div className="flex items-center gap-3">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-          style={{
-            background: `${meta.color}22`,
-            border: `1px solid ${meta.color}55`,
-          }}
-        >
-          {debt.icon}
-        </div>
+        <CategoryIcon category={debt.category} />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className={`category-chip cat-${debt.category}`}>
-              {meta.emoji} {t(`debt.cat_${debt.category}`)}
-            </span>
+            <span className={`category-chip cat-${debt.category}`}>{t(`debt.cat_${debt.category}`)}</span>
             <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-c">
               <span className={`urgency-dot urgency-${debt.urgency}`} />
               {t(URGENCY_KEY[debt.urgency])} {t('debt.urgency_suffix')}
@@ -75,31 +61,26 @@ function DebtCard({
         </div>
 
         <div className="text-right shrink-0">
-          <div className="font-bold text-lg text-amber-200">{debt.amount} ₺</div>
+          <div className="font-bold text-lg text-amber-200 tabular-nums">{formatTL(debt.amount, locale)}</div>
           {progressPct > 0 && (
             <div className="text-[10px] text-emerald-300 font-medium">%{progressPct} {t('debt.paid_label')}</div>
           )}
         </div>
       </div>
 
-      {/* Kısmi ödeme ilerleme çubuğu */}
       {progressPct > 0 && (
         <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all"
-            style={{ width: `${progressPct}%` }}
-          />
+          <div className="h-full bg-emerald-400/80 transition-all" style={{ width: `${progressPct}%` }} />
         </div>
       )}
 
-      {/* Aksiyon butonları */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         <button
           type="button"
-          onClick={handleFullPay}
-          className="btn-primary-c flex-1 sm:flex-none !text-[13px] !px-4 !py-2"
+          onClick={() => onSelect(debt.id, null)}
+          className="btn btn-primary flex-1 sm:flex-none !text-[13px] !px-4 !py-2"
         >
-          💚 {t('debt.full_pay')}
+          {t('debt.full_pay')}
         </button>
 
         <button
@@ -108,16 +89,13 @@ function DebtCard({
           className="text-[12px] px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-muted-c"
           aria-expanded={partialOpen}
         >
-          🤲 {t('debt.partial_pay')}
+          {t('debt.partial_pay')}
         </button>
       </div>
 
-      {/* Kısmi katkı paneli */}
       {partialOpen && (
         <div className="mt-3 p-3 rounded-xl bg-white/5 border border-amber-500/20">
-          <div className="text-[11px] text-muted-c mb-2">
-            {t('debt.partial_hint')}
-          </div>
+          <div className="text-[11px] text-muted-c mb-2">{t('debt.partial_hint')}</div>
 
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {suggestions.map((v) => (
@@ -127,7 +105,7 @@ function DebtCard({
                 onClick={() => setPartialValue(String(v))}
                 className="text-[11px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-muted-c"
               >
-                {v} ₺
+                {formatTL(v, locale)}
               </button>
             ))}
           </div>
@@ -144,15 +122,18 @@ function DebtCard({
                 setPartialValue(e.target.value);
                 if (partialError) setPartialError('');
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handlePartialSubmit();
+              }}
               placeholder={`1-${debt.amount} ₺`}
               className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-right outline-none focus:border-amber-400/50"
             />
             <button
               type="button"
               onClick={handlePartialSubmit}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 text-black font-bold text-sm px-4 py-2 rounded-lg hover:scale-105 transition-transform"
+              className="btn btn-gold !text-sm !px-4 !py-2 !rounded-lg"
             >
-              ✓ {t('debt.confirm')}
+              {t('debt.confirm')}
             </button>
           </div>
 
@@ -167,5 +148,4 @@ function DebtCard({
   );
 }
 
-// Liste yeniden render olduğunda değişmeyen kartlar yeniden çizilmesin
 export default memo(DebtCard);

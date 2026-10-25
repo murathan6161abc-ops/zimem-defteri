@@ -13,17 +13,24 @@ import { calculateXP } from '@/lib/xp';
 import { checkUnlocks } from '@/lib/achievements';
 import { computeStreak } from '@/lib/streak';
 import { syncSurveySubmission, syncDeviceSnapshot } from '@/lib/sync';
-import { deleteMerchantDebt, insertMerchantDebt } from '@/lib/supabaseDebts';
+import { deleteMerchantDebt, insertMerchantDebt, payMerchantDebtRemote } from '@/lib/supabaseDebts';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { signOut, type AccountData } from '@/lib/auth';
 import { tStatic } from '@/lib/i18n';
 
 interface ToastMsg {
   id: string;
-  emoji: string;
   title: string;
   desc?: string;
 }
+
+/** Sunucunun onayladığı ödeme: gerçekten düşülen tutar ve borçta kalan. */
+interface ConfirmedPayment {
+  paid: number;
+  remaining: number;
+}
+
+export type PaymentOutcome = 'ok' | 'gone' | 'error';
 
 interface ZimemState {
   profile: UserProfile | null;
@@ -38,38 +45,39 @@ interface ZimemState {
   openDebts: Debt[];
   merchantDebts: MerchantDebt[];
 
-  // YENİ: kısmi ödeme takibi { debtId: toplamÖdenen }
+  // Bu cihazdan yapılan kısmi katkılar: { borçId: toplam }
   partialPayments: Record<string, number>;
 
-  // modal flow
+  // Ödeme akışı. activeDebt, akış başladığı andaki borcun kopyasıdır: liste bu sırada
+  // değişse (başkası kısmi ödeme yapsa, borç kapansa) bile pencereler aynı borcu gösterir.
   modalStep: ModalStep;
-  activeDebtId: string | null;
-  activePayAmount: number | null; // YENİ: kısmi ödeme tutarı (null = tam)
+  activeDebt: Debt | null;
+  activePayAmount: number | null; // null = borcun tamamı
+  payment: ConfirmedPayment | null;
   preData: PreTestData | null;
   postData: PostTestData | null;
-  lastResult: { xp: number; newAchievements: string[]; isPartial?: boolean } | null;
+  lastResult: { xp: number; newAchievements: string[]; remaining: number } | null;
 
-  // toasts
   toasts: ToastMsg[];
 
-  // actions
   setProfile: (p: UserProfile) => void;
   clearProfile: () => void;
 
-  // YENİ: hesap (giriş/çıkış) — kimlik karışmasını önler
+  // Giriş: yerel veriyi giriş yapan hesabın verisiyle tamamen değiştirir.
   hydrateAccount: (profile: UserProfile, data: AccountData) => void;
   logout: () => Promise<void>;
 
-  // YENİ: Supabase ile borç senkronizasyonu
   setOpenDebts: (debts: Debt[]) => void;
   applyRemoteDebtInsert: (debt: Debt) => void;
   applyRemoteDebtUpdate: (debt: Debt) => void;
-  // true → borç bu cihazın listesinde hâlâ açıktı (başka biri kapattı ya da sildi).
+  // true → borcu başka biri kapattı ya da sildi (kullanıcıya haber verilebilir).
   applyRemoteDebtClose: (id: string) => boolean;
 
   startFlow: (debtId: string, partialAmount?: number | null) => void;
   submitPretest: (data: PreTestData) => void;
-  confirmPayment: () => void;
+  // Ödemeyi sunucuya yazar. 'gone' → borç bu arada kapanmış/silinmiş, akış kapanır;
+  // 'error' → bağlantı sorunu, kullanıcı tekrar deneyebilir.
+  confirmPayment: () => Promise<PaymentOutcome>;
   submitPosttest: (data: PostTestData) => void;
   closeModal: () => void;
 
@@ -78,7 +86,7 @@ interface ZimemState {
   // Sunucudan gelen tek borç değişikliğini deftere uygular; true → borç bu değişiklikle kapandı.
   applyMerchantDebtChange: (debt: MerchantDebt) => boolean;
 
-  // null → Supabase'e yazılamadı, hiçbir yere kaydedilmedi (esnaf tekrar dener).
+  // null → sunucuya yazılamadı, hiçbir yere kaydedilmedi (esnaf tekrar dener).
   // synced=false → Supabase ayarlanmamış (çevrimdışı demo); kayıt yalnızca bu cihazda.
   addMerchantDebt: (input: Omit<Debt, 'id'>) => Promise<{ id: string; synced: boolean } | null>;
   // false → sunucuda silinemedi (bağlantı yok ya da borç artık açık değil); liste değişmez.
@@ -87,6 +95,15 @@ interface ZimemState {
   pushToast: (t: Omit<ToastMsg, 'id'>) => void;
   dismissToast: (id: string) => void;
 }
+
+const closedFlow = {
+  modalStep: 'closed' as ModalStep,
+  activeDebt: null as Debt | null,
+  activePayAmount: null as number | null,
+  payment: null as ConfirmedPayment | null,
+  preData: null as PreTestData | null,
+  postData: null as PostTestData | null,
+};
 
 const initialState = {
   profile: null as UserProfile | null,
@@ -98,30 +115,24 @@ const initialState = {
   lastActionDate: null as string | null,
   unlockedAchievements: [] as string[],
   history: [] as HistoryEntry[],
-  // openDebts artık Supabase'ten yüklenir — boş başla
+  // Açık borçlar her açılışta sunucudan yüklenir.
   openDebts: [] as Debt[],
   merchantDebts: [] as MerchantDebt[],
   partialPayments: {} as Record<string, number>,
 
-  modalStep: 'closed' as ModalStep,
-  activeDebtId: null as string | null,
-  activePayAmount: null as number | null,
-  preData: null as PreTestData | null,
-  postData: null as PostTestData | null,
-  lastResult: null as { xp: number; newAchievements: string[]; isPartial?: boolean } | null,
+  ...closedFlow,
+  lastResult: null as { xp: number; newAchievements: string[]; remaining: number } | null,
 
   toasts: [] as ToastMsg[],
 };
 
 // Sunucu kapanan borcun tutarını 0 yapar ve ilk tutarı saklamaz. Bu cihaz borcu daha
 // önce açıkken gördüyse son bilinen tutar "hibe edilen" olarak korunur (arada kısmi
-// ödeme olduysa bu, son kalan tutardır). İkon sunucuda tutulmadığı için esnafın seçtiği
-// ikon da korunur.
+// ödeme olduysa bu, son kalan tutardır).
 function mergeMerchantDebt(incoming: MerchantDebt, known: MerchantDebt | undefined): MerchantDebt {
   if (!known) return incoming;
   return {
     ...incoming,
-    icon: known.icon,
     amount: incoming.closed && incoming.amount === 0 ? known.amount : incoming.amount,
   };
 }
@@ -134,12 +145,10 @@ export const useZimemStore = create<ZimemState>()(
       setProfile: (p) => set({ profile: p }),
       clearProfile: () => set({ profile: null }),
 
-      // ─── Hesap girişi: sunucu verisi yerel state'i TAMAMEN değiştirir ──
-      // Aynı tarayıcıda başka bir hesaba geçildiğinde önceki kullanıcının
-      // verisi (XP, geçmiş, esnaf defteri) sızmasın diye hepsi sıfırlanıp
-      // giriş yapan hesabın verisiyle doldurulur.
+      // Aynı tarayıcıda başka hesaba geçilince önceki kullanıcının XP'si, geçmişi ve
+      // defteri görünmesin diye her şey giriş yapan hesabın verisiyle değiştirilir.
       hydrateAccount: (profile, data) => {
-        // Başarımları istatistiğe göre sessizce (toast'sız) yeniden türet
+        // Başarımlar istatistikten yeniden hesaplanır (bildirim gösterilmeden).
         const unlocked = checkUnlocks({
           xp: data.xp,
           debtsPaid: data.debtsPaid,
@@ -160,24 +169,16 @@ export const useZimemStore = create<ZimemState>()(
           merchantDebts: data.merchantDebts,
           unlockedAchievements: unlocked,
           partialPayments: {},
-          // modal/toast durumunu da temizle
-          modalStep: 'closed',
-          activeDebtId: null,
-          activePayAmount: null,
-          preData: null,
-          postData: null,
+          ...closedFlow,
           lastResult: null,
           toasts: [],
         });
       },
 
-      // ─── Çıkış: oturumu kapat ve TÜM yerel veriyi sıfırla ──────────────
       logout: async () => {
         await signOut();
         set({ ...initialState });
       },
-
-      // ─── Supabase debt senkronizasyon aksiyonları ───────────────
 
       setOpenDebts: (debts) => set({ openDebts: debts }),
 
@@ -193,8 +194,12 @@ export const useZimemStore = create<ZimemState>()(
         })),
 
       applyRemoteDebtClose: (id) => {
-        const wasOpen = get().openDebts.some((d) => d.id === id);
-        if (wasOpen) set((s) => ({ openDebts: s.openDebts.filter((d) => d.id !== id) }));
+        const s = get();
+        const wasOpen = s.openDebts.some((d) => d.id === id);
+        if (wasOpen) set({ openDebts: s.openDebts.filter((d) => d.id !== id) });
+        // Kullanıcının şu an ödediği borç: olay kendi ödemesinden gelmiş olabilir. Başkası
+        // kapattıysa bunu ödeme adımında sunucunun cevabından öğrenir.
+        if (s.activeDebt?.id === id) return false;
         return wasOpen;
       },
 
@@ -215,8 +220,6 @@ export const useZimemStore = create<ZimemState>()(
         return !!known && !known.closed && !!merged.closed;
       },
 
-      // ─── Merchant (esnaf) borç ekleme — Supabase write sync.ts'te ──
-
       addMerchantDebt: async (input) => {
         const profile = get().profile;
         const merchantName = profile?.shopName || profile?.displayName || 'Anonim Esnaf';
@@ -224,9 +227,8 @@ export const useZimemStore = create<ZimemState>()(
 
         let debt: MerchantDebt;
         if (online) {
-          // Supabase'e yaz (Realtime ile diğer cihazlara yayılır). Yazılamazsa yerel
-          // kayıt OLUŞTURULMAZ: sonraki girişte kaybolan, kimsenin göremediği bir borç
-          // yerine esnaf hatayı görür ve tekrar dener.
+          // Sunucuya yazılamazsa yerel kayıt da oluşturulmaz: başka kimsenin göremeyeceği
+          // ve sonraki girişte kaybolacak bir borç yerine esnaf hatayı görüp tekrar dener.
           const remote = await insertMerchantDebt({
             title: input.title,
             description: input.description,
@@ -237,11 +239,8 @@ export const useZimemStore = create<ZimemState>()(
             city: profile?.city,
           });
           if (!remote) return null;
-          // Sunucunun temizlediği metin esas alınır; ikon sunucuda tutulmadığı için
-          // esnafın seçtiği ikon bu cihazda korunur.
-          debt = { ...remote, icon: input.icon };
+          debt = remote;
         } else {
-          // Supabase ayarlanmamış (çevrimdışı demo): kayıt yalnızca bu cihazda tutulur.
           debt = {
             ...input,
             id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -250,8 +249,7 @@ export const useZimemStore = create<ZimemState>()(
           };
         }
 
-        // Yerel state'e ekle (anında UI feedback). Realtime aynı borcu daha önce
-        // getirmiş olabilir — iki listede de duplikasyonu önle.
+        // Realtime aynı borcu bu cevaptan önce getirmiş olabilir; iki kez eklenmesin.
         set((s) => ({
           merchantDebts: s.merchantDebts.some((d) => d.id === debt.id) ? s.merchantDebts : [debt, ...s.merchantDebts],
           openDebts: s.openDebts.some((d) => d.id === debt.id) ? s.openDebts : [debt, ...s.openDebts],
@@ -260,7 +258,7 @@ export const useZimemStore = create<ZimemState>()(
       },
 
       removeMerchantDebt: async (id) => {
-        // "m-" önekli kayıtlar sunucuya hiç yazılamamış yerel kayıtlardır.
+        // "m-" önekli kayıtlar yalnızca bu cihazda duran demo kayıtlarıdır.
         const ok = id.startsWith('m-') ? true : await deleteMerchantDebt(id);
         if (!ok) return false;
         set((s) => ({
@@ -270,48 +268,82 @@ export const useZimemStore = create<ZimemState>()(
         return true;
       },
 
-      // ─── Ödeme akışı (kısmi destekli) ────────────────────────────
-
-      startFlow: (debtId, partialAmount = null) =>
+      startFlow: (debtId, partialAmount = null) => {
+        const debt = get().openDebts.find((d) => d.id === debtId);
+        if (!debt) return;
+        const partial = partialAmount !== null && partialAmount > 0 && partialAmount < debt.amount ? partialAmount : null;
         set({
-          activeDebtId: debtId,
-          activePayAmount: partialAmount, // null = tam ödeme
+          ...closedFlow,
           modalStep: 'pretest',
-          preData: null,
-          postData: null,
+          activeDebt: { ...debt },
+          activePayAmount: partial,
           lastResult: null,
-        }),
+        });
+      },
 
       submitPretest: (data) => set({ preData: data, modalStep: 'payment' }),
 
-      confirmPayment: () => set({ modalStep: 'posttest' }),
+      confirmPayment: async () => {
+        const { activeDebt: debt, activePayAmount, preData } = get();
+        if (!debt || !preData) return 'gone';
+        const requested = activePayAmount ?? debt.amount;
+
+        let paid: number;
+        let remaining: number;
+        if (isSupabaseConfigured()) {
+          let result: Awaited<ReturnType<typeof payMerchantDebtRemote>>;
+          try {
+            result = await payMerchantDebtRemote(debt.id, requested);
+          } catch {
+            return 'error';
+          }
+          if (!result) {
+            set((s) => ({ ...closedFlow, openDebts: s.openDebts.filter((d) => d.id !== debt.id) }));
+            get().pushToast({ title: tStatic('payment.gone_title'), desc: tStatic('payment.gone_desc') });
+            return 'gone';
+          }
+          // Aynı anda başka biri de ödediyse sunucu kalan kadarını düşer.
+          paid = result.paidAmount;
+          remaining = result.newAmount;
+        } else {
+          paid = Math.min(requested, debt.amount);
+          remaining = debt.amount - paid;
+        }
+
+        const closedAt = new Date().toISOString();
+        set((s) => {
+          const partialPayments = { ...s.partialPayments };
+          if (remaining > 0) partialPayments[debt.id] = (partialPayments[debt.id] || 0) + paid;
+          else delete partialPayments[debt.id];
+          return {
+            payment: { paid, remaining },
+            modalStep: 'posttest',
+            partialPayments,
+            openDebts:
+              remaining > 0
+                ? s.openDebts.map((d) => (d.id === debt.id ? { ...d, amount: remaining } : d))
+                : s.openDebts.filter((d) => d.id !== debt.id),
+            merchantDebts: s.merchantDebts.map((m) =>
+              m.id !== debt.id ? m : remaining > 0 ? { ...m, amount: remaining } : { ...m, closed: true, closedAt },
+            ),
+          };
+        });
+        return 'ok';
+      },
 
       submitPosttest: (data) => {
         const s = get();
-        const debt = s.openDebts.find((d) => d.id === s.activeDebtId);
-        if (!debt || !s.preData) {
-          // Borç eşzamanlı kapanmış/silinmişse modal'ı sıfırla — kullanıcı
-          // posttest adımında kilitli kalmasın.
-          set({
-            modalStep: 'closed',
-            activeDebtId: null,
-            activePayAmount: null,
-            preData: null,
-            postData: null,
-          });
+        const debt = s.activeDebt;
+        const payment = s.payment;
+        if (!debt || !s.preData || !payment) {
+          set(closedFlow);
           return;
         }
 
-        // Kısmi ödeme mi tam ödeme mi?
-        const payAmount =
-          s.activePayAmount !== null && s.activePayAmount > 0
-            ? Math.min(s.activePayAmount, debt.amount)
-            : debt.amount;
-        const isPartial = payAmount < debt.amount;
-
-        const xpGain = calculateXP(s.preData, data, debt, payAmount);
+        const xpGain = calculateXP(s.preData, data, debt, payment.paid);
         const now = new Date();
         const { streak, dateKey } = computeStreak(s.lastActionDate, s.streak, now);
+        const closedDebt = payment.remaining === 0;
 
         const entry: HistoryEntry = {
           id: `${debt.id}-${now.getTime()}`,
@@ -319,7 +351,7 @@ export const useZimemStore = create<ZimemState>()(
           date: now.toISOString(),
           category: debt.category,
           title: debt.title,
-          amount: payAmount,
+          amount: payment.paid,
           xp: xpGain,
           preEmotion: s.preData.emotion,
           postEmotion: data.emotion,
@@ -327,99 +359,53 @@ export const useZimemStore = create<ZimemState>()(
           urgency: debt.urgency,
         };
 
-        // Yeni borç durumu
-        const newOpenDebts = isPartial
-          ? s.openDebts.map((d) =>
-              d.id === debt.id ? { ...d, amount: d.amount - payAmount } : d,
-            )
-          : s.openDebts.filter((d) => d.id !== debt.id);
-
-        // Kısmi ödeme takibi
-        const newPartial = { ...s.partialPayments };
-        if (isPartial) {
-          newPartial[debt.id] = (newPartial[debt.id] || 0) + payAmount;
-        } else {
-          delete newPartial[debt.id];
-        }
-
-        const newState = {
+        const stats = {
           xp: s.xp + xpGain,
-          // debtsPaid sadece tam kapanışta artar
-          debtsPaid: s.debtsPaid + (isPartial ? 0 : 1),
-          totalDonated: s.totalDonated + payAmount,
+          // Kapanan borç sayısı yalnızca borç tamamen kapanınca artar.
+          debtsPaid: s.debtsPaid + (closedDebt ? 1 : 0),
+          totalDonated: s.totalDonated + payment.paid,
           history: [entry, ...s.history],
-          openDebts: newOpenDebts,
-          partialPayments: newPartial,
-          merchantDebts: s.merchantDebts.map((m) =>
-            m.id === debt.id && !isPartial
-              ? { ...m, closed: true, closedAt: now.toISOString() }
-              : m.id === debt.id
-                ? { ...m, amount: m.amount - payAmount }
-                : m,
-          ),
           streak,
           lastActionDate: dateKey,
         };
 
-        const unlocked = new Set(s.unlockedAchievements);
-        const newOnes = checkUnlocks({
-          xp: newState.xp,
-          debtsPaid: newState.debtsPaid,
-          streak: newState.streak,
-          totalDonated: newState.totalDonated,
-          history: newState.history,
-          unlocked,
-        });
+        const newOnes = checkUnlocks({ ...stats, unlocked: new Set(s.unlockedAchievements) });
         const newIds = newOnes.map((a) => a.id);
 
         set({
-          ...newState,
+          ...stats,
           postData: data,
           unlockedAchievements: [...s.unlockedAchievements, ...newIds],
           modalStep: 'result',
-          lastResult: { xp: xpGain, newAchievements: newIds, isPartial },
-          activePayAmount: null,
+          lastResult: { xp: xpGain, newAchievements: newIds, remaining: payment.remaining },
           toasts: [
             ...s.toasts,
             ...newOnes.map((a) => ({
               id: `${a.id}-${Date.now()}`,
-              emoji: a.emoji,
               title: tStatic(a.nameKey),
               desc: tStatic(a.descKey),
             })),
           ],
         });
 
-        // Anket gönderimi + (yeni) Supabase borç güncelleme
         void syncSurveySubmission({
           debt,
           pre: s.preData,
           post: data,
           entry,
           profile: s.profile,
-          payAmount,
-          isPartial,
         });
-
-        // Liderlik tablosu canlı kalsın — her kapanışta güncel snapshot gönder
-        // (önceden yalnızca /liderlik ziyaretinde güncelleniyordu)
+        // Liderlik tablosu her iyilikten sonra güncellenir.
         void syncDeviceSnapshot({
           profile: s.profile,
-          xp: newState.xp,
-          debtsPaid: newState.debtsPaid,
-          totalDonated: newState.totalDonated,
-          streak: newState.streak,
+          xp: stats.xp,
+          debtsPaid: stats.debtsPaid,
+          totalDonated: stats.totalDonated,
+          streak: stats.streak,
         });
       },
 
-      closeModal: () =>
-        set({
-          modalStep: 'closed',
-          activeDebtId: null,
-          activePayAmount: null,
-          preData: null,
-          postData: null,
-        }),
+      closeModal: () => set(closedFlow),
 
       pushToast: (t) =>
         set((s) => ({ toasts: [...s.toasts, { ...t, id: `t-${Date.now()}-${Math.random()}` }] })),
@@ -428,7 +414,7 @@ export const useZimemStore = create<ZimemState>()(
     }),
     {
       name: 'zimem-defteri-state-v1',
-      // openDebts artık Supabase'ten gelir — persist etme
+      // Açık borçlar ve ödeme akışı saklanmaz; her açılışta sunucudan gelir.
       partialize: (s) => ({
         profile: s.profile,
         xp: s.xp,

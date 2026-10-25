@@ -101,7 +101,6 @@ export default function ForgotPasswordPage() {
 
         {step !== 'mfa' && (
           <div className="text-center mb-6">
-            <div className="text-4xl mb-2">🔑</div>
             <h1 className="heading-lg">{t('security.forgot_title')}</h1>
             {step === 'email' && <p className="text-sm text-muted-c mt-2">{t('security.forgot_desc')}</p>}
           </div>
@@ -189,7 +188,6 @@ export default function ForgotPasswordPage() {
 
         {step === 'done' && (
           <div className="text-center space-y-4">
-            <div className="text-5xl">✅</div>
             <div className="font-semibold">{t('security.password_saved')}</div>
             <button type="button" className="btn btn-primary w-full" onClick={() => router.replace('/')}>
               {t('security.continue_app')}

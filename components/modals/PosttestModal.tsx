@@ -6,25 +6,28 @@ import { useI18n } from '@/lib/i18n';
 import { PANAS_POSITIVE } from '@/lib/scales';
 import type { PostTestData } from '@/types';
 
-const EMOTIONS: { key: PostTestData['emotion']; emoji: string; value: number }[] = [
-  { key: 'mutlu', emoji: '😊', value: 4 },
-  { key: 'dingin', emoji: '🌿', value: 4 },
-  { key: 'hafiflemis', emoji: '🕊️', value: 4 },
-  { key: 'gururlu', emoji: '🌟', value: 3 },
+// value, puan hesabında kullanılan duygu ağırlığıdır (lib/xp.ts).
+const EMOTIONS: { key: PostTestData['emotion']; value: number }[] = [
+  { key: 'mutlu', value: 4 },
+  { key: 'dingin', value: 4 },
+  { key: 'hafiflemis', value: 4 },
+  { key: 'gururlu', value: 3 },
 ];
 
 const REPEAT: PostTestData['willRepeat'][] = ['evet', 'belki', 'bilmiyorum'];
 
+// Ödeme bu adımdan önce kaydedildiği için pencere kapatılamaz; son test tamamlanınca
+// puan ve geçmiş yazılır.
 export default function PosttestModal({ open }: { open: boolean }) {
-  const closeModal = useZimemStore((s) => s.closeModal);
   const submit = useZimemStore((s) => s.submitPosttest);
+  const remaining = useZimemStore((s) => s.payment?.remaining ?? 0);
   const { t } = useI18n();
 
   const [huzur, setHuzur] = useState<number | null>(null);
   const [emotion, setEmotion] = useState<PostTestData['emotion'] | null>(null);
   const [likert, setLikert] = useState<number>(0);
   const [willRepeat, setWillRepeat] = useState<PostTestData['willRepeat'] | null>(null);
-  // PANAS Pozitif — opsiyonel
+  // PANAS pozitif afekt maddeleri; bölüm isteğe bağlı
   const [panasOpen, setPanasOpen] = useState(false);
   const [panasPos, setPanasPos] = useState<Record<string, number>>({});
 
@@ -43,19 +46,19 @@ export default function PosttestModal({ open }: { open: boolean }) {
       willRepeat: willRepeat!,
       panasPos: panasOpen ? panasPos : undefined,
     });
-    setHuzur(null); setEmotion(null); setLikert(0); setWillRepeat(null); setPanasPos({}); setPanasOpen(false);
-  };
-
-  const handleClose = () => {
-    setHuzur(null); setEmotion(null); setLikert(0); setWillRepeat(null); setPanasPos({}); setPanasOpen(false);
-    closeModal();
+    setHuzur(null);
+    setEmotion(null);
+    setLikert(0);
+    setWillRepeat(null);
+    setPanasPos({});
+    setPanasOpen(false);
   };
 
   return (
     <ModalShell
       open={open}
       title={t('posttest.title')}
-      subtitle={t('posttest.subtitle')}
+      subtitle={remaining > 0 ? t('posttest.subtitle_partial') : t('posttest.subtitle_full')}
     >
       <div className="space-y-6">
         <section>
@@ -84,7 +87,6 @@ export default function PosttestModal({ open }: { open: boolean }) {
                 className={`emotion-card ${emotion === e.key ? 'selected' : ''}`}
                 onClick={() => setEmotion(e.key)}
               >
-                <div className="emotion-emoji">{e.emoji}</div>
                 <div className="emotion-label">{t(`posttest.emo_${e.key}`)}</div>
               </button>
             ))}
@@ -124,7 +126,6 @@ export default function PosttestModal({ open }: { open: boolean }) {
           </div>
         </section>
 
-        {/* PANAS — opsiyonel akademik ölçek */}
         <section className="border-t border-white/10 pt-4">
           <button
             type="button"
@@ -133,7 +134,7 @@ export default function PosttestModal({ open }: { open: boolean }) {
           >
             <div>
               <div className="text-sm font-semibold flex items-center gap-2">
-                🔬 {t('research.detail_toggle')} <span className="text-[10px] font-normal text-muted-c">{t('common.optional')}</span>
+                {t('research.detail_toggle')} <span className="text-[10px] font-normal text-muted-c">{t('common.optional')}</span>
               </div>
               <div className="text-[11px] text-muted-c">
                 {t('research.detail_sub')}
@@ -157,10 +158,10 @@ export default function PosttestModal({ open }: { open: boolean }) {
                           onClick={() => setPanasPos((p) => ({ ...p, [item.key]: v }))}
                           className={`w-7 h-7 rounded-full text-[11px] font-semibold transition-all ${
                             panasPos[item.key] === v
-                              ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-black scale-110'
+                              ? 'bg-emerald-400 text-black'
                               : 'bg-white/5 text-muted-c border border-white/10 hover:bg-white/10'
                           }`}
-                          aria-label={`${item.key} ${v}`}
+                          aria-label={`${t(item.i18nKey)} ${v}`}
                         >
                           {v}
                         </button>
@@ -173,13 +174,10 @@ export default function PosttestModal({ open }: { open: boolean }) {
           )}
         </section>
 
-        <div className="flex gap-2 pt-2">
-          <button type="button" className="btn flex-1" onClick={handleClose}>
-            {t('common.give_up')}
-          </button>
+        <div className="pt-2">
           <button
             type="button"
-            className="btn btn-primary flex-1"
+            className="btn btn-primary w-full"
             disabled={!canSubmit}
             onClick={handleSubmit}
           >

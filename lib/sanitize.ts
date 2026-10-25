@@ -1,50 +1,49 @@
-// ============================================================
-// Input sanitization — XSS ve veri sızıntısı önleme
-// React varsayılan olarak escape eder ama Supabase'e yazılan
-// veriyi her halükarda temizliyoruz (defense in depth).
-// ============================================================
+// Sunucuya yazılan metinlerin temizlenmesi. React ekranda zaten kaçış uygular; bu
+// katman, verinin başka araçlarda (CSV, yönetim paneli) da temiz kalması için.
 
 const MAX_TITLE = 100;
 const MAX_DESC = 500;
 const MAX_NAME = 50;
 const MAX_CITY = 50;
 
-// HTML/script taglarını temizle, kontrol karakterlerini at
+// HTML etiketlerini, kontrol karakterlerini ve script/data adreslerini atar.
 function stripUnsafe(s: string): string {
   return s
-    .replace(/<[^>]*>/g, '')                 // HTML tag
-    .replace(/[\x00-\x1F\x7F]/g, '')         // kontrol karakterleri (eslint-disable-line no-control-regex)
-    .replace(/javascript:/gi, '')             // protocol injection
-    .replace(/data:/gi, '')                   // base64 injection
-    .replace(/\s+/g, ' ')                     // ardışık boşluk
+    .replace(/<[^>]*>/g, '')
+    .replace(/[\x00-\x1F\x7F]/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-/** Başlık metni: kısa, kontrol karakteri yok, max 100 */
+/** Başlık: en fazla 100 karakter */
 export function sanitizeTitle(input: string): string {
   return stripUnsafe(String(input || '')).slice(0, MAX_TITLE);
 }
 
-/** Açıklama metni: orta uzunluk, max 500 */
+/** Açıklama: en fazla 500 karakter */
 export function sanitizeDescription(input: string): string {
   return stripUnsafe(String(input || '')).slice(0, MAX_DESC);
 }
 
-/** İsim/takma ad: max 50, sadece harf/rakam/boşluk/bazı işaretler */
+/** Takma ad / dükkan adı: en fazla 50 karakter; harf, rakam, boşluk ve - _ . ' */
 export function sanitizeName(input: string): string {
   return stripUnsafe(String(input || ''))
     .replace(/[^\p{L}\p{N} \-_.']/gu, '')
     .slice(0, MAX_NAME);
 }
 
-/** Şehir: max 50, sadece harf/boşluk */
+/** Şehir / mahalle: en fazla 50 karakter; harf, boşluk ve "Fatih, İstanbul" ya da "Fatih / İstanbul" yazımı için , / . - */
 export function sanitizeCity(input: string): string {
   return stripUnsafe(String(input || ''))
-    .replace(/[^\p{L} ]/gu, '')
+    .replace(/[^\p{L} ,/.-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
     .slice(0, MAX_CITY);
 }
 
-/** Pozitif tam sayı (TL): 1-100000 arası */
+/** Tutar (₺): 1 ile 100.000 arasında tam sayı */
 export function sanitizeAmount(input: number | string): number {
   const n = typeof input === 'number' ? input : parseFloat(String(input).replace(/[^\d.,]/g, '').replace(',', '.'));
   if (!Number.isFinite(n)) return 0;

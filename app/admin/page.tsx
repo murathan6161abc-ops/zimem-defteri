@@ -33,14 +33,14 @@ export interface SubmissionRow {
   xp_gained: number;
   app_version: string | null;
   created_at: string;
-  // PANAS-SF toplam skorları (akademik analiz için)
+  // PANAS toplamları; bölüm atlandıysa null
   panas_neg_total: number | null;
   panas_pos_total: number | null;
 }
 
 type AccessState = 'checking' | 'signed_out' | 'mfa' | 'forbidden' | 'authorized';
 
-// ─── CSV dışa aktarma (Excel / SPSS / JASP analizleri için) ──────────
+// CSV dışa aktarma (Excel, SPSS, JASP)
 function csvEscape(v: unknown): string {
   if (v === null || v === undefined) return '';
   const raw = String(v);
@@ -49,9 +49,8 @@ function csvEscape(v: unknown): string {
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-// Capacitor/APK'da blob + <a download> güvenilir çalışmıyor (WebView'de
-// sessizce başarısız olabiliyor) → orada panoya kopyalayıp uyarı gösteriyoruz.
-// Web/masaüstünde eski dosya-indirme davranışı aynen korunuyor.
+// APK'nın WebView'inde blob + <a download> sessizce başarısız olabiliyor; orada içerik
+// panoya kopyalanır. Web'de dosya indirilir.
 function exportOrCopy(isCapacitor: boolean, filename: string, content: string, mime: string): void {
   if (isCapacitor) {
     void navigator.clipboard
@@ -213,8 +212,7 @@ export default function AdminPage() {
       <div className="pt-10 max-w-md mx-auto">
         <form onSubmit={tryLogin} className="glass-strong p-6">
           <div className="text-center mb-5">
-            <div className="text-4xl mb-2">🔐</div>
-            <h1 className="heading-lg">Admin Girişi</h1>
+            <h1 className="heading-lg">Yönetici girişi</h1>
             <p className="text-xs text-muted-c">Yetkili Supabase hesabıyla giriş yap.</p>
           </div>
           <input
@@ -249,7 +247,7 @@ export default function AdminPage() {
     <div className="pt-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h1 className="heading-xl">Admin Paneli</h1>
+          <h1 className="heading-xl">Yönetim paneli</h1>
           <p className="text-xs text-muted-c">
             {loading ? 'Yükleniyor…' : `${rows.length} anket gönderimi · son ${days} gün`}
           </p>
@@ -267,33 +265,31 @@ export default function AdminPage() {
             <option value={3650}>Tümü</option>
           </select>
           <button type="button" className="btn" onClick={loadRows}>
-            🔄 Yenile
+            Yenile
           </button>
           <button
             type="button"
             className="btn"
             onClick={() => exportOrCopy(isCapacitor, `zimem-anket-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(rows, null, 2), 'application/json')}
           >
-            {isCapacitor ? '📋 JSON kopyala' : '⬇️ JSON indir'}
+            {isCapacitor ? 'JSON kopyala' : 'JSON indir'}
           </button>
           <button
             type="button"
             className="btn"
             onClick={() => {
-              // UTF-8 BOM → Excel'de Türkçe karakterler doğru görünsün
+              // UTF-8 BOM: Excel Türkçe karakterleri doğru göstersin diye
               const csv = String.fromCharCode(0xfeff) + rowsToCSV(rows);
               exportOrCopy(isCapacitor, `zimem-anket-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv;charset=utf-8;');
             }}
           >
-            {isCapacitor ? '📋 CSV kopyala' : '📊 CSV indir'}
+            {isCapacitor ? 'CSV kopyala' : 'CSV indir'}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="glass p-4 mb-4 border-red-400/30 text-red-300 text-sm">
-          ⚠️ {error}
-        </div>
+        <div className="glass p-4 mb-4 border-red-400/30 text-red-300 text-sm">{error}</div>
       )}
 
       <div className="flex gap-2 flex-wrap mb-4">
@@ -304,14 +300,14 @@ export default function AdminPage() {
             onClick={() => setFilter(c)}
             className={`tab-btn ${filter === c ? 'active' : ''}`}
           >
-            {c === 'all' ? '📋 Tümü' : `${CATEGORY_META[c].emoji} ${CATEGORY_META[c].label}`}
+            {c === 'all' ? 'Tümü' : CATEGORY_META[c].label}
           </button>
         ))}
       </div>
 
       <AdminCharts rows={filtered} />
 
-      <h2 className="heading-lg mt-6 mb-3">Anket Tablosu</h2>
+      <h2 className="heading-lg mt-6 mb-3">Anket tablosu</h2>
       <div className="glass overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="text-muted-c">
@@ -321,10 +317,10 @@ export default function AdminPage() {
               <th className="text-left p-3">Şehir</th>
               <th className="text-left p-3">Borç</th>
               <th className="text-right p-3">Tutar</th>
-              <th className="text-center p-3">Acl</th>
-              <th className="text-left p-3">Pre</th>
-              <th className="text-left p-3">Post</th>
-              <th className="text-left p-3">Tekrar?</th>
+              <th className="text-center p-3">Aciliyet</th>
+              <th className="text-left p-3">Ön test (duygu · madde · huzur)</th>
+              <th className="text-left p-3">Son test (duygu · madde · huzur)</th>
+              <th className="text-left p-3">Tekrar</th>
               <th className="text-right p-3">XP</th>
             </tr>
           </thead>
@@ -343,9 +339,7 @@ export default function AdminPage() {
                 <td className="p-3">{r.city || '—'}</td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <span className={`category-chip cat-${r.debt_category}`}>
-                      {CATEGORY_META[r.debt_category].emoji}
-                    </span>
+                    <span className={`urgency-dot dot-${r.debt_category}`} title={CATEGORY_META[r.debt_category].label} />
                     <span className="truncate max-w-[180px] inline-block">{r.debt_title}</span>
                   </div>
                 </td>
@@ -354,10 +348,10 @@ export default function AdminPage() {
                   <span className={`urgency-dot urgency-${r.debt_urgency}`} />
                 </td>
                 <td className="p-3 whitespace-nowrap">
-                  {r.pre_emotion || '—'} · ⓛ{r.pre_likert} · 😌{r.pre_huzur}
+                  {r.pre_emotion || '—'} · {r.pre_likert ?? '—'} · {r.pre_huzur ?? '—'}
                 </td>
                 <td className="p-3 whitespace-nowrap">
-                  {r.post_emotion || '—'} · ⓛ{r.post_likert}
+                  {r.post_emotion || '—'} · {r.post_likert ?? '—'} · {r.post_huzur ?? '—'}
                 </td>
                 <td className="p-3">{r.will_repeat || '—'}</td>
                 <td className="p-3 text-right text-amber-300 font-bold">+{r.xp_gained}</td>
