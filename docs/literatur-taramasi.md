@@ -84,8 +84,25 @@ platformlar, (6) oyunlaştırma ve sürdürme.
   - Özdemir, Ö. (2023). *Marife Dini Araştırmalar Dergisi, 23*(2), 553–572. https://doi.org/10.33420/marife.1328884 (Kaynak 1'de de atıf var. İki kaynakta başlık ve dergi adı farklı yazılmış, nihai künye DOI'den doğrulanmalı.)
 - **Not:** Maddedeki bazı cümleler eksik (1680–1690 için bölge adı düşmüş). Rakamlar yalnızca asıl makalelerden doğrulandıktan sonra kullanılmalı.
 
+### 7. MÜSİAD (t.y.) — Zimem Defteri sosyal sorumluluk sayfası — Eksen 1 ve 5 (kurum sayfası, gri literatür)
+- **Künye:** MÜSİAD. (t.y.). *Zimem defteri*. Müstakil Sanayici ve İşadamları Derneği. https://musiad.org.tr/tr/sosyal-sorumluluk/zimem-defteri (Erişim: 28.10.2026). Eski adres: https://www.musiad.org.tr/icerik/zimem-defteri-46. KÜRE maddesi (Kaynak 6) bu adrese atıf yapıyor.
+- **Tür:** Kurum tanıtım sayfası. Yazar, tarih, kaynakça ve sayısal veri yok.
+- **İçerik:**
+  - Zimem defteri, günümüzdeki adıyla veresiye defteri olarak tanımlanıyor ve "yardımlaşmanın ve hayırda yarışmanın" bir yolu olarak sunuluyor.
+  - Osmanlı'da varlıklı kişiler defterdeki borçların tamamını ödeyerek defteri "satın alırdı".
+  - MÜSİAD uygulamayı 5. Genel Başkan Nail Olpak'ın girişimiyle yeniden başlattı. Başta yalnızca Ramazan'a özeldi. 6. dönem Genel Başkanı Abdurrahman Kaan'ın çağrısıyla 12 aya yayıldı.
+  - Temel ilke anonimlik: borçlu ile borcu ödeyen birbirini tanımaz ("sağ elin verdiğini sol el görmeyecek").
+- **Eksikler:**
+  - Borç doğrulama, esnaf seçimi ve izleme süreci anlatılmıyor.
+  - Girişimin yılı verilmiyor. Tarih, Olpak ve Kaan'ın başkanlık dönemlerinden ve dönemin haberlerinden doğrulanmalı.
+  - Sayfadaki broşür bağlantısı (…/uploads/sosyal-sorumluluk/zimem/zimemdefteri_brosur_r.pdf) 28.10.2026'da 404 döndü. Broşüre ulaşılamadı.
+- **D-Zimem bağlantısı:**
+  - Geleneğin günümüzde sivil toplum eliyle yeniden canlandırıldığını gösteren örneklerden biri. e-Zimem (Kaynak 4) kamu eliyle yürütülen bir örnek. Birlikte "geleneğin çağdaş uygulamaları" alt başlığında kullanılabilir.
+  - Kampanyanın Ramazan'dan yıl geneline yayılması, D-Zimem'in sürekli kullanım hedefine (seri, XP) bağlanabilir. Eksen 6 için zayıf ama ilgili bir dayanak.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
 - [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
 - [ ] Kaynak 6'daki Yıldırım (2023) ve Yıldırım ve ark. makalelerini bul, doğrula
+- [ ] MÜSİAD girişiminin başlangıç yılını haber kaynaklarından doğrula
 - [ ] Yeni makaleleri buraya ekle
