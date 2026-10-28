@@ -37,7 +37,8 @@ npm run dev
 Uygulama `http://localhost:3939` adresinde açılır. Supabase kurulumu ve yönetici
 ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
 [SECURITY.md](./docs/SECURITY.md), APK teslimi için
-[RELEASE.md](./docs/RELEASE.md) kullanılır.
+[RELEASE.md](./docs/RELEASE.md), TÜBİTAK 2204-A hazırlığı için
+[TUBITAK-2204A.md](./docs/TUBITAK-2204A.md) kullanılır.
 
 ## Komutlar
 
@@ -69,5 +70,5 @@ ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
 
 ## Sürüm
 
-Geçerli uygulama sürümü `2.6.0`'dır. Sürüm artırırken `package.json`,
+Geçerli uygulama sürümü `2.8.0`'dır. Sürüm artırırken `package.json`,
 `lib/version.ts` ve `android/app/build.gradle` birlikte güncellenir.

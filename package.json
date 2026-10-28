@@ -1,6 +1,6 @@
 {
   "name": "zimem-defteri",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3939",
@@ -18,7 +18,8 @@
     "delivery:release": "node scripts/setup-release-key.cjs && npm run android:release && node scripts/package-apk.cjs --release",
     "tarama": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs",
     "tarama:kurulum": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs --kurulum",
-    "tarama:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-bench.mjs"
+    "tarama:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-bench.mjs",
+    "tarama:sentetik": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/make-synthetic-ledgers.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

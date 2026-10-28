@@ -1,9 +1,11 @@
-// Release APK imza anahtarını bir kez üretir: android/dzimem-release.keystore ve
-// android/keystore.properties (ikisi de git'e girmez). Varsa dokunmaz.
+// Release APK imza anahtarını bir kez üretir. Anahtar proje klasörünün DIŞINDA,
+// ~/.dzimem-imza/ içinde durur (DZIMEM_KEYSTORE_DIR ile değiştirilebilir);
+// android/keystore.properties yalnızca yolunu ve şifresini tutar (git'e girmez). Varsa dokunmaz.
 //
 // ÖNEMLİ: Bu iki dosyanın yedeğini güvenli bir yere al. Anahtar kaybolursa telefonlardaki
 // uygulama güncellenemez; katılımcıların eski sürümü silip yenisini kurması gerekir.
 const crypto = require('node:crypto');
+const os = require('node:os');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -11,16 +13,18 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const androidDirectory = path.join(root, 'android');
 const propertiesFile = path.join(androidDirectory, 'keystore.properties');
+const keystoreDirectory = process.env.DZIMEM_KEYSTORE_DIR || path.join(os.homedir(), '.dzimem-imza');
 const keystoreName = 'dzimem-release.keystore';
-const keystoreFile = path.join(androidDirectory, keystoreName);
+const keystoreFile = path.join(keystoreDirectory, keystoreName);
 
 if (fs.existsSync(propertiesFile)) {
   console.log('Release imza anahtarı zaten var (android/keystore.properties).');
   process.exit(0);
 }
 if (fs.existsSync(keystoreFile)) {
-  throw new Error(`${keystoreName} var ama keystore.properties yok. Şifreyi bilmeden yeni anahtar üretilmez.`);
+  throw new Error(`${keystoreFile} var ama keystore.properties yok. Şifreyi bilmeden yeni anahtar üretilmez.`);
 }
+fs.mkdirSync(keystoreDirectory, { recursive: true, mode: 0o700 });
 
 function findKeytool() {
   const homes = [process.env.JAVA_HOME, '/Applications/Android Studio.app/Contents/jbr/Contents/Home'];
@@ -60,7 +64,7 @@ fs.writeFileSync(
   propertiesFile,
   [
     '# D-Zimem release imzası — GİZLİ, git\'e ekleme, yedeğini al.',
-    `storeFile=${keystoreName}`,
+    `storeFile=${keystoreFile}`,
     `storePassword=${password}`,
     `keyAlias=${alias}`,
     `keyPassword=${password}`,
@@ -69,5 +73,5 @@ fs.writeFileSync(
   { mode: 0o600 },
 );
 fs.chmodSync(keystoreFile, 0o600);
-console.log('Release imza anahtarı üretildi: android/dzimem-release.keystore + android/keystore.properties');
+console.log(`Release imza anahtarı üretildi: ${keystoreFile} (+ android/keystore.properties)`);
 console.log('Bu iki dosyanın yedeğini güvenli bir yere al (ör. şifreli bir USB bellek).');

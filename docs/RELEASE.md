@@ -31,6 +31,21 @@ cd dist
 shasum -a 256 -c SHA256SUMS.txt
 ```
 
+## Release APK (katılımcılara dağıtım)
+
+Katılımcı telefonlarına **debug APK verilmez**: debug sürümde hata ayıklama açıktır ve
+telefona USB ile erişen biri uygulamanın oturum bilgilerini okuyabilir.
+
+```bash
+npm run delivery:release
+```
+
+İlk çalıştırmada imza anahtarı üretilir: `~/.dzimem-imza/dzimem-release.keystore` ve
+`android/keystore.properties` (ikisi de git dışında). **Bu iki dosyanın yedeğini al**;
+anahtar kaybolursa telefonlardaki uygulama güncellenemez. Debug sürümden release sürüme
+geçen bir telefonda imza değiştiği için eski uygulama önce silinmelidir (veriler sunucuda
+olduğundan kaybolmaz).
+
 ## Üretim AAB
 
 1. Android Studio'da `android/` projesini aç.
