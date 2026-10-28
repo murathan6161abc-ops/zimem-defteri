@@ -52,6 +52,21 @@ platformlar, (6) oyunlaştırma ve sürdürme.
 - **Dikkat:** Sayaçlar boş, denetim raporu bağlantısı çalışmıyor, "çok yakında" ve "kapatıldı" ifadeleri bir arada. Rakamlar bağımsız doğrulanamadı. Atıfta "kurum açıklaması" olarak belirtilmeli.
 - **D-Zimem bağlantısı:** Aynı geleneğin kurumsal ve dijital uygulaması. D-Zimem ile farkı: onay mekanizması kamu eliyle, ölçüm/araştırma bileşeni yok. D-Zimem'in PANAS-SF/WHO-5 ile ön/son test ölçümü bu boşluğa konumlanabilir (alıntı yapılacak akademik bir değerlendirme bulunamazsa "literatürdeki boşluk" iddiası için ayrıca arama gerekir).
 
+### 5. Ateş (2026) — Eksen 1 (veresiye / zimem ayrımı, tarihsel çerçeve)
+- **Künye:** Ateş, D. (2026). Osmanlı Devleti'nde tüketimin dönüşümü ve veresiye mağazacılığı: Veresiye Mağazaları Osmanlı Anonim Şirketi örneği. *Dumlupınar Üniversitesi Sosyal Bilimler Dergisi, 91*, 22–37. https://doi.org/10.51290/dpusbe.1879147
+- **Amaç:** 1910 tarihli Veresiye Mağazaları Osmanlı Anonim Şirketi'nin yapısını, sermayesini, yönetimini ve veresiye satış sistemini incelemek.
+- **Yöntem:** Nitel tarihsel belge analizi. Esas kaynak nizamname (BOA, I.TNF 21/10) ve diğer arşiv belgeleri. Tüketici profiline (sınıf, cinsiyet, coğrafya) dair sistematik veri yok. Yazar bunu sınırlılık olarak belirtiyor.
+- **Bulgular:**
+  - Veresiye, güvene dayalı ve esnafın defterine yazılan açık hesap kredisidir. Eşit taksitli satıştan farklıdır.
+  - Osmanlı'da veresiye iki yüzlü gelişti. İlk aşamada zimem defteri üzerinden sosyal yardımlaşma biçimindeydi. Borcu ödeyen ile borcu ödenen birbirini tanımaz ve yardım gizli yapılır. XIX. yüzyılda ise ticari bir kurumsallaşma örneğine dönüştü.
+  - Şirket nizamnamesi borç süresini 3 yılla sınırlıyor, gecikmeye faiz öngörüyor, anlaşmalı ticarethane listesi veriyor. Yazar bunu Fransa'daki Dufayel ve Singer sistemleriyle karşılaştırıyor.
+  - Sonuç: veresiye, "gayriresmî güven kredisi"nden "kurumsal tüketici kredisi"ne geçişin erken bir örneği.
+- **Sınırlılık:** Tek şirket ve tek nizamname. Uygulamanın fiilî işleyişine dair veri yok. Faiz yasağıyla ilişki ayrı çalışma konusu olarak bırakılmış.
+- **D-Zimem bağlantısı:**
+  - Zimem ile ticari veresiye arasındaki kavramsal ayrımı akademik olarak dayandırır. D-Zimem tarafı zimemin yardımlaşma boyutunu temsil eder (anonimlik, karşılıksız ödeme).
+  - Kaynak 1 ile birlikte "zimem defteri" tanımı için ikili dayanak olur.
+  - Alıntı yapılan Çetin (2014) ve Muldrew (2001, güvene dayalı kredi) aday atıf olarak notlandı, asıl kaynaktan doğrulanmadı.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
 - [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
