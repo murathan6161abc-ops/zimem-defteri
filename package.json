@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build",
+    "test": "vitest run",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "android:sync": "npm run build && cap sync android",
     "android:debug": "npm run android:sync && node scripts/run-gradle.cjs assembleDebug",
     "delivery:debug": "npm run android:debug && node scripts/package-debug-apk.cjs",
@@ -17,33 +18,34 @@
     "tarama:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-bench.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "8.4.2",
-    "@capacitor/app": "8.1.1",
-    "@capacitor/browser": "8.0.4",
-    "@capacitor/core": "8.4.2",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/core": "8.5.3",
     "@supabase/supabase-js": "2.110.7",
-    "next": "16.2.10",
+    "next": "16.4.3",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "uuid": "14.0.1",
     "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.4.2",
+    "@capacitor/cli": "8.5.3",
     "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "20.19.43",
+    "@types/node": "22.20.5",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/uuid": "10.0.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.4.3",
     "sharp": "0.34.5",
     "supabase": "2.109.1",
     "tailwindcss": "4.3.3",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
   },
   "overrides": {
-    "postcss": "8.5.20",
-    "tar": "7.5.20"
+    "postcss": "8.5.31",
+    "tar": "7.5.22"
   }
 }

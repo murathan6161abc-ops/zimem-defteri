@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useZimemStore } from '@/store/useZimemStore';
-import { useI18n, type Locale } from '@/lib/i18n';
+import { tStatic, useI18n, type Locale } from '@/lib/i18n';
 import { KIND_META, iconOf, kindChipStyle, kindOf } from '@/lib/debts';
 import { forgetLedgerRef, readLedgerRefs } from '@/lib/ledgerScan';
+import { getSupabase } from '@/lib/supabase';
+import { fetchMyMerchantDebts, subscribeToMyDebts } from '@/lib/supabaseDebts';
 
 const DATE_LOCALE: Record<Locale, string> = { tr: 'tr-TR', en: 'en-US', ar: 'ar' };
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
@@ -21,6 +23,9 @@ function fmtDate(iso: string, locale: Locale) {
 export default function EsnafHomePage() {
   const merchantDebts = useZimemStore((s) => s.merchantDebts);
   const removeDebt = useZimemStore((s) => s.removeMerchantDebt);
+  const setMerchantDebts = useZimemStore((s) => s.setMerchantDebts);
+  const applyMerchantDebtChange = useZimemStore((s) => s.applyMerchantDebtChange);
+  const pushToast = useZimemStore((s) => s.pushToast);
   const profile = useZimemStore((s) => s.profile);
   const refreshMerchantDebts = useZimemStore((s) => s.refreshMerchantDebts);
   const { t, locale } = useI18n();
@@ -33,6 +38,46 @@ export default function EsnafHomePage() {
     // Defter her açıldığında sunucuyla eşitlenir (başka cihazdan / taramadan eklenenler dahil).
     void refreshMerchantDebts();
   }, [refreshMerchantDebts]);
+
+  // Defter sunucudan tazelenir ve hayırseverlerin ödemeleri anında yansır. Uygulama arka
+  // plandan dönünce yeniden tazelenir: o arada kopan bağlantı olay kaçırmış olabilir.
+  useEffect(() => {
+    const client = getSupabase();
+    if (!client) return;
+    let active = true;
+    let userId: string | null = null;
+    let unsubscribe = () => {};
+
+    const refresh = async () => {
+      if (!userId) return;
+      const debts = await fetchMyMerchantDebts(userId);
+      if (active && debts) setMerchantDebts(debts);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+
+    void (async () => {
+      const { data } = await client.auth.getSession();
+      // Oturum yoksa (AuthGate girişe yönlendirir) eldeki defter silinmesin.
+      userId = data.session?.user.id ?? null;
+      if (!active || !userId) return;
+      await refresh();
+      if (!active) return;
+      unsubscribe = subscribeToMyDebts(userId, (debt) => {
+        if (applyMerchantDebtChange(debt)) {
+          pushToast({ emoji: '✅', title: tStatic('debt.toast_closed_title'), desc: debt.title });
+        }
+      });
+      document.addEventListener('visibilitychange', onVisible);
+    })();
+
+    return () => {
+      active = false;
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [setMerchantDebts, applyMerchantDebtChange, pushToast]);
 
   const list = mounted ? merchantDebts : [];
   const open = list.filter((d) => !d.closed);

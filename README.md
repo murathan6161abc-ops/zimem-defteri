@@ -33,8 +33,9 @@ ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
 | `npm run dev` | Geliştirme sunucusu (`3939`) |
 | `npm run lint` | ESLint kontrolü |
 | `npm run typecheck` | TypeScript kontrolü |
+| `npm test` | Vitest birim testleri (Türkiye saatiyle koşar) |
 | `npm run build` | Statik web çıktısı (`out/`) |
-| `npm run check` | Lint + tip + üretim build'i |
+| `npm run check` | Lint + tip + test + üretim build'i |
 | `npm run android:sync` | Web build'i ve Capacitor senkronizasyonu |
 | `npm run android:debug` | Debug APK üretimi |
 | `npm run delivery:debug` | APK + SHA-256 + teslim manifesti (`dist/`) |

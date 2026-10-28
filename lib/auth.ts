@@ -21,6 +21,7 @@ import { getDeviceId } from './deviceId';
 import { isAgeGroup } from './research';
 import { clearLedgerRefs } from './ledgerScan';
 import { rowToDebt } from './supabaseDebts';
+import { dayKey } from './streak';
 import type {
   Category,
   HistoryEntry,
@@ -406,7 +407,9 @@ export async function fetchAccountData(userId: string): Promise<AccountData> {
         willRepeat: (r.will_repeat as HistoryEntry['willRepeat']) || 'belki',
         urgency: Number(r.debt_urgency || 2),
       }));
-      empty.lastActionDate = empty.history[0]?.date.slice(0, 10) ?? null;
+      // Seri yerel takvim günüyle sayılır. ISO tarihinin ilk 10 karakteri UTC günüdür ve
+      // Türkiye'de 00:00-03:00 arasındaki iyiliği bir önceki güne yazar.
+      empty.lastActionDate = empty.history[0] ? dayKey(new Date(empty.history[0].date)) : null;
     }
   } catch {}
 

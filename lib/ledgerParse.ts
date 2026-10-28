@@ -58,7 +58,7 @@ export function toInitials(raw: unknown): string {
     .join('');
 }
 
-function parseAmount(raw: unknown): number {
+export function parseAmount(raw: unknown): number {
   if (typeof raw === 'number') return Math.round(raw);
   // "1.250,50 TL" / "85 TL" gibi metinleri de kabul et.
   const text = String(raw ?? '')

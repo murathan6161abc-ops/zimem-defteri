@@ -49,8 +49,9 @@ export const WHO5_ITEMS: ScaleItem[] = [
 
 // ─── Hesaplama yardımcıları ──────────────────────────────────
 
-export function panasTotal(scores: Record<string, number> | undefined): number {
-  if (!scores) return 0;
+/** Alt ölçek toplamı (5-25). Bölüm atlandıysa null: 0 geçerli bir PANAS toplamı değildir. */
+export function panasTotal(scores: Record<string, number> | undefined): number | null {
+  if (!scores) return null;
   return Object.values(scores).reduce((sum, v) => sum + (v || 0), 0);
 }
 
