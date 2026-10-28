@@ -118,9 +118,9 @@ export default function PretestModal({ open }: { open: boolean }) {
           >
             <div>
               <div className="text-sm font-semibold flex items-center gap-2">
-                🔬 {t('research.detail_toggle')} <span className="text-[10px] font-normal text-muted-c">{t('common.optional')}</span>
+                🔬 {t('research.detail_toggle')} <span className="text-[11px] font-normal text-muted-c">{t('common.optional')}</span>
               </div>
-              <div className="text-[11px] text-muted-c">
+              <div className="text-xs text-muted-c">
                 {t('research.detail_sub')}
               </div>
             </div>
@@ -129,7 +129,7 @@ export default function PretestModal({ open }: { open: boolean }) {
 
           {panasOpen && (
             <div className="mt-3">
-              <div className="text-[11px] text-muted-c mb-3">{t('panas.instruction')}</div>
+              <div className="text-xs text-muted-c mb-3">{t('panas.instruction')}</div>
               <div className="space-y-2">
                 {PANAS_NEGATIVE.map((item) => (
                   <div key={item.key} className="flex items-center justify-between gap-2">
@@ -140,7 +140,7 @@ export default function PretestModal({ open }: { open: boolean }) {
                           key={v}
                           type="button"
                           onClick={() => setPanasNeg((p) => ({ ...p, [item.key]: v }))}
-                          className={`w-7 h-7 rounded-full text-[11px] font-semibold transition-all ${
+                          className={`w-7 h-7 rounded-full text-xs font-semibold transition-all ${
                             panasNeg[item.key] === v
                               ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black scale-110'
                               : 'bg-white/5 text-muted-c border border-white/10 hover:bg-white/10'

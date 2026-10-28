@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n, type Locale } from '@/lib/i18n';
-import { CATEGORY_META } from '@/lib/debts';
+import { KIND_META, iconOf, kindChipStyle, kindOf } from '@/lib/debts';
 import { forgetLedgerRef, readLedgerRefs } from '@/lib/ledgerScan';
 
 const DATE_LOCALE: Record<Locale, string> = { tr: 'tr-TR', en: 'en-US', ar: 'ar' };
@@ -22,6 +22,7 @@ export default function EsnafHomePage() {
   const merchantDebts = useZimemStore((s) => s.merchantDebts);
   const removeDebt = useZimemStore((s) => s.removeMerchantDebt);
   const profile = useZimemStore((s) => s.profile);
+  const refreshMerchantDebts = useZimemStore((s) => s.refreshMerchantDebts);
   const { t, locale } = useI18n();
   const [mounted, setMounted] = useState(false);
   // Taramadan gelen müşteri baş harfleri — yalnızca bu cihazda tutulur.
@@ -29,7 +30,9 @@ export default function EsnafHomePage() {
   useEffect(() => {
     setMounted(true);
     setRefs(readLedgerRefs());
-  }, []);
+    // Defter her açıldığında sunucuyla eşitlenir (başka cihazdan / taramadan eklenenler dahil).
+    void refreshMerchantDebts();
+  }, [refreshMerchantDebts]);
 
   const list = mounted ? merchantDebts : [];
   const open = list.filter((d) => !d.closed);
@@ -39,24 +42,31 @@ export default function EsnafHomePage() {
 
   return (
     <div className="pt-6">
-      <section className="glass-strong p-7 mb-6 relative overflow-hidden">
+      <section className="glass-strong p-5 sm:p-7 mb-6 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <div className="section-title">{t('merchant.panel')}</div>
-            <h1 className="heading-xl">{profile?.shopName || t('merchant.default_book')}</h1>
-            {profile?.city && (
-              <div className="text-sm text-muted-c mt-1">📍 {profile.city}</div>
-            )}
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Link href="/esnaf/tara" className="btn">
-              {t('merchant.scan_btn')}
-            </Link>
-            <Link href="/esnaf/yeni" className="btn btn-primary">
-              ➕ {t('merchant.add_new')}
-            </Link>
-          </div>
+        <div className="relative">
+          <div className="section-title">{t('merchant.panel')}</div>
+          <h1 className="heading-xl">{profile?.shopName || t('merchant.default_book')}</h1>
+          {profile?.city && (
+            <div className="text-sm text-muted-c mt-1">📍 {profile.city}</div>
+          )}
+        </div>
+        {/* Ana eylemler: defter taraması öne çıkar, tek borç elle eklenir */}
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+          <Link href="/esnaf/tara" className="action-tile action-tile-primary">
+            <span className="action-tile-icon" aria-hidden>📷</span>
+            <span className="min-w-0">
+              <span className="block font-bold text-base">{t('merchant.scan_tile_title')}</span>
+              <span className="block text-[13px] opacity-90">{t('merchant.scan_tile_desc')}</span>
+            </span>
+          </Link>
+          <Link href="/esnaf/yeni" className="action-tile">
+            <span className="action-tile-icon" aria-hidden>✍️</span>
+            <span className="min-w-0">
+              <span className="block font-bold text-base">{t('merchant.add_new')}</span>
+              <span className="block text-[13px] text-muted-c">{t('merchant.add_tile_desc')}</span>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -107,27 +117,28 @@ export default function EsnafHomePage() {
       ) : (
         <div className="grid gap-3 mb-6">
           {open.map((d) => {
-            const meta = CATEGORY_META[d.category];
+            const kind = kindOf(d);
+              const meta = KIND_META[kind];
             return (
               <div key={d.id} className="debt-card !cursor-default">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
                   style={{ background: `${meta.color}22`, border: `1px solid ${meta.color}55` }}
                 >
-                  {d.icon}
+                  {iconOf(d)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`category-chip cat-${d.category}`}>
-                      {meta.emoji} {t(`debt.cat_${d.category}`)}
+                    <span className="category-chip" style={kindChipStyle(kind)}>
+                      {meta.emoji} {t(`debt.kind_${kind}`)}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-c">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-c">
                       <span className={`urgency-dot urgency-${d.urgency}`} />
                       {t(URGENCY_KEY[d.urgency])} {t('debt.urgency_suffix')}
                     </span>
-                    <span className="text-[11px] text-muted-c">· {fmtDate(d.addedAt, locale)}</span>
+                    <span className="text-xs text-muted-c">· {fmtDate(d.addedAt, locale)}</span>
                     {refs[d.id] && (
-                      <span className="text-[11px] text-amber-200/90">· 🔒 {refs[d.id]}</span>
+                      <span className="text-xs text-amber-200/90">· 🔒 {refs[d.id]}</span>
                     )}
                   </div>
                   <div className="font-semibold text-[15px] truncate">{d.title}</div>
@@ -137,7 +148,7 @@ export default function EsnafHomePage() {
                   <div className="font-bold text-lg text-amber-200">{d.amount} ₺</div>
                   <button
                     type="button"
-                    className="text-[11px] text-muted-c hover:text-red-400 transition"
+                    className="text-xs text-muted-c hover:text-red-400 transition"
                     onClick={() => {
                       if (!confirm(t('merchant.delete_confirm', { title: d.title }))) return;
                       void removeDebt(d.id).then((ok) => {
@@ -165,14 +176,15 @@ export default function EsnafHomePage() {
           </h2>
           <div className="grid gap-3">
             {closed.map((d) => {
-              const meta = CATEGORY_META[d.category];
+              const kind = kindOf(d);
+              const meta = KIND_META[kind];
               return (
                 <div key={d.id} className="debt-card !cursor-default opacity-70">
                   <div
                     className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 grayscale"
                     style={{ background: `${meta.color}11` }}
                   >
-                    {d.icon}
+                    {iconOf(d)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-muted-c mb-1">

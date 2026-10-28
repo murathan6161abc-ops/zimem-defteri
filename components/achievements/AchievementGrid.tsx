@@ -27,9 +27,9 @@ export default function AchievementGrid() {
             <div className={`font-bold text-sm mb-0.5 ${has ? 'text-amber-200' : ''}`}>
               {t(a.nameKey)}
             </div>
-            <div className="text-[11px] text-muted-c">{t(a.descKey)}</div>
+            <div className="text-xs text-muted-c">{t(a.descKey)}</div>
             {!has && (
-              <div className="text-[10px] mt-1 text-muted-c opacity-70">🔒 {t('ach.locked')}</div>
+              <div className="text-[11px] mt-1 text-muted-c opacity-70">🔒 {t('ach.locked')}</div>
             )}
           </div>
         );

@@ -60,9 +60,19 @@ hiçbir yapay zekâ şirketine gönderilmez. Program sonucu yazarken fotoğrafı
 Sonucu yalnızca `scan_worker` rolü yazabilir; esnaf kendi işini "tamamlandı"
 yapamaz ve kotayı sıfırlamak için işini silemez. Model çıktısı hem programda hem
 uygulamada aynı beyaz listeden geçer (`lib/ledgerParse.ts`); müşteri adı ne
-gelirse gelsin baş harfe indirgenir ve yalnızca esnafın cihazında tutulur.
+gelirse gelsin baş harfe indirgenir ve yalnızca esnafın cihazında tutulur. Satırları
+müşteri bazında toplayan kod (`scripts/ledger-reader.mjs`) tam adı yalnızca tarama
+bilgisayarının belleğinde kullanır; açıklamadan rakamları (telefon vb.) ve müşterinin
+kendi adını ayıklar. `tarama-test/` (doğruluk testi fotoğrafları) git dışıdır.
 Tarama hesabının şifresi yalnızca o bilgisayardaki `.env.tarama` dosyasındadır
 (izin 600, git dışı); sızarsa hesabın şifresi değiştirilmeli ya da rolü kaldırılmalıdır.
+
+## Borç türü ve ikonu
+
+`kind` veritabanında beyaz listeyle ve grubuyla tutarlılık kısıtıyla (`merchant_kind_group_check`)
+denetlenir; `icon` en fazla 16 karakterdir. Uygulama yalnızca kendi ikon listesindeki
+ikonları gösterir (`lib/debts.ts` → `iconOf`); listede olmayan bir değer türün varsayılan
+ikonuyla değiştirilir, böylece başka biri API'ye doğrudan yazsa bile rastgele metin görünmez.
 
 ## İstemci ve Android
 

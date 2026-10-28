@@ -45,3 +45,5 @@ next-env.d.ts
 # Yerel araç / test çıktıları
 /.playwright-cli/
 /.claude/
+# Gerçek defter fotoğrafları (müşteri adları içerir) — asla commit etme
+/tarama-test/

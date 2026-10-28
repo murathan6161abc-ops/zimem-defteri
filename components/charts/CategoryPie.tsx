@@ -47,11 +47,11 @@ export default function CategoryPie() {
           ) : (
             arcs
           )}
-          <circle cx={cx} cy={cx} r={r * 0.55} fill="#131a2e" />
+          <circle cx={cx} cy={cx} r={r * 0.55} fill="#272f46" />
           <text
             x={cx}
             y={cx + 4}
-            fill="#f5f7fb"
+            fill="#eceff6"
             textAnchor="middle"
             fontSize="22"
             fontWeight="700"
@@ -61,7 +61,7 @@ export default function CategoryPie() {
           <text
             x={cx}
             y={cx + 20}
-            fill="#9aa6c1"
+            fill="#b3bdd2"
             textAnchor="middle"
             fontSize="10"
           >

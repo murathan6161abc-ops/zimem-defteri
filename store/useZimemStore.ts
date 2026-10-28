@@ -13,8 +13,9 @@ import { calculateXP } from '@/lib/xp';
 import { checkUnlocks } from '@/lib/achievements';
 import { syncSurveySubmission, syncDeviceSnapshot } from '@/lib/sync';
 import { deleteMerchantDebt, insertMerchantDebt } from '@/lib/supabaseDebts';
-import { signOut, type AccountData } from '@/lib/auth';
+import { fetchMyMerchantDebts, getCurrentUserId, signOut, type AccountData } from '@/lib/auth';
 import { tStatic } from '@/lib/i18n';
+import { iconOf, kindOf } from '@/lib/debts';
 
 interface ToastMsg {
   id: string;
@@ -74,6 +75,8 @@ interface ZimemState {
   addMerchantDebt: (input: Omit<Debt, 'id'>) => Promise<{ id: string; synced: boolean }>;
   // false → sunucuda silinemedi (bağlantı yok ya da borç artık açık değil); liste değişmez.
   removeMerchantDebt: (id: string) => Promise<boolean>;
+  // Esnaf defterini sunucudaki kayıtlarla eşitler (giriş sırasındaki yarışta düşen kayıtlar geri gelir).
+  refreshMerchantDebts: () => Promise<void>;
 
   pushToast: (t: Omit<ToastMsg, 'id'>) => void;
   dismissToast: (id: string) => void;
@@ -205,6 +208,8 @@ export const useZimemStore = create<ZimemState>()(
           title: input.title,
           description: input.description,
           category: input.category,
+          kind: input.kind,
+          icon: input.icon,
           amount: input.amount,
           urgency: input.urgency,
           merchantName,
@@ -231,6 +236,17 @@ export const useZimemStore = create<ZimemState>()(
           };
         });
         return { id, synced: !!remote };
+      },
+
+      refreshMerchantDebts: async () => {
+        const server = await fetchMyMerchantDebts(getCurrentUserId());
+        if (!server) return; // çevrimdışı: yerel liste olduğu gibi kalır
+        set((s) => {
+          const ids = new Set(server.map((d) => d.id));
+          // Sunucuya hiç yazılamamış yerel kayıtlar ("m-" önekli) korunur.
+          const localOnly = s.merchantDebts.filter((d) => d.id.startsWith('m-') && !ids.has(d.id));
+          return { merchantDebts: [...localOnly, ...server] };
+        });
       },
 
       removeMerchantDebt: async (id) => {
@@ -299,6 +315,8 @@ export const useZimemStore = create<ZimemState>()(
           postEmotion: data.emotion,
           willRepeat: data.willRepeat,
           urgency: debt.urgency,
+          kind: kindOf(debt),
+          icon: iconOf(debt),
         };
 
         // Yeni borç durumu

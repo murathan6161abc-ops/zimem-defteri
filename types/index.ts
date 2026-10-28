@@ -1,4 +1,18 @@
+// Araştırma grubu (TÜBİTAK analizleri ve veritabanı `category` sütunu): 4 sabit değer.
 export type Category = 'gida' | 'egitim' | 'fatura' | 'saglik';
+
+// Borcun ayrıntılı türü (esnafın seçtiği, kartlarda görünen). Her tür bir gruba bağlıdır.
+export type DebtKind =
+  | 'gida'
+  | 'bebek'
+  | 'temizlik'
+  | 'saglik'
+  | 'egitim'
+  | 'giyim'
+  | 'yakacak'
+  | 'fatura'
+  | 'ulasim'
+  | 'diger';
 
 export interface Debt {
   id: string;
@@ -8,6 +22,7 @@ export interface Debt {
   amount: number;
   urgency: 1 | 2 | 3;
   icon: string;
+  kind?: DebtKind; // yoksa category'den türetilir (eski kayıtlar)
 }
 
 export interface PreTestData {
@@ -50,6 +65,8 @@ export interface HistoryEntry {
   postEmotion: PostTestData['emotion'];
   willRepeat: PostTestData['willRepeat'];
   urgency: number;
+  kind?: DebtKind; // bu cihazda ödenenlerde; sunucudan yeniden kurulan geçmişte yok
+  icon?: string;
 }
 
 export interface Achievement {
@@ -79,6 +96,9 @@ export interface UserProfile {
   createdAt: string;
   // Bilgilendirilmiş onam (informed consent) zaman damgası — araştırma etiği
   consentAt?: string;
+  // Yaş grubu (doğum tarihi tutulmaz) ve 18 yaş altı için velinin imzalı onam beyanı
+  ageGroup?: 'minor' | 'adult';
+  guardianConsentAt?: string;
 }
 
 export interface MerchantDebt extends Debt {

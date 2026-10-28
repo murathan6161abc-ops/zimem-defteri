@@ -14,8 +14,8 @@
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
         <!-- Koyu tema ile uyumlu sistem çubukları (beyaz ikonlar) -->
-        <item name="android:statusBarColor">#FF0A0E1A</item>
-        <item name="android:navigationBarColor">#FF0A0E1A</item>
+        <item name="android:statusBarColor">#FF1D2436</item>
+        <item name="android:navigationBarColor">#FF1D2436</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 

@@ -71,6 +71,7 @@ export async function syncSurveySubmission(args: {
       will_repeat: post.willRepeat,
       xp_gained: entry.xp,
       app_version: APP_VERSION,
+      age_group: profile?.ageGroup ?? null,
       // PANAS-SF skorları (akademik ölçek)
       panas_neg_scores: pre.panasNeg || null,
       panas_pos_scores: post.panasPos || null,

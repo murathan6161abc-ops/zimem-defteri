@@ -66,6 +66,30 @@ npm run tarama
 Terminal kullanmak istemezsen `scripts/tarama-baslat.command` dosyasına çift tıkla:
 Ollama kapalıysa açar ve programı başlatır. Masaüstüne kısayolunu sürükleyebilirsin.
 
+### Borç türleri ve ikonlar (v2.7.0)
+
+SQL Editor'de `migrations/20260928120000_debt_kind_icon.sql` dosyasını çalıştır
+(masaüstündeki `D-Zimem/tur-ve-ikon.sql` ile aynı). `merchant_debts` tablosuna
+`kind` (bebek, temizlik, giyim, yakacak, ulaşım… 10 tür) ve `icon` sütunlarını ekler.
+`category` sütunu araştırma grubu olarak (gida/egitim/fatura/saglik) aynen kalır;
+tür her zaman kendi grubuyla kaydedilir (ör. yakacak → fatura). SQL çalıştırılmadan
+da uygulama çalışır, yalnızca tür ve ikon sunucuda saklanmaz.
+
+**Okuma doğruluğu.** Program (`scripts/ledger-reader.mjs`) modele hesap yaptırmaz: model
+yalnızca satırları okur (ad, ürün, tutar, borç/ödeme/toplam/"ödendi", üstü çizili mi);
+toplama, kısmi ödeme düşme ve müşteri gruplama kodla yapılır. Modelin emin olmadığı
+rakamlar ve defterde yazan toplamla tutmayan hesaplar uygulamada "Kontrol et" diye
+işaretlenir ve kendiliğinden seçilmez. Kendi defter fotoğraflarınla doğruluğu ölçmek için
+fotoğrafları `tarama-test/` klasörüne koy (git'e girmez) ve çalıştır:
+
+```bash
+npm run tarama:test
+```
+
+Doğru cevabı biliyorsan fotoğrafın yanına aynı adla `.json` koy
+(`{"entries":[{"ref":"A.Y.","amount":130},{"ref":"M.K.","amount":90,"paid":true}]}`);
+araç kaç borcun doğru okunduğunu puanlar.
+
 Model değiştirmek için `.env.tarama` içindeki `OLLAMA_MODEL` satırını düzenle
 (ör. daha hızlı ama daha az doğru `qwen3.5:4b`). `.env.tarama` gizlidir, git'e girmez.
 

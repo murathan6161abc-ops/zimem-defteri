@@ -1,13 +1,13 @@
 'use client';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useZimemStore } from '@/store/useZimemStore';
-import type { Category } from '@/types';
+import type { DebtKind } from '@/types';
 import {
   fetchOpenDebts,
   subscribeToDebts,
 } from '@/lib/supabaseDebts';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { SAMPLE_DEBTS } from '@/lib/debts';
+import { SAMPLE_DEBTS, kindOf } from '@/lib/debts';
 import { useI18n, tStatic } from '@/lib/i18n';
 import DebtCard from './DebtCard';
 import DebtFilters from './DebtFilters';
@@ -21,8 +21,9 @@ export default function DebtList() {
   const applyRemoteDebtUpdate = useZimemStore((s) => s.applyRemoteDebtUpdate);
   const applyRemoteDebtClose = useZimemStore((s) => s.applyRemoteDebtClose);
   const pushToast = useZimemStore((s) => s.pushToast);
+  const closedByMe = useZimemStore((s) => s.history.length);
 
-  const [filter, setFilter] = useState<Category | 'all'>('all');
+  const [filter, setFilter] = useState<DebtKind | 'all'>('all');
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false);
@@ -87,9 +88,14 @@ export default function DebtList() {
         ? []
         : filter === 'all'
           ? openDebts
-          : openDebts.filter((d) => d.category === filter),
+          : openDebts.filter((d) => kindOf(d) === filter),
     [mounted, filter, openDebts],
   );
+  const kindCounts = useMemo(() => {
+    const counts: Partial<Record<DebtKind, number>> = {};
+    if (mounted) for (const d of openDebts) counts[kindOf(d)] = (counts[kindOf(d)] ?? 0) + 1;
+    return counts;
+  }, [mounted, openDebts]);
 
   return (
     <section>
@@ -99,7 +105,7 @@ export default function DebtList() {
           {!mounted || loading ? '…' : t('debt.unpaid_count', { n: openDebts.length })}
         </div>
       </div>
-      <DebtFilters active={filter} onChange={setFilter} />
+      <DebtFilters active={filter} onChange={setFilter} counts={kindCounts} />
 
       {mounted && loading ? (
         <div className="glass p-10 text-center">
@@ -108,13 +114,27 @@ export default function DebtList() {
         </div>
       ) : mounted && visible.length === 0 ? (
         <div className="glass p-10 text-center">
-          <div className="text-5xl mb-3">🌿</div>
-          <div className="font-bold text-lg mb-1">{t('debt.congrats')}</div>
-          <div className="text-sm text-muted-c">
-            {openDebts.length === 0
-              ? t('debt.all_closed')
-              : t('debt.none_in_category')}
-          </div>
+          {openDebts.length > 0 ? (
+            // Filtre: bu kategoride borç yok
+            <>
+              <div className="text-4xl mb-3">🔎</div>
+              <div className="text-sm text-muted-c">{t('debt.none_in_category')}</div>
+            </>
+          ) : closedByMe > 0 ? (
+            // Havuz boş ve kullanıcı borç kapatmış: tebrik
+            <>
+              <div className="text-5xl mb-3">🌿</div>
+              <div className="font-bold text-lg mb-1">{t('debt.congrats')}</div>
+              <div className="text-sm text-muted-c">{t('debt.all_closed')}</div>
+            </>
+          ) : (
+            // Havuz boş, yeni kullanıcı: tebrik değil, bilgi
+            <>
+              <div className="text-5xl mb-3">🕊️</div>
+              <div className="font-bold text-lg mb-1">{t('debt.empty_pool_title')}</div>
+              <div className="text-sm text-muted-c">{t('debt.empty_pool_desc')}</div>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid gap-3">

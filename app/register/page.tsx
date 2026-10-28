@@ -17,6 +17,8 @@ import {
 } from '@/lib/accountSecurity';
 import type { Role } from '@/types';
 import GoogleButton from '@/components/auth/GoogleButton';
+import ConsentBlock from '@/components/auth/ConsentBlock';
+import { consentComplete, type AgeGroup } from '@/lib/research';
 
 // Supabase varsa gerçek hesap (e-posta + 6 haneli kod + şifre); yoksa yerel profil.
 const authMode = isSupabaseConfigured();
@@ -47,7 +49,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   // Bilgilendirilmiş onam (araştırma etiği) — kayıt için zorunlu
   const [consent, setConsent] = useState(false);
-  const [kvkkOpen, setKvkkOpen] = useState(false);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
+  const [guardian, setGuardian] = useState(false);
 
   const credsOk = !authMode || (isValidRecoveryEmail(email) && isValidPassword(password));
 
@@ -63,6 +66,8 @@ export default function RegisterPage() {
     shopName: role === 'esnaf' ? shopName.trim() : undefined,
     city: city.trim() || undefined,
     consentAt: at,
+    ageGroup: ageGroup ?? 'adult',
+    guardianConsentAt: ageGroup === 'minor' ? at : undefined,
   });
 
   // Kayıt formu → e-postaya 6 haneli kod gönder
@@ -136,6 +141,7 @@ export default function RegisterPage() {
     displayName.trim().length >= 2 &&
     (role !== 'esnaf' || shopName.trim().length >= 2) &&
     consent &&
+    consentComplete(ageGroup, guardian) &&
     credsOk &&
     !busy;
 
@@ -158,6 +164,8 @@ export default function RegisterPage() {
       city: cityVal,
       createdAt: now,
       consentAt: now,
+      ageGroup: ageGroup ?? undefined,
+      guardianConsentAt: ageGroup === 'minor' ? now : undefined,
     });
     router.replace(role === 'esnaf' ? '/esnaf/' : '/');
   };
@@ -188,7 +196,7 @@ export default function RegisterPage() {
                 >
                   <div className="text-4xl sm:text-5xl mb-2">🤝</div>
                   <div className="font-bold text-base mb-1">{t('register.citizen')}</div>
-                  <div className="text-[11px] sm:text-xs text-muted-c leading-relaxed">
+                  <div className="text-xs sm:text-xs text-muted-c leading-relaxed">
                     {t('register.citizen_desc')}
                   </div>
                 </button>
@@ -199,7 +207,7 @@ export default function RegisterPage() {
                 >
                   <div className="text-4xl sm:text-5xl mb-2">🏪</div>
                   <div className="font-bold text-base mb-1">{t('register.merchant')}</div>
-                  <div className="text-[11px] sm:text-xs text-muted-c leading-relaxed">
+                  <div className="text-xs sm:text-xs text-muted-c leading-relaxed">
                     {t('register.merchant_desc')}
                   </div>
                 </button>
@@ -216,7 +224,7 @@ export default function RegisterPage() {
 
               {authMode && (
                 <>
-                  <div className="flex items-center gap-3 my-5 text-[11px] text-muted-c uppercase tracking-wider">
+                  <div className="flex items-center gap-3 my-5 text-xs text-muted-c uppercase tracking-wider">
                     <span className="flex-1 h-px bg-white/10" />
                     {t('auth.or')}
                     <span className="flex-1 h-px bg-white/10" />
@@ -290,42 +298,14 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Aydınlatma metni + bilgilendirilmiş gönüllü onam (araştırma etiği / KVKK) */}
-              <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setKvkkOpen((v) => !v)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
-                  aria-expanded={kvkkOpen}
-                >
-                  <span className="text-[13px] font-semibold flex items-center gap-2">
-                    🔒 {t('register.consent_title')}
-                  </span>
-                  <span className={`text-muted-c transition-transform ${kvkkOpen ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {kvkkOpen && (
-                  <div className="px-4 pb-4 text-[11px] text-muted-c leading-relaxed space-y-2 border-t border-white/5 pt-3">
-                    <p>{t('register.consent_p1')}</p>
-                    <p>{t('register.consent_p2')}</p>
-                    <p>{t('register.consent_p3')}</p>
-                    <p>{t('register.consent_p4')}</p>
-                  </div>
-                )}
-              </div>
-
-              <label className="mt-3 flex items-start gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-amber-400"
-                />
-                <span className="text-[12px] text-muted-c leading-relaxed">
-                  {t('register.consent_checkbox')}
-                </span>
-              </label>
+              <ConsentBlock
+                ageGroup={ageGroup}
+                onAgeGroup={setAgeGroup}
+                guardian={guardian}
+                onGuardian={setGuardian}
+                consent={consent}
+                onConsent={setConsent}
+              />
 
               {error && (
                 <div className="mt-4 text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
@@ -434,7 +414,7 @@ export default function RegisterPage() {
                   </button>
 
                   {!codeVerified && (
-                    <div className="flex items-center justify-between text-[12px]">
+                    <div className="flex items-center justify-between text-[13px]">
                       <button
                         type="button"
                         className="text-muted-c hover:text-white bg-transparent border-0 p-0"
@@ -461,7 +441,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-c text-center mt-6 opacity-70">
+          <p className="text-xs text-muted-c text-center mt-6 opacity-70">
             {t('register.footer')}
           </p>
         </div>
@@ -498,7 +478,7 @@ function Field({
         placeholder={placeholder}
         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
       />
-      {hint && <div className="text-[11px] text-muted-c mt-1">{hint}</div>}
+      {hint && <div className="text-xs text-muted-c mt-1">{hint}</div>}
     </label>
   );
 }

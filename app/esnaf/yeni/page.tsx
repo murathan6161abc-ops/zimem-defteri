@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { CATEGORY_ICONS, CATEGORY_META } from '@/lib/debts';
-import type { Category } from '@/types';
+import { DEBT_KINDS, KIND_META } from '@/lib/debts';
+import type { DebtKind } from '@/types';
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
 
@@ -14,16 +14,17 @@ export default function NewMerchantDebtPage() {
   const addDebt = useZimemStore((s) => s.addMerchantDebt);
   const { t } = useI18n();
 
-  const [category, setCategory] = useState<Category>('gida');
-  const [icon, setIcon] = useState<string>('🍞');
+  const [kind, setKind] = useState<DebtKind>('gida');
+  const [icon, setIcon] = useState<string>(KIND_META.gida.emoji);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [urgency, setUrgency] = useState<1 | 2 | 3>(2);
 
   const amountNum = Number(amount.replace(/,/g, '.'));
+  // Başlık isteğe bağlı: boşsa türe göre hazır başlık kullanılır.
+  const finalTitle = title.trim().length >= 3 ? title.trim() : t(`debt.kind_title_${kind}`);
   const canSubmit =
-    title.trim().length >= 3 &&
     description.trim().length >= 3 &&
     !Number.isNaN(amountNum) &&
     amountNum > 0;
@@ -31,9 +32,10 @@ export default function NewMerchantDebtPage() {
   const handleSubmit = () => {
     if (!canSubmit) return;
     addDebt({
-      category,
+      category: KIND_META[kind].group,
+      kind,
       icon,
-      title: title.trim(),
+      title: finalTitle,
       description: description.trim(),
       amount: Math.round(amountNum),
       urgency,
@@ -56,27 +58,32 @@ export default function NewMerchantDebtPage() {
       <div className="glass p-6 space-y-5">
         <section>
           <div className="section-title">{t('merchant.step_category')}</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
-              const meta = CATEGORY_META[c];
-              const active = category === c;
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {DEBT_KINDS.map((k) => {
+              const meta = KIND_META[k];
+              const active = kind === k;
               return (
                 <button
-                  key={c}
+                  key={k}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => {
-                    setCategory(c);
-                    setIcon(CATEGORY_ICONS[c][0]);
+                    setKind(k);
+                    setIcon(meta.emoji);
                   }}
-                  className={`emotion-card ${active ? 'selected' : ''}`}
+                  className="flex flex-col items-center justify-center gap-1 min-h-[76px] px-1 py-2.5 rounded-2xl border text-center transition-all"
                   style={
                     active
-                      ? { borderColor: meta.color, background: `${meta.color}22` }
-                      : undefined
+                      ? { borderColor: meta.color, background: `${meta.color}2e`, boxShadow: `0 0 0 1px ${meta.color}66` }
+                      : { borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)' }
                   }
                 >
-                  <div className="emotion-emoji">{meta.emoji}</div>
-                  <div className="emotion-label">{t(`debt.cat_${c}`)}</div>
+                  <span className="text-2xl leading-none" aria-hidden>
+                    {meta.emoji}
+                  </span>
+                  <span className={`text-xs leading-tight ${active ? 'font-semibold text-white' : 'text-muted-c'}`}>
+                    {t(`debt.kind_${k}`)}
+                  </span>
                 </button>
               );
             })}
@@ -84,54 +91,22 @@ export default function NewMerchantDebtPage() {
         </section>
 
         <section>
-          <div className="section-title">{t('merchant.step_icon')}</div>
-          <div className="flex gap-2 flex-wrap">
-            {CATEGORY_ICONS[category].map((i) => (
+          <div className="text-xs text-muted-c mb-2">{t('debt.icon_label')}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {KIND_META[kind].icons.map((i) => (
               <button
                 key={i}
                 type="button"
+                aria-pressed={icon === i}
                 onClick={() => setIcon(i)}
-                className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center border transition-all ${
-                  icon === i
-                    ? 'border-purple-400 bg-purple-500/20'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center border transition-all ${
+                  icon === i ? 'border-purple-400 bg-purple-500/25 scale-110' : 'border-white/10 bg-white/5 hover:bg-white/10'
                 }`}
               >
                 {i}
               </button>
             ))}
           </div>
-        </section>
-
-        <section>
-          <label className="block">
-            <div className="text-sm font-medium mb-1">{t('merchant.step_title')}</div>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t(`merchant.title_ph_${category}`)}
-              maxLength={48}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
-            />
-          </label>
-        </section>
-
-        <section>
-          <label className="block">
-            <div className="text-sm font-medium mb-1">{t('merchant.step_desc')}</div>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('merchant.desc_ph')}
-              rows={3}
-              maxLength={180}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all resize-none"
-            />
-            <div className="text-[11px] text-muted-c text-right">
-              {description.length}/180
-            </div>
-          </label>
         </section>
 
         <section className="grid grid-cols-2 gap-3">
@@ -168,6 +143,37 @@ export default function NewMerchantDebtPage() {
           </div>
         </section>
 
+        <section>
+          <label className="block">
+            <div className="text-sm font-medium mb-1">{t('merchant.step_desc')}</div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t('merchant.desc_ph')}
+              rows={3}
+              maxLength={180}
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all resize-none"
+            />
+            <div className="text-xs text-muted-c text-right">
+              {description.length}/180
+            </div>
+          </label>
+        </section>
+
+        <section>
+          <label className="block">
+            <div className="text-sm font-medium mb-1">{t('merchant.step_title')}</div>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t(`debt.kind_ph_${kind}`)}
+              maxLength={48}
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
+            />
+          </label>
+        </section>
+
         <div className="flex gap-2 pt-2">
           <Link href="/esnaf" className="btn flex-1 text-center">
             {t('common.give_up')}
@@ -183,7 +189,7 @@ export default function NewMerchantDebtPage() {
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-c text-center mt-4 opacity-70">
+      <p className="text-xs text-muted-c text-center mt-4 opacity-70">
         {t('merchant.new_footer')}
       </p>
     </div>

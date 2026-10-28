@@ -1,35 +1,46 @@
 'use client';
-import type { Category } from '@/types';
-import { CATEGORY_META } from '@/lib/debts';
+import type { DebtKind } from '@/types';
+import { DEBT_KINDS, KIND_META } from '@/lib/debts';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES: { key: Category | 'all'; emoji: string }[] = [
-  { key: 'all', emoji: '📋' },
-  { key: 'gida', emoji: CATEGORY_META.gida.emoji },
-  { key: 'egitim', emoji: CATEGORY_META.egitim.emoji },
-  { key: 'fatura', emoji: CATEGORY_META.fatura.emoji },
-  { key: 'saglik', emoji: CATEGORY_META.saglik.emoji },
-];
-
+/**
+ * Tür filtreleri: yalnızca havuzda borcu olan türler (sayısıyla) gösterilir;
+ * tek satırda yana kaydırılır ki telefonda ekranı kaplamasın.
+ */
 export default function DebtFilters({
   active,
   onChange,
+  counts,
 }: {
-  active: Category | 'all';
-  onChange: (v: Category | 'all') => void;
+  active: DebtKind | 'all';
+  onChange: (v: DebtKind | 'all') => void;
+  counts: Partial<Record<DebtKind, number>>;
 }) {
   const { t } = useI18n();
+  const kinds = DEBT_KINDS.filter((k) => (counts[k] ?? 0) > 0 || k === active);
+  const total = Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0);
   return (
-    <div className="flex gap-2 flex-wrap mb-4">
-      {CATEGORIES.map((c) => (
+    <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto scrollbar-none pb-1 mb-4">
+      <button
+        className={`tab-btn shrink-0 ${active === 'all' ? 'active' : ''}`}
+        onClick={() => onChange('all')}
+        type="button"
+      >
+        <span aria-hidden>📋</span>
+        <span>{t('debt.cat_all')}</span>
+        {total > 0 && <span className="opacity-70">{total}</span>}
+      </button>
+      {kinds.map((k) => (
         <button
-          key={c.key}
-          className={`tab-btn ${active === c.key ? 'active' : ''}`}
-          onClick={() => onChange(c.key)}
+          key={k}
+          className={`tab-btn shrink-0 ${active === k ? 'active' : ''}`}
+          style={active === k ? { borderColor: `${KIND_META[k].color}99`, background: `${KIND_META[k].color}26` } : undefined}
+          onClick={() => onChange(k)}
           type="button"
         >
-          <span>{c.emoji}</span>
-          <span>{t(c.key === 'all' ? 'debt.cat_all' : `debt.cat_${c.key}`)}</span>
+          <span aria-hidden>{KIND_META[k].emoji}</span>
+          <span>{t(`debt.kind_${k}`)}</span>
+          <span className="opacity-70">{counts[k] ?? 0}</span>
         </button>
       ))}
     </div>

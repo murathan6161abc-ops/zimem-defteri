@@ -127,7 +127,7 @@ export default function LoginPage() {
               📖
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight leading-none">D-Zimem</h1>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-amber-300/90 font-semibold mt-1.5">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/90 font-semibold mt-1.5">
               Kadim İyilik · Dijital İz
             </p>
             <p className="text-sm text-muted-c mt-3">{t('auth.login_subtitle')}</p>
@@ -138,7 +138,7 @@ export default function LoginPage() {
           ) : (
           <>
           <GoogleButton onError={setError} />
-          <div className="flex items-center gap-3 my-5 text-[11px] text-muted-c uppercase tracking-wider">
+          <div className="flex items-center gap-3 my-5 text-xs text-muted-c uppercase tracking-wider">
             <span className="flex-1 h-px bg-white/10" />
             {t('auth.or')}
             <span className="flex-1 h-px bg-white/10" />
@@ -166,7 +166,7 @@ export default function LoginPage() {
           {error && (
             <div className="mt-4 text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
               {error}
-              {errorDetail && <div className="text-[10px] text-red-200/60 mt-1.5 break-words">{errorDetail}</div>}
+              {errorDetail && <div className="text-[11px] text-red-200/60 mt-1.5 break-words">{errorDetail}</div>}
             </div>
           )}
 

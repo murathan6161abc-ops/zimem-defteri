@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
               placeholder="ornek@eposta.com"
               className={inputCls}
             />
-            {typedUsername && <p className="text-[12px] text-amber-300">{t('security.forgot_no_email')}</p>}
+            {typedUsername && <p className="text-[13px] text-amber-300">{t('security.forgot_no_email')}</p>}
             <button type="button" className="btn btn-primary w-full" disabled={busy || !email.trim()} onClick={() => void sendCode()}>
               {busy ? t('common.loading') : t('security.forgot_send')}
             </button>
@@ -166,7 +166,7 @@ export default function ForgotPasswordPage() {
             <label className="block">
               <div className="text-sm font-medium mb-1">{t('security.new_password')}</div>
               <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
-              <div className="text-[11px] text-muted-c mt-1">{t('security.password_hint')}</div>
+              <div className="text-xs text-muted-c mt-1">{t('security.password_hint')}</div>
             </label>
             <label className="block">
               <div className="text-sm font-medium mb-1">{t('security.new_password_confirm')}</div>

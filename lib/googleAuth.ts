@@ -17,8 +17,13 @@ import { getSupabase } from './supabase';
 
 export const NATIVE_REDIRECT = 'com.dzimem.app://login-callback';
 
-export type GoogleAuthError = 'not_configured' | 'cancelled' | 'network' | 'already_linked' | 'account_exists' | 'generic';
+export type GoogleAuthError = 'not_configured' | 'cancelled' | 'network' | 'already_linked' | 'account_exists' | 'no_callback' | 'generic';
 export type GoogleFailure = { ok: false; error: GoogleAuthError; detail?: string };
+
+// APK: tarayıcı açıldı ama dönüş bağlantısı henüz gelmedi. Supabase'de dönüş adresi
+// izin listesinde değilse tarayıcı uygulamaya hiç dönmez ve hata görünmezdi.
+let nativePending = false;
+const CALLBACK_GRACE_MS = 3000;
 
 function webRedirect(path = '/login/'): string {
   const base = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -68,6 +73,7 @@ export async function startGoogleSignIn(): Promise<{ ok: true } | { ok: false; e
     if (error) return { ok: false, error: mapError(error.message) };
     if (native) {
       if (!data?.url) return { ok: false, error: 'generic' };
+      nativePending = true;
       await Browser.open({ url: data.url, presentationStyle: 'popover' });
     }
     return { ok: true };
@@ -104,6 +110,7 @@ export async function startGoogleLink(): Promise<{ ok: true } | { ok: false; err
     }
     if (native) {
       if (!data?.url) return { ok: false, error: 'generic' };
+      nativePending = true;
       await Browser.open({ url: data.url, presentationStyle: 'popover' });
     }
     return { ok: true };
@@ -148,16 +155,29 @@ export function listenForNativeOAuth(onError: (error: GoogleAuthError, detail?: 
   if (!Capacitor.isNativePlatform()) return () => {};
   const handle = async (url: string | undefined) => {
     if (!url || !url.startsWith(NATIVE_REDIRECT)) return;
+    nativePending = false;
     try {
       await Browser.close();
     } catch {}
     const result = await completeFromUrl(url);
-    if (result && !result.ok) onError(result.error, result.detail);
+    // Dönüş adresi geldi ama ne kod ne hata var: sessizce yutma.
+    if (!result) onError('no_callback');
+    else if (!result.ok) onError(result.error, result.detail);
   };
+  // Tarayıcı kapandı ve dönüş bağlantısı gelmediyse (iptal ya da yanlış yönlendirme) bildir.
+  const finished = Browser.addListener('browserFinished', () => {
+    if (!nativePending) return;
+    setTimeout(() => {
+      if (!nativePending) return;
+      nativePending = false;
+      onError('no_callback');
+    }, CALLBACK_GRACE_MS);
+  });
   void App.getLaunchUrl().then((launch) => handle(launch?.url));
   const listener = App.addListener('appUrlOpen', (event) => void handle(event.url));
   return () => {
     void listener.then((l) => l.remove());
+    void finished.then((l) => l.remove());
   };
 }
 

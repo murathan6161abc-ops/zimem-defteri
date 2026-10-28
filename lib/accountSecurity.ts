@@ -16,6 +16,7 @@
 
 import type { Factor, User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
+import type { AgeGroup } from './research';
 import { isSyntheticEmail, isValidPassword, normalizeUsername, usernameToEmail } from './auth';
 
 export type SecurityErrorCode =
@@ -428,6 +429,8 @@ export interface EmailSignUpProfile {
   shopName?: string;
   city?: string;
   consentAt: string;
+  ageGroup: AgeGroup;
+  guardianConsentAt?: string;
 }
 
 function signUpMetadata(p: EmailSignUpProfile) {
@@ -437,6 +440,8 @@ function signUpMetadata(p: EmailSignUpProfile) {
     shopName: p.shopName || null,
     city: p.city || null,
     consentAt: p.consentAt,
+    ageGroup: p.ageGroup,
+    guardianConsentAt: p.guardianConsentAt || null,
   };
 }
 
@@ -514,6 +519,19 @@ export async function finishEmailSignUp(
       await client.auth.refreshSession();
     } catch {}
     return { ok: true, user: data.user };
+  } catch (e) {
+    return { ok: false, error: mapSecurityError(e) };
+  }
+}
+
+/** Kullanıcının hesabını ve tüm araştırma verisini kalıcı olarak siler. */
+export async function deleteMyAccount(): Promise<SecurityResult> {
+  const client = getSupabase();
+  if (!client) return { ok: false, error: 'not_configured' };
+  try {
+    const { error } = await client.rpc('delete_my_account');
+    if (error) return { ok: false, error: mapSecurityError(error) };
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: mapSecurityError(e) };
   }

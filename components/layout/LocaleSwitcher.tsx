@@ -33,7 +33,7 @@ export default function LocaleSwitcher() {
       >
         <span className="text-sm leading-none">{current.flag}</span>
         <span className="hidden sm:inline">{current.label}</span>
-        <span className="text-muted-c text-[10px]">▼</span>
+        <span className="text-muted-c text-[11px]">▼</span>
       </button>
 
       {open && (

@@ -6,11 +6,13 @@
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
 import { who5Total } from './scales';
+import type { AgeGroup } from './research';
 import type { WHO5Measurement } from '@/types';
 
 /** Yeni bir WHO-5 ölçümü kaydeder */
 export async function submitWHO5(
   scores: Record<string, number>,
+  ageGroup?: AgeGroup,
 ): Promise<WHO5Measurement | null> {
   const client = getSupabase();
   if (!client) return null;
@@ -23,6 +25,7 @@ export async function submitWHO5(
       user_id: getCurrentUserId(),
       scores,
       total,
+      age_group: ageGroup ?? null,
     })
     .select()
     .single();

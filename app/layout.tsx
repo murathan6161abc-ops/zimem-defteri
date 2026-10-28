@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import BottomNav from "@/components/layout/BottomNav";
+import ScanWatcher from "@/components/scan/ScanWatcher";
 import ToastHost from "@/components/ui/ToastHost";
 import AuthGate from "@/components/auth/AuthGate";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
@@ -55,7 +57,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover" as const,
-  themeColor: "#0a0e1a",
+  themeColor: "#1d2436",
 };
 
 export default function RootLayout({
@@ -78,6 +80,8 @@ export default function RootLayout({
           <ToastHost />
           <OnboardingModal />
           <Footer />
+          <BottomNav />
+          <ScanWatcher />
         </I18nProvider>
       </body>
     </html>

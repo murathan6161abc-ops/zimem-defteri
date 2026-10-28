@@ -3,10 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useI18n } from '@/lib/i18n';
 import { getSupabase } from '@/lib/supabase';
-import { isValidUsername } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { isValidUsername, signOut } from '@/lib/auth';
 import { googleErrorKey, startGoogleLink } from '@/lib/googleAuth';
 import {
   cancelTotpEnrollment,
+  deleteMyAccount,
   confirmTotpEnrollment,
   disableTotp,
   getTotpFactor,
@@ -50,7 +52,53 @@ function Msg({ kind, children }: { kind: 'error' | 'info'; children: React.React
     kind === 'error'
       ? 'text-red-300 bg-red-500/10 border-red-500/20'
       : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20';
-  return <div className={`text-[12px] border rounded-xl px-3 py-2 ${cls}`}>{children}</div>;
+  return <div className={`text-[13px] border rounded-xl px-3 py-2 ${cls}`}>{children}</div>;
+}
+
+const TONE = {
+  ok: 'bg-emerald-500/15 text-emerald-300',
+  warn: 'bg-amber-500/15 text-amber-300',
+  off: 'bg-white/10 text-muted-c',
+} as const;
+
+/** Açılır-kapanır ayar kartı: kapalıyken başlık ve durum rozeti görünür, dokununca açılır. */
+function Fold({
+  icon,
+  title,
+  status,
+  tone,
+  forceOpen = false,
+  children,
+}: {
+  icon: string;
+  title: string;
+  status: string;
+  tone: keyof typeof TONE;
+  forceOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const shown = open || forceOpen;
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={shown}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-start bg-transparent border-0 text-inherit"
+      >
+        <span className="text-xl shrink-0" aria-hidden>
+          {icon}
+        </span>
+        <span className="flex-1 min-w-0 font-semibold text-[15px]">{title}</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${TONE[tone]}`}>{status}</span>
+        <span className={`text-muted-c shrink-0 transition-transform ${shown ? 'rotate-180' : ''}`} aria-hidden>
+          ▾
+        </span>
+      </button>
+      {shown && <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">{children}</div>}
+    </div>
+  );
 }
 
 export default function AccountSecurity({ username }: { username: string }) {
@@ -81,13 +129,12 @@ export default function AccountSecurity({ username }: { username: string }) {
   if (!user) return null;
 
   return (
-    <section className="glass p-5 mb-6 space-y-6">
+    <section className="glass p-5 mb-6 space-y-3">
       <div className="section-title">{t('security.section')}</div>
       <RecoveryEmailCard user={user} username={username} onChanged={refreshUser} />
-      <div className="border-t border-white/5" />
       <GoogleLinkCard user={user} />
-      <div className="border-t border-white/5" />
       <TwoFactorCard />
+      <DeleteAccountCard />
     </section>
   );
 }
@@ -188,18 +235,21 @@ function RecoveryEmailCard({
   const awaitingCode = !!pending || (!!state.email && !state.verified);
 
   return (
-    <div className="space-y-3">
-      <div>
-        <div className="font-semibold text-sm">📧 {t('security.email_title')}</div>
-        <p className="text-xs text-muted-c mt-1">
-          {isValidUsername(username) ? t('security.email_desc') : t('security.email_desc_short')}
-        </p>
-      </div>
+    <Fold
+      icon="📧"
+      title={t('security.email_title')}
+      status={state.verified ? `✓ ${t('security.email_verified')}` : state.email ? t('security.email_unverified') : t('security.status_missing')}
+      tone={state.verified ? 'ok' : 'warn'}
+      forceOpen={awaitingCode || !!error || !!info}
+    >
+      <p className="text-[13px] text-muted-c">
+        {isValidUsername(username) ? t('security.email_desc') : t('security.email_desc_short')}
+      </p>
 
       {state.email ? (
         <div className="flex items-center justify-between gap-2 flex-wrap text-sm">
           <span className="font-mono text-xs truncate">{state.email}</span>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full ${state.verified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${state.verified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
             {state.verified ? `✓ ${t('security.email_verified')}` : t('security.email_unverified')}
           </span>
         </div>
@@ -224,11 +274,11 @@ function RecoveryEmailCard({
           <button type="button" className="btn btn-primary w-full" disabled={busy || !isValidEmailCode(code)} onClick={() => void verify()}>
             {busy ? t('common.loading') : t('security.verify_btn')}
           </button>
-          <button type="button" className="w-full text-[12px] text-muted-c hover:text-white bg-transparent border-0" disabled={busy} onClick={() => void resend()}>
+          <button type="button" className="w-full text-[13px] text-muted-c hover:text-white bg-transparent border-0" disabled={busy} onClick={() => void resend()}>
             {t('security.resend')}
           </button>
           {pending && !state.email && (
-            <button type="button" className="w-full text-[12px] text-muted-c hover:text-white bg-transparent border-0" disabled={busy} onClick={cancelPending}>
+            <button type="button" className="w-full text-[13px] text-muted-c hover:text-white bg-transparent border-0" disabled={busy} onClick={cancelPending}>
               {t('security.cancel')}
             </button>
           )}
@@ -238,14 +288,14 @@ function RecoveryEmailCard({
       {/* Yalnızca kullanıcı adıyla açılmış eski hesaplar e-postayı kaldırıp kullanıcı
           adına dönebilir; e-postayla açılan hesabın dönebileceği bir kullanıcı adı yok. */}
       {state.email && isValidUsername(username) && (
-        <button type="button" className="text-[12px] text-red-300/80 hover:text-red-300 bg-transparent border-0 p-0" disabled={busy} onClick={() => void remove()}>
+        <button type="button" className="text-[13px] text-red-300/80 hover:text-red-300 bg-transparent border-0 p-0" disabled={busy} onClick={() => void remove()}>
           {t('security.email_remove')}
         </button>
       )}
 
       {info && <Msg kind="info">{info}</Msg>}
       {error && <Msg kind="error">{error}</Msg>}
-    </div>
+    </Fold>
   );
 }
 
@@ -279,16 +329,14 @@ function GoogleLinkCard({ user }: { user: User }) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="font-semibold text-sm">🔗 {t('security.google_title')}</div>
-          <p className="text-xs text-muted-c mt-1">{t('security.google_desc')}</p>
-        </div>
-        <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${linked ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-muted-c'}`}>
-          {linked ? `✓ ${t('security.google_linked')}` : t('security.google_not_linked')}
-        </span>
-      </div>
+    <Fold
+      icon="🔗"
+      title={t('security.google_title')}
+      status={linked ? `✓ ${t('security.google_linked')}` : t('security.google_not_linked')}
+      tone={linked ? 'ok' : 'off'}
+      forceOpen={!!error}
+    >
+      <p className="text-[13px] text-muted-c">{t('security.google_desc')}</p>
       {!linked && (
         <button type="button" className="btn w-full" disabled={busy} onClick={() => void link()}>
           {busy ? t('common.loading') : t('security.google_link_btn')}
@@ -297,10 +345,10 @@ function GoogleLinkCard({ user }: { user: User }) {
       {error && (
         <Msg kind="error">
           {error}
-          {detail && <div className="text-[10px] opacity-60 mt-1 break-words">{detail}</div>}
+          {detail && <div className="text-[11px] opacity-60 mt-1 break-words">{detail}</div>}
         </Msg>
       )}
-    </div>
+    </Fold>
   );
 }
 
@@ -386,16 +434,14 @@ function TwoFactorCard() {
   if (enabled === null) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="font-semibold text-sm">🛡️ {t('security.mfa_title')}</div>
-          <p className="text-xs text-muted-c mt-1">{t('security.mfa_desc')}</p>
-        </div>
-        <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${enabled ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-muted-c'}`}>
-          {enabled ? t('security.mfa_on') : t('security.mfa_off')}
-        </span>
-      </div>
+    <Fold
+      icon="🛡️"
+      title={t('security.mfa_title')}
+      status={enabled ? t('security.mfa_on') : t('security.mfa_off')}
+      tone={enabled ? 'ok' : 'off'}
+      forceOpen={!!enrollment || disabling || !!error || !!info}
+    >
+      <p className="text-[13px] text-muted-c">{t('security.mfa_desc')}</p>
 
       {!enabled && !enrollment && (
         <button type="button" className="btn w-full" disabled={busy} onClick={() => void begin()}>
@@ -437,12 +483,12 @@ function TwoFactorCard() {
               {busy ? t('common.loading') : t('security.verify_btn')}
             </button>
           </div>
-          <p className="text-[11px] text-muted-c">{t('security.mfa_lost_device')}</p>
+          <p className="text-xs text-muted-c">{t('security.mfa_lost_device')}</p>
         </div>
       )}
 
       {enabled && !disabling && (
-        <button type="button" className="text-[12px] text-red-300/80 hover:text-red-300 bg-transparent border-0 p-0" onClick={() => { setDisabling(true); setCode(''); setError(''); setInfo(''); }}>
+        <button type="button" className="text-[13px] text-red-300/80 hover:text-red-300 bg-transparent border-0 p-0" onClick={() => { setDisabling(true); setCode(''); setError(''); setInfo(''); }}>
           {t('security.mfa_disable')}
         </button>
       )}
@@ -464,6 +510,56 @@ function TwoFactorCard() {
 
       {info && <Msg kind="info">{info}</Msg>}
       {error && <Msg kind="error">{error}</Msg>}
-    </div>
+    </Fold>
+  );
+}
+
+// ─── Hesabı ve araştırma verilerini silme (katılımdan çekilme hakkı) ─────
+function DeleteAccountCard() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const word = t('security.delete_confirm_word');
+  const confirmed = typed.trim().toLocaleUpperCase() === word.toLocaleUpperCase();
+
+  const remove = async () => {
+    if (!confirmed || busy) return;
+    setBusy(true);
+    setError('');
+    const r = await deleteMyAccount();
+    if (!r.ok) {
+      setError(t('security.delete_failed'));
+      setBusy(false);
+      return;
+    }
+    await signOut();
+    router.replace('/login/');
+  };
+
+  return (
+    <Fold icon="🗑️" title={t('security.delete_title')} status={t('security.delete_status')} tone="warn" forceOpen={!!error}>
+      <p className="text-[13px] text-muted-c">{t('security.delete_desc')}</p>
+      <label className="block text-[13px] text-muted-c">
+        {t('security.delete_confirm_label')}
+        <input
+          type="text"
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          className={`${inputCls} mt-1`}
+        />
+      </label>
+      <button
+        type="button"
+        className="btn w-full"
+        disabled={!confirmed || busy}
+        onClick={() => void remove()}
+      >
+        {busy ? t('common.loading') : t('security.delete_btn')}
+      </button>
+      {error && <Msg kind="error">{error}</Msg>}
+    </Fold>
   );
 }

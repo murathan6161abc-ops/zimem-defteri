@@ -167,7 +167,7 @@ export default function IyilikTree({
       </svg>
 
       {/* legend */}
-      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted-c">
+      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-c">
         {(['gida', 'egitim', 'fatura', 'saglik'] as Category[]).map((c) => (
           <span key={c} className="inline-flex items-center gap-1.5">
             <span

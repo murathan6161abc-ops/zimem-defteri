@@ -5,6 +5,8 @@ import { useI18n } from '@/lib/i18n';
 import { getSupabase } from '@/lib/supabase';
 import { signOut } from '@/lib/auth';
 import type { Role } from '@/types';
+import ConsentBlock from '@/components/auth/ConsentBlock';
+import { consentComplete, type AgeGroup } from '@/lib/research';
 
 // Google ile ilk kez giren hesap: rol, takma ad ve araştırma onamı alınır.
 // Google'ın paylaştığı gerçek ad KULLANILMAZ; kişi anonim bir takma ad seçer.
@@ -19,7 +21,8 @@ export default function CompleteProfilePage() {
   const [shopName, setShopName] = useState('');
   const [city, setCity] = useState('');
   const [consent, setConsent] = useState(false);
-  const [kvkkOpen, setKvkkOpen] = useState(false);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
+  const [guardian, setGuardian] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,6 +40,7 @@ export default function CompleteProfilePage() {
     displayName.trim().length >= 2 &&
     (role !== 'esnaf' || shopName.trim().length >= 2) &&
     consent &&
+    consentComplete(ageGroup, guardian) &&
     !busy;
 
   const save = async () => {
@@ -54,6 +58,8 @@ export default function CompleteProfilePage() {
           city: city.trim() || null,
           createdAt: now,
           consentAt: now,
+          ageGroup,
+          guardianConsentAt: ageGroup === 'minor' ? now : null,
           signupCompleted: true,
         },
       });
@@ -107,13 +113,13 @@ export default function CompleteProfilePage() {
               placeholder={role === 'esnaf' ? t('register.nickname_ph_merchant') : t('register.nickname_ph_citizen')}
               className={inputCls}
             />
-            <div className="text-[11px] text-muted-c mt-1">{t('register.nickname_hint')}</div>
+            <div className="text-xs text-muted-c mt-1">{t('register.nickname_hint')}</div>
           </label>
           {role === 'esnaf' && (
             <label className="block">
               <div className="text-sm font-medium mb-1">{t('register.shop_label')}</div>
               <input type="text" value={shopName} onChange={(e) => setShopName(e.target.value)} placeholder={t('register.shop_ph')} className={inputCls} />
-              <div className="text-[11px] text-muted-c mt-1">{t('register.shop_hint')}</div>
+              <div className="text-xs text-muted-c mt-1">{t('register.shop_hint')}</div>
             </label>
           )}
           <label className="block">
@@ -122,34 +128,14 @@ export default function CompleteProfilePage() {
           </label>
         </div>
 
-        <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setKvkkOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
-            aria-expanded={kvkkOpen}
-          >
-            <span className="text-[13px] font-semibold">🔒 {t('register.consent_title')}</span>
-            <span className={`text-muted-c transition-transform ${kvkkOpen ? 'rotate-180' : ''}`}>▼</span>
-          </button>
-          {kvkkOpen && (
-            <div className="px-4 pb-4 text-[11px] text-muted-c leading-relaxed space-y-2 border-t border-white/5 pt-3">
-              <p>{t('register.consent_p1')}</p>
-              <p>{t('register.consent_p2')}</p>
-              <p>{t('register.consent_p3')}</p>
-              <p>{t('register.consent_p4')}</p>
-            </div>
-          )}
-        </div>
-        <label className="mt-3 flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-            className="mt-0.5 w-4 h-4 shrink-0 accent-amber-400"
-          />
-          <span className="text-[12px] text-muted-c leading-relaxed">{t('register.consent_checkbox')}</span>
-        </label>
+        <ConsentBlock
+          ageGroup={ageGroup}
+          onAgeGroup={setAgeGroup}
+          guardian={guardian}
+          onGuardian={setGuardian}
+          consent={consent}
+          onConsent={setConsent}
+        />
 
         {error && (
           <div className="mt-4 text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>

@@ -18,9 +18,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
-import { cleanEntries, LEDGER_JSON_SCHEMA, LEDGER_PROMPT } from '../lib/ledgerParse.ts';
+import { NUM_CTX, READER_VERSION, readLedger } from './ledger-reader.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USERNAME_DOMAIN = 'dzimem.app';
@@ -28,8 +29,8 @@ const USERNAME_DOMAIN = 'dzimem.app';
 const POLL_MS = 2_000;
 const HEARTBEAT_MS = 20_000;
 const CLEANUP_MS = 30 * 60_000;
-const STALE_JOB_MS = 3 * 60_000; // telefon 45 sn sonra vazgeçer; eski işleri okumaya değmez
-const OLLAMA_TIMEOUT_MS = 170_000; // uygulama 180 sn bekler
+const STALE_JOB_MS = 5 * 60_000; // telefon sırada en fazla 4 dk bekler; daha eskisini okumaya değmez
+const OLLAMA_TIMEOUT_MS = 170_000; // uygulama 180 sn bekler (kalabalık sayfa ~60 sn)
 const KEEP_DAYS = 3;
 
 // ─── Ayarlar ─────────────────────────────────────────────────
@@ -137,43 +138,11 @@ async function warmUp() {
     await fetch(`${OLLAMA_URL}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: OLLAMA_MODEL, prompt: '', keep_alive: '1h' }),
+      // Model, taramada kullanılan bağlam boyutuyla yüklensin (yoksa ilk taramada yeniden yüklenir).
+      body: JSON.stringify({ model: OLLAMA_MODEL, prompt: '', keep_alive: '1h', options: { num_ctx: NUM_CTX } }),
       signal: AbortSignal.timeout(120_000),
     });
   } catch {}
-}
-
-async function readLedger(image) {
-  const request = (withThink) =>
-    fetch(`${OLLAMA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        stream: false,
-        keep_alive: '1h',
-        ...(withThink ? { think: false } : {}),
-        format: LEDGER_JSON_SCHEMA,
-        options: { temperature: 0 },
-        messages: [{ role: 'user', content: LEDGER_PROMPT, images: [image] }],
-      }),
-      signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS),
-    });
-
-  let res = await request(true);
-  if (res.status === 400) {
-    // "düşünme" kipini desteklemeyen modeller için parametresiz tekrar dene
-    const text = await res.text();
-    if (/think/i.test(text)) res = await request(false);
-    else throw new Error(`ollama 400: ${text.slice(0, 120)}`);
-  }
-  if (!res.ok) throw new Error(`ollama ${res.status}`);
-  const payload = await res.json();
-  const parsed = JSON.parse(payload?.message?.content ?? '');
-  return {
-    entries: cleanEntries(parsed),
-    warning: typeof parsed?.warning === 'string' ? parsed.warning.slice(0, 300) : '',
-  };
 }
 
 // ─── Supabase oturumu ────────────────────────────────────────
@@ -187,12 +156,19 @@ async function signIn() {
   }
 }
 
+// Nabız zamanlayıcısı ve iş döngüsü aynı anda yenilemesin: tek yenileme paylaşılır.
+let refreshing = null;
 async function ensureSession() {
   const { data } = await supabase.auth.getSession();
   const expiresAt = (data.session?.expires_at ?? 0) * 1000;
   if (expiresAt - Date.now() > 5 * 60_000) return;
-  const { error } = await supabase.auth.refreshSession();
-  if (error) await signIn();
+  refreshing ??= (async () => {
+    const { error } = await supabase.auth.refreshSession();
+    if (error) await signIn();
+  })().finally(() => {
+    refreshing = null;
+  });
+  await refreshing;
 }
 
 // ─── İş döngüsü ──────────────────────────────────────────────
@@ -220,9 +196,20 @@ async function processJob(job) {
   const started = Date.now();
   log('→ yeni sayfa okunuyor…');
   try {
-    const result = await readLedger(image);
-    await finish(job.id, { status: 'done', result });
-    log(`✓ ${result.entries.length} borç okundu (${((Date.now() - started) / 1000).toFixed(1)} sn)`);
+    const { entries, warning, warningCode, stats } = await readLedger(image, {
+      url: OLLAMA_URL,
+      model: OLLAMA_MODEL,
+      timeoutMs: OLLAMA_TIMEOUT_MS,
+    });
+    await finish(job.id, {
+      status: 'done',
+      result: { entries, warning, warning_code: warningCode, version: READER_VERSION },
+    });
+    const toCheck = entries.filter((e) => e.issue).length;
+    log(
+      `✓ ${entries.length} borç okundu${toCheck ? `, ${toCheck} tanesi kontrol istiyor` : ''}` +
+        `${warningCode ? ` (${warningCode})` : ''} · ${stats.lines} satır · ${((Date.now() - started) / 1000).toFixed(1)} sn`,
+    );
   } catch (e) {
     const reason = e?.name === 'TimeoutError' ? 'timeout' : 'ocr_failed';
     await finish(job.id, { status: 'failed', error: reason });
@@ -258,8 +245,23 @@ async function cleanup() {
   await supabase.from('scan_jobs').delete().lt('created_at', cutoff);
 }
 
+/**
+ * macOS: program açık kaldığı sürece Mac boşta uykuya geçmesin (uyursa taramalar
+ * yarıda kalır ve telefonlar bilgisayarı kapalı görür). caffeinate bu işlem
+ * kapanınca kendiliğinden sonlanır. Kapak kapatılırsa Mac yine uyuyabilir.
+ */
+function keepAwake() {
+  if (process.platform !== 'darwin') return;
+  try {
+    const child = spawn('caffeinate', ['-i', '-w', String(process.pid)], { stdio: 'ignore', detached: true });
+    child.on('error', () => {});
+    child.unref();
+  } catch {}
+}
+
 async function run() {
   if (!env.TARAMA_SIFRE) fail('Tarama hesabı kurulmamış. Önce çalıştır:  npm run tarama:kurulum');
+  keepAwake();
   log(`Sunucu: ${new URL(SUPABASE_URL).host}  ·  Model: ${OLLAMA_MODEL}`);
   await checkOllama();
   await signIn();
@@ -269,16 +271,19 @@ async function run() {
   await cleanup();
   log('✓ Tarama bilgisayarı hazır. Bu pencere açık kaldığı sürece esnaflar defter tarayabilir. (Durdurmak için Ctrl+C)');
 
-  let lastBeat = Date.now();
+  // Nabız, okuma sürerken de gitsin: bir sayfa 20–60 sn sürebilir; nabız kesilirse
+  // sırada bekleyen esnafın telefonu bilgisayarı kapalı sanıp işini iptal eder.
+  setInterval(() => {
+    void ensureSession()
+      .then(heartbeat)
+      .catch(() => {});
+  }, HEARTBEAT_MS);
+
   let lastCleanup = Date.now();
   let failures = 0;
   for (;;) {
     try {
       await ensureSession();
-      if (Date.now() - lastBeat > HEARTBEAT_MS) {
-        await heartbeat();
-        lastBeat = Date.now();
-      }
       if (Date.now() - lastCleanup > CLEANUP_MS) {
         await cleanup();
         lastCleanup = Date.now();

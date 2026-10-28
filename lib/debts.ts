@@ -1,21 +1,114 @@
-import type { Debt, Category } from '@/types';
+import type { Debt, Category, DebtKind } from '@/types';
+import { KIND_GROUP, LEDGER_KINDS } from './ledgerParse';
 
-// Esnafın borç kaydında seçebileceği ikonlar (ilk öğe varsayılan).
-export const CATEGORY_ICONS: Record<Category, string[]> = {
-  gida: ['🍞', '🥫', '🍼', '🥛', '🥚', '🍎', '🥬'],
-  egitim: ['📚', '✏️', '🚌', '🎒', '📓', '🖍️'],
-  fatura: ['💡', '🔥', '💧', '📱', '📺'],
-  saglik: ['💊', '👓', '🩹', '🦷', '🩺'],
+// ─── Borç türleri ────────────────────────────────────────────
+// Esnaf ayrıntılı türü seçer (bebek, temizlik, yakacak…); veritabanındaki `category`
+// ise araştırma analizleri için 4 sabit gruptan biri olarak kalır (group).
+// İkonlar yalnızca Emoji 11.0 ve öncesinden seçildi: eski Android'lerde de görünür.
+export const DEBT_KINDS: DebtKind[] = LEDGER_KINDS;
+
+export const KIND_META: Record<DebtKind, { group: Category; color: string; emoji: string; icons: string[] }> = {
+  gida: {
+    group: KIND_GROUP.gida,
+    color: '#10b981',
+    emoji: '🍞',
+    icons: ['🍞', '🥖', '🥛', '🧀', '🥚', '🍅', '🥔', '🥕', '🍎', '🍌', '🍋', '🥬', '🍚', '🍝', '🍗', '🥩', '🐟', '🍯', '☕', '🍵', '🧂', '🥫', '🍪', '🍫'],
+  },
+  bebek: {
+    group: KIND_GROUP.bebek,
+    color: '#a78bfa',
+    emoji: '🍼',
+    icons: ['🍼', '👶', '🧸', '🚼', '🧷', '🥣', '🧦', '🎈'],
+  },
+  temizlik: {
+    group: KIND_GROUP.temizlik,
+    color: '#22d3ee',
+    emoji: '🧼',
+    icons: ['🧼', '🧽', '🧴', '🧻', '🧹', '🧺', '🚿', '🛁', '✨'],
+  },
+  saglik: {
+    group: KIND_GROUP.saglik,
+    color: '#ec4899',
+    emoji: '💊',
+    icons: ['💊', '💉', '🌡️', '😷', '👓', '🦷', '🧪', '🏥', '⚕️'],
+  },
+  egitim: {
+    group: KIND_GROUP.egitim,
+    color: '#3b82f6',
+    emoji: '📚',
+    icons: ['📚', '📓', '📒', '📖', '✏️', '🖍️', '🖊️', '📐', '📏', '🎒', '🧮', '🎨', '🖨️'],
+  },
+  giyim: {
+    group: KIND_GROUP.giyim,
+    color: '#f97316',
+    emoji: '👕',
+    icons: ['👕', '👚', '👖', '🧥', '👗', '👟', '👞', '🥾', '👢', '🧣', '🧤', '🧦', '🎽'],
+  },
+  yakacak: {
+    group: KIND_GROUP.yakacak,
+    color: '#ef4444',
+    emoji: '🔥',
+    icons: ['🔥', '🛢️', '⛽', '♨️', '🕯️', '❄️', '🌡️'],
+  },
+  fatura: {
+    group: KIND_GROUP.fatura,
+    color: '#f59e0b',
+    emoji: '💡',
+    icons: ['💡', '💧', '🔌', '📱', '📶', '🌐', '📺', '☎️', '🧾', '📬'],
+  },
+  ulasim: {
+    group: KIND_GROUP.ulasim,
+    color: '#14b8a6',
+    emoji: '🚌',
+    icons: ['🚌', '🚍', '🚇', '🚕', '🚐', '🚲', '🛵', '🎫', '⛽'],
+  },
+  diger: {
+    group: KIND_GROUP.diger,
+    color: '#94a3b8',
+    emoji: '📦',
+    icons: ['📦', '🛒', '🎁', '🔧', '🔨', '🧰', '🛏️', '🏠', '🔑', '🧵'],
+  },
 };
 
+const ALL_ICONS = new Set(DEBT_KINDS.flatMap((k) => KIND_META[k].icons));
+
+export function isDebtKind(v: unknown): v is DebtKind {
+  return typeof v === 'string' && (DEBT_KINDS as string[]).includes(v);
+}
+
+/** Borcun türü; eski kayıtlarda (tür yok) grubun kendisi. */
+export function kindOf(d: { kind?: unknown; category: Category }): DebtKind {
+  return isDebtKind(d.kind) ? d.kind : isDebtKind(d.category) ? d.category : 'gida';
+}
+
+/** Yalnızca bilinen ikonlar gösterilir; değilse türün varsayılan ikonu. */
+export function iconOf(d: { icon?: unknown; kind?: unknown; category: Category }): string {
+  return typeof d.icon === 'string' && ALL_ICONS.has(d.icon) ? d.icon : KIND_META[kindOf(d)].emoji;
+}
+
+/** Türün rengine göre küçük etiket (chip) stili. */
+export function kindChipStyle(kind: DebtKind): { color: string; background: string; borderColor: string } {
+  const c = KIND_META[kind].color;
+  return { color: c, background: `${c}1f`, borderColor: `${c}4d` };
+}
+
+// Araştırma grupları (grafikler, raporlar): 4 sabit değer.
 export const CATEGORY_META: Record<
   Category,
   { label: string; color: string; emoji: string }
 > = {
-  gida: { label: 'Temel Gıda', color: '#10b981', emoji: '🍞' },
+  gida: { label: 'Temel İhtiyaç', color: '#10b981', emoji: '🧺' },
   egitim: { label: 'Eğitim', color: '#3b82f6', emoji: '📚' },
-  fatura: { label: 'Fatura', color: '#f59e0b', emoji: '💡' },
+  fatura: { label: 'Fatura ve Hizmet', color: '#f59e0b', emoji: '💡' },
   saglik: { label: 'Sağlık', color: '#ec4899', emoji: '💊' },
+};
+
+// Eski kod yolları için (grup → ikonlar)
+export const CATEGORY_ICONS: Record<Category, string[]> = {
+  gida: KIND_META.gida.icons,
+  egitim: KIND_META.egitim.icons,
+  fatura: KIND_META.fatura.icons,
+  saglik: KIND_META.saglik.icons,
 };
 
 export const SAMPLE_DEBTS: Debt[] = [
@@ -63,6 +156,7 @@ export const SAMPLE_DEBTS: Debt[] = [
     amount: 220,
     urgency: 3,
     icon: '🍼',
+    kind: 'bebek',
   },
   {
     id: 'd6',

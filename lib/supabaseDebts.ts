@@ -19,26 +19,26 @@ import {
   sanitizeName,
   sanitizeCity,
 } from './sanitize';
-import type { Category, MerchantDebt } from '@/types';
+import type { Category, DebtKind, MerchantDebt } from '@/types';
+import { iconOf, isDebtKind, KIND_META, kindOf } from './debts';
 
-const ICON_BY_CATEGORY: Record<Category, string> = {
-  gida: '🛒',
-  egitim: '📚',
-  fatura: '💡',
-  saglik: '💊',
-};
+const VALID_CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
 
 // ─── Supabase satır → MerchantDebt dönüştürücü ────────────────
-function rowToDebt(row: Record<string, unknown>): MerchantDebt {
-  const category = (row.category as Category) || 'gida';
+// kind/icon sütunları yoksa (eski veritabanı / eski kayıt) gruptan türetilir;
+// yalnızca bilinen tür ve ikonlar gösterilir.
+export function rowToDebt(row: Record<string, unknown>): MerchantDebt {
+  const category = VALID_CATEGORIES.includes(row.category as Category) ? (row.category as Category) : 'gida';
+  const kind = kindOf({ kind: row.kind, category });
   return {
     id: String(row.id),
     category,
+    kind,
     title: String(row.title || ''),
     description: String(row.description || ''),
     amount: Number(row.amount || 0),
     urgency: (Number(row.urgency || 2) as 1 | 2 | 3),
-    icon: ICON_BY_CATEGORY[category] || '📦',
+    icon: iconOf({ icon: row.icon, kind, category }),
     addedBy: String(row.merchant_name || 'Anonim Esnaf'),
     addedAt: String(row.created_at || new Date().toISOString()),
     closed: Boolean(row.closed),
@@ -53,7 +53,8 @@ export async function fetchOpenDebts(): Promise<MerchantDebt[]> {
 
   const { data, error } = await client
     .from('merchant_debts')
-    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
+    // '*': kind/icon sütunları henüz eklenmemiş veritabanında da hata vermez
+    .select('*')
     .eq('closed', false)
     .order('urgency', { ascending: false })
     .order('created_at', { ascending: false });
@@ -105,6 +106,8 @@ export async function insertMerchantDebt(args: {
   title: string;
   description: string;
   category: Category;
+  kind?: DebtKind;
+  icon?: string;
   amount: number;
   urgency: 1 | 2 | 3;
   merchantName?: string;
@@ -121,12 +124,14 @@ export async function insertMerchantDebt(args: {
   const merchantName = args.merchantName ? sanitizeName(args.merchantName) : null;
   const city = args.city ? sanitizeCity(args.city) : null;
 
-  // Kategori whitelist kontrolü
-  const VALID_CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
-  if (!VALID_CATEGORIES.includes(args.category)) {
+  // Tür ve grup whitelist kontrolü: grup her zaman türden türetilir (tutarlı kalsın).
+  const kind = isDebtKind(args.kind) ? args.kind : null;
+  const category = kind ? KIND_META[kind].group : args.category;
+  if (!VALID_CATEGORIES.includes(category)) {
     console.warn('[supabaseDebts] Geçersiz kategori:', args.category);
     return null;
   }
+  const icon = kind ? iconOf({ icon: args.icon, kind, category }) : null;
 
   // Minimum doğrulama
   if (title.length < 3 || description.length < 3 || amount < 1) {
@@ -134,28 +139,33 @@ export async function insertMerchantDebt(args: {
     return null;
   }
 
-  const { data, error } = await client
-    .from('merchant_debts')
-    .insert({
-      user_id: getCurrentUserId(),
-      merchant_name: merchantName,
-      city,
-      title,
-      description,
-      category: args.category,
-      amount,
-      urgency,
-      closed: false,
-      is_sample: false,
-    })
-    .select('id, merchant_name, city, title, description, category, amount, urgency, closed, closed_at, created_at')
-    .single();
+  const base = {
+    user_id: getCurrentUserId(),
+    merchant_name: merchantName,
+    city,
+    title,
+    description,
+    category,
+    amount,
+    urgency,
+    closed: false,
+    is_sample: false,
+  };
+  const insert = (row: Record<string, unknown>) => client.from('merchant_debts').insert(row).select('*').single();
+
+  let { data, error } = await insert(kind ? { ...base, kind, icon } : base);
+  // Tür/ikon sütunları henüz eklenmemişse (SQL çalıştırılmadıysa) onlarsız kaydet.
+  if (error && kind && /kind|icon/i.test(`${error.message} ${error.details ?? ''}`) && /column/i.test(error.message)) {
+    ({ data, error } = await insert(base));
+  }
 
   if (error) {
     console.warn('[supabaseDebts] insertMerchantDebt hatası:', error.message);
     return null;
   }
-  return rowToDebt(data as Record<string, unknown>);
+  // Sunucu tür/ikonu saklamasa da bu cihazda seçilen görünsün.
+  const debt = rowToDebt(data as Record<string, unknown>);
+  return kind ? { ...debt, kind, icon: icon ?? debt.icon } : debt;
 }
 
 /** Esnafın kendi açık borcunu sunucudan siler. RLS başka birinin ya da kapanmış

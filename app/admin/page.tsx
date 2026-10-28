@@ -32,6 +32,7 @@ export interface SubmissionRow {
   will_repeat: string | null;
   xp_gained: number;
   app_version: string | null;
+  age_group: 'minor' | 'adult' | null;
   created_at: string;
   // PANAS-SF toplam skorları (akademik analiz için)
   panas_neg_total: number | null;
@@ -76,7 +77,7 @@ function rowsToCSV(rows: SubmissionRow[]): string {
     'pre_huzur', 'pre_emotion', 'pre_emotion_value', 'pre_likert',
     'post_huzur', 'post_emotion', 'post_emotion_value', 'post_likert', 'will_repeat',
     'panas_neg_total', 'panas_pos_total',
-    'xp_gained', 'app_version',
+    'xp_gained', 'app_version', 'age_group',
   ];
   const header = cols.join(',');
   const lines = rows.map((r) => cols.map((c) => csvEscape(r[c])).join(','));
@@ -141,7 +142,7 @@ export default function AdminPage() {
     const since = new Date(Date.now() - days * 86400000).toISOString();
     const { data, error: err } = await sb
       .from('survey_submissions')
-      .select('id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, xp_gained, app_version, created_at')
+      .select('id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, xp_gained, app_version, age_group, created_at')
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(2000);

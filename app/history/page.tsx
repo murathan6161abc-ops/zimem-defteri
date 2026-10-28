@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useZimemStore } from '@/store/useZimemStore';
-import { CATEGORY_META } from '@/lib/debts';
+import { CATEGORY_META, KIND_META, kindChipStyle } from '@/lib/debts';
 import { useI18n } from '@/lib/i18n';
 
 const POST_EMOJI: Record<string, string> = {
@@ -42,6 +42,8 @@ export default function HistoryPage() {
         <ol className="relative border-l-2 border-white/10 ml-3 space-y-4">
           {list.map((h) => {
             const meta = CATEGORY_META[h.category];
+            // Türü biliniyorsa (bu cihazda ödenen) tür etiketi; yoksa araştırma grubu
+            const kind = h.kind && KIND_META[h.kind] ? h.kind : null;
             return (
               <li key={h.id} className="ml-5 relative">
                 <span
@@ -51,9 +53,15 @@ export default function HistoryPage() {
                 <div className="glass p-4">
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
                     <div className="flex items-center gap-2">
-                      <span className={`category-chip cat-${h.category}`}>
-                        {meta.emoji} {t(`debt.cat_${h.category}`)}
-                      </span>
+                      {kind ? (
+                        <span className="category-chip" style={kindChipStyle(kind)}>
+                          {h.icon || KIND_META[kind].emoji} {t(`debt.kind_${kind}`)}
+                        </span>
+                      ) : (
+                        <span className={`category-chip cat-${h.category}`}>
+                          {meta.emoji} {t(`debt.cat_${h.category}`)}
+                        </span>
+                      )}
                       <span className="text-xs text-muted-c">{fmtDate(h.date, locale)}</span>
                     </div>
                     <div className="xp-badge text-xs">⚡ +{h.xp} XP</div>

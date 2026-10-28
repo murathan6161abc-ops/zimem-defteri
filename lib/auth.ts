@@ -18,7 +18,9 @@
 import type { User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import { getDeviceId } from './deviceId';
+import { isAgeGroup } from './research';
 import { clearLedgerRefs } from './ledgerScan';
+import { rowToDebt } from './supabaseDebts';
 import type {
   Category,
   HistoryEntry,
@@ -168,6 +170,8 @@ export function profileFromMetadata(user: User): UserProfile {
     city: m.city ? String(m.city) : undefined,
     createdAt: String(m.createdAt || user.created_at || new Date().toISOString()),
     consentAt: m.consentAt ? String(m.consentAt) : undefined,
+    ageGroup: isAgeGroup(m.ageGroup) ? m.ageGroup : undefined,
+    guardianConsentAt: m.guardianConsentAt ? String(m.guardianConsentAt) : undefined,
   };
 }
 
@@ -332,12 +336,22 @@ export interface AccountData {
   merchantDebts: MerchantDebt[];
 }
 
-const ICON_BY_CATEGORY: Record<Category, string> = {
-  gida: '🛒',
-  egitim: '📚',
-  fatura: '💡',
-  saglik: '💊',
-};
+/** Esnafın sunucudaki kendi borçları (en yeni önce). Okunamazsa null. */
+export async function fetchMyMerchantDebts(userId: string): Promise<MerchantDebt[] | null> {
+  const client = getSupabase();
+  if (!client || !userId) return null;
+  try {
+    const { data: mrows, error } = await client
+      .from('merchant_debts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error || !mrows) return null;
+    return mrows.map((row: Record<string, unknown>) => rowToDebt(row));
+  } catch {
+    return null;
+  }
+}
 
 export async function fetchAccountData(userId: string): Promise<AccountData> {
   const empty: AccountData = {
@@ -397,31 +411,7 @@ export async function fetchAccountData(userId: string): Promise<AccountData> {
   } catch {}
 
   // 3. Esnafın kendi defteri (eklediği borçlar)
-  try {
-    const { data: mrows } = await client
-      .from('merchant_debts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (mrows) {
-      empty.merchantDebts = mrows.map((row: Record<string, unknown>) => {
-        const category = (row.category as Category) || 'gida';
-        return {
-          id: String(row.id),
-          category,
-          title: String(row.title || ''),
-          description: String(row.description || ''),
-          amount: Number(row.amount || 0),
-          urgency: Number(row.urgency || 2) as 1 | 2 | 3,
-          icon: ICON_BY_CATEGORY[category] || '📦',
-          addedBy: String(row.merchant_name || 'Anonim Esnaf'),
-          addedAt: String(row.created_at || new Date().toISOString()),
-          closed: Boolean(row.closed),
-          closedAt: row.closed_at ? String(row.closed_at) : undefined,
-        };
-      });
-    }
-  } catch {}
+  empty.merchantDebts = (await fetchMyMerchantDebts(userId)) ?? [];
 
   return empty;
 }

@@ -1,7 +1,7 @@
 // ============================================================
 // Veresiye defteri tarama — istemci tarafı
 // ────────────────────────────────────────────────────────────
-// 1. Fotoğrafı cihazda küçültür (≤2000 px JPEG) → hızlı yükleme
+// 1. Fotoğrafı cihazda küçültür (≤2000 px JPEG) ve karanlık/bulanıksa uyarır
 // 2. Supabase'deki scan_jobs kuyruğuna "pending" iş olarak yazar
 // 3. Yöneticinin bilgisayarındaki tarama programı (yerel Ollama modeli) işi
 //    okur, sonucu yazar ve fotoğrafı siler; uygulama sonucu bekleyip alır
@@ -25,7 +25,7 @@ export type ScanErrorCode =
   | 'generic';
 
 export type ScanResult =
-  | { ok: true; entries: ScannedEntry[]; warning: string }
+  | { ok: true; entries: ScannedEntry[]; warning: string; warningCode: string }
   | { ok: false; error: ScanErrorCode };
 
 export type ScanStage = 'uploading' | 'queued' | 'processing';
@@ -52,8 +52,67 @@ async function loadBitmap(file: Blob): Promise<ImageBitmap | HTMLImageElement> {
   }
 }
 
-/** Görseli en fazla 2000 px'e küçültüp base64 JPEG döndürür (data: öneki olmadan). */
-export async function compressImage(file: Blob): Promise<string> {
+export interface PreparedImage {
+  base64: string; // JPEG, data: öneki olmadan
+  dark: boolean;
+  blurry: boolean;
+}
+
+// Kalite eşikleri bilerek temkinli: yalnızca belirgin karanlık/bulanık fotoğrafta uyarır
+// (uyarı gönderimi engellemez). Ölçüm ≤800 px gri tonlu kopyada yapılır.
+const QUALITY_SIZE = 800;
+const DARK_P80 = 60; // en aydınlık %20'lik kısım bile bundan koyuysa karanlık
+const BLURRY_LAPLACIAN_VAR = 50; // keskinlik (Laplace varyansı) bundan düşükse bulanık
+
+function measureQuality(source: CanvasImageSource, width: number, height: number): { dark: boolean; blurry: boolean } {
+  try {
+    const scale = Math.min(1, QUALITY_SIZE / Math.max(width, height));
+    const w = Math.max(3, Math.round(width * scale));
+    const h = Math.max(3, Math.round(height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return { dark: false, blurry: false };
+    ctx.drawImage(source, 0, 0, w, h);
+    const rgba = ctx.getImageData(0, 0, w, h).data;
+    const gray = new Uint8ClampedArray(w * h);
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < gray.length; i++) {
+      const v = (rgba[i * 4] * 299 + rgba[i * 4 + 1] * 587 + rgba[i * 4 + 2] * 114) / 1000;
+      gray[i] = v;
+      hist[gray[i]]++;
+    }
+    let acc = 0;
+    let p80 = 255;
+    for (let v = 0; v < 256; v++) {
+      acc += hist[v];
+      if (acc >= gray.length * 0.8) {
+        p80 = v;
+        break;
+      }
+    }
+    let sum = 0;
+    let sumSq = 0;
+    let n = 0;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const lap = Math.min(255, Math.max(0, gray[i - w] + gray[i + w] + gray[i - 1] + gray[i + 1] - 4 * gray[i] + 128));
+        sum += lap;
+        sumSq += lap * lap;
+        n++;
+      }
+    }
+    const variance = n ? sumSq / n - (sum / n) ** 2 : 0;
+    return { dark: p80 < DARK_P80, blurry: variance < BLURRY_LAPLACIAN_VAR };
+  } catch {
+    return { dark: false, blurry: false };
+  }
+}
+
+/** Görseli en fazla 2000 px'e küçültür (base64 JPEG) ve karanlık/bulanık olup olmadığına bakar. */
+export async function prepareImage(file: Blob): Promise<PreparedImage> {
   const source = await loadBitmap(file);
   const width = 'naturalWidth' in source ? source.naturalWidth : source.width;
   const height = 'naturalHeight' in source ? source.naturalHeight : source.height;
@@ -66,21 +125,21 @@ export async function compressImage(file: Blob): Promise<string> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas unavailable');
   ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  const quality = measureQuality(canvas, canvas.width, canvas.height);
   if ('close' in source) source.close();
 
   const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
   if (!base64) throw new Error('encode failed');
-  return base64;
+  return { base64, ...quality };
 }
 
-
 // Bilgisayar 45 sn içinde işi almazsa nabzına bakılır: kapalıysa iş iptal edilir;
-// açıksa (başka esnafın sayfasını okuyordur) 150 sn'ye kadar sırada beklenir.
+// açıksa (başka sayfaları okuyordur) 240 sn'ye kadar sırada beklenir.
 // Aldıktan sonra model ilk yüklemede yavaş olabileceği için 3 dakika tanınır.
 // (Tarama programı 3 dakikadan eski bekleyen işleri zaten okumaz.)
 const PICKUP_TIMEOUT_MS = 45_000;
-const BUSY_PICKUP_TIMEOUT_MS = 150_000;
+const BUSY_PICKUP_TIMEOUT_MS = 240_000; // sırada birkaç sayfa olabilir (sayfa başı ~40 sn)
 const PROCESS_TIMEOUT_MS = 180_000;
 const POLL_MS = 2_000;
 
@@ -125,19 +184,13 @@ async function cancelJob(id: string): Promise<void> {
   } catch {}
 }
 
-export async function scanLedgerPage(file: Blob, onStage?: (stage: ScanStage) => void): Promise<ScanResult> {
+/** Fotoğrafı kuyruğa yazar (image: prepareImage() ile hazırlanmış base64 JPEG). */
+export async function submitScan(
+  image: string,
+): Promise<{ ok: true; jobId: string; createdAt: number } | { ok: false; error: ScanErrorCode }> {
   const client = getSupabase();
   if (!client) return { ok: false, error: 'not_configured' };
-
-  let image: string;
-  try {
-    image = await compressImage(file);
-  } catch {
-    return { ok: false, error: 'bad_image' };
-  }
-
-  onStage?.('uploading');
-  let jobId: string;
+  if (!image) return { ok: false, error: 'bad_image' };
   try {
     const { data, error } = await client
       .from('scan_jobs')
@@ -145,18 +198,30 @@ export async function scanLedgerPage(file: Blob, onStage?: (stage: ScanStage) =>
       .select('id')
       .single();
     if (error || !data) return { ok: false, error: mapDbError(error) };
-    jobId = String((data as { id: string }).id);
+    return { ok: true, jobId: String((data as { id: string }).id), createdAt: Date.now() };
   } catch (e) {
     return { ok: false, error: mapDbError(e instanceof Error ? { message: e.message } : null) };
   }
+}
 
-  onStage?.('queued');
-  const startedAt = Date.now();
+/**
+ * Kuyruktaki işin sonucunu bekler. Süreler işin gönderildiği andan (createdAt)
+ * sayılır; böylece uygulama kapanıp açıldığında kaldığı yerden devam edilebilir.
+ * shouldStop true dönerse (ör. hesaptan çıkıldı) bekleme sessizce bırakılır.
+ */
+export async function waitForScan(
+  jobId: string,
+  opts: { createdAt: number; onStage?: (stage: ScanStage) => void; shouldStop?: () => boolean },
+): Promise<ScanResult | null> {
+  const client = getSupabase();
+  if (!client) return { ok: false, error: 'not_configured' };
   let pickedAt: number | null = null;
   let networkErrors = 0;
+  opts.onStage?.('queued');
 
   for (;;) {
     await sleep(POLL_MS);
+    if (opts.shouldStop?.()) return null;
     let row: JobRow | null = null;
     try {
       const { data, error } = await client
@@ -175,21 +240,22 @@ export async function scanLedgerPage(file: Blob, onStage?: (stage: ScanStage) =>
     if (!row) return { ok: false, error: 'generic' };
 
     if (row.status === 'done') {
-      const result = (row.result ?? {}) as { warning?: unknown };
+      const result = (row.result ?? {}) as { warning?: unknown; warning_code?: unknown };
       return {
         ok: true,
         entries: cleanEntries(row.result),
         warning: typeof result.warning === 'string' ? result.warning.slice(0, 300) : '',
+        warningCode: typeof result.warning_code === 'string' ? result.warning_code.slice(0, 40) : '',
       };
     }
     if (row.status === 'failed') {
-      return { ok: false, error: row.error === 'bad_image' ? 'bad_image' : 'ocr_failed' };
+      return { ok: false, error: row.error === 'bad_image' ? 'bad_image' : row.error === 'expired' ? 'offline' : 'ocr_failed' };
     }
     if (row.status === 'processing' && pickedAt === null) {
       pickedAt = Date.now();
-      onStage?.('processing');
+      opts.onStage?.('processing');
     }
-    const waited = Date.now() - startedAt;
+    const waited = Date.now() - opts.createdAt;
     if (pickedAt === null && waited > PICKUP_TIMEOUT_MS) {
       const status = waited > BUSY_PICKUP_TIMEOUT_MS ? null : await getScannerStatus();
       if (!status?.online) {
@@ -248,5 +314,11 @@ export function clearLedgerRefs(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(REFS_KEY);
+    // Yarım kalmış tarama oturumu (inceleme listesi) da bir sonraki kişiye kalmasın.
+    window.localStorage.removeItem(SCAN_SESSION_KEY);
+    window.dispatchEvent(new Event(SCAN_RESET_EVENT));
   } catch {}
 }
+
+export const SCAN_SESSION_KEY = 'd-zimem-scan-session-v1';
+export const SCAN_RESET_EVENT = 'd-zimem-scan-reset';

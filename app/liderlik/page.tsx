@@ -36,7 +36,7 @@ export default function LiderlikPage() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="pt-6">
-        <h1 className="heading-lg mb-3">🏆 {t('leaderboard.offline_title')}</h1>
+        <h1 className="heading-lg mb-3 flex items-center gap-2"><span aria-hidden>🏆</span><span>{t('leaderboard.offline_title')}</span></h1>
         <div className="glass p-8 text-center">
           <div className="text-4xl mb-3">📡</div>
           <p className="text-sm text-muted-c">
@@ -53,7 +53,7 @@ export default function LiderlikPage() {
     <div className="pt-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h1 className="heading-lg mb-1">🏆 {t('leaderboard.title')}</h1>
+          <h1 className="heading-lg mb-1 flex items-center gap-2"><span aria-hidden>🏆</span><span>{t('leaderboard.title')}</span></h1>
           <p className="text-xs text-muted-c">
             {t('leaderboard.subtitle')}
           </p>
@@ -106,15 +106,15 @@ export default function LiderlikPage() {
                       {u.display_name || t('leaderboard.anon')}
                     </span>
                     {isMe && (
-                      <span className="text-[10px] font-bold uppercase bg-gradient-to-br from-amber-500 to-amber-600 text-black px-1.5 py-0.5 rounded-full">
+                      <span className="text-[11px] font-bold uppercase bg-gradient-to-br from-amber-500 to-amber-600 text-black px-1.5 py-0.5 rounded-full">
                         {t('leaderboard.you')}
                       </span>
                     )}
                     {u.role === 'esnaf' && (
-                      <span className="text-[10px] text-blue-300">🏪</span>
+                      <span className="text-[11px] text-blue-300">🏪</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-c">
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-c">
                     {u.streak > 1 && <span>🔥 {u.streak} {t('leaderboard.streak_suffix')}</span>}
                     {u.debts_paid > 0 && <span>✅ {u.debts_paid} {t('leaderboard.debt_suffix')}</span>}
                     {u.city && <span>📍 {u.city}</span>}
@@ -125,7 +125,7 @@ export default function LiderlikPage() {
                   <div className="font-bold text-base text-amber-300">
                     {u.total_xp.toLocaleString(locale)}
                   </div>
-                  <div className="text-[10px] text-muted-c uppercase">XP</div>
+                  <div className="text-[11px] text-muted-c uppercase">XP</div>
                 </div>
               </div>
             );

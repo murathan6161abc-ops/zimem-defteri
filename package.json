@@ -1,6 +1,6 @@
 {
   "name": "zimem-defteri",
-  "version": "2.5.1",
+  "version": "2.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3939",
@@ -13,7 +13,8 @@
     "android:debug": "npm run android:sync && node scripts/run-gradle.cjs assembleDebug",
     "delivery:debug": "npm run android:debug && node scripts/package-debug-apk.cjs",
     "tarama": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs",
-    "tarama:kurulum": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs --kurulum"
+    "tarama:kurulum": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs --kurulum",
+    "tarama:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-bench.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.4.2",

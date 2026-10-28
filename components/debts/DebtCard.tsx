@@ -1,7 +1,7 @@
 'use client';
 import { memo, useState } from 'react';
 import type { Debt } from '@/types';
-import { CATEGORY_META } from '@/lib/debts';
+import { KIND_META, iconOf, kindChipStyle, kindOf } from '@/lib/debts';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 
@@ -15,7 +15,8 @@ function DebtCard({
   onSelect: (id: string, partialAmount?: number | null) => void;
 }) {
   const { t } = useI18n();
-  const meta = CATEGORY_META[debt.category];
+  const kind = kindOf(debt);
+  const meta = KIND_META[kind];
   const partialPaid = useZimemStore((s) => s.partialPayments[debt.id] || 0);
   const originalTotal = debt.amount + partialPaid; // başlangıçtaki tutar
   const progressPct =
@@ -57,15 +58,15 @@ function DebtCard({
             border: `1px solid ${meta.color}55`,
           }}
         >
-          {debt.icon}
+          {iconOf(debt)}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className={`category-chip cat-${debt.category}`}>
-              {meta.emoji} {t(`debt.cat_${debt.category}`)}
+            <span className="category-chip" style={kindChipStyle(kind)}>
+              {meta.emoji} {t(`debt.kind_${kind}`)}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-c">
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-c">
               <span className={`urgency-dot urgency-${debt.urgency}`} />
               {t(URGENCY_KEY[debt.urgency])} {t('debt.urgency_suffix')}
             </span>
@@ -77,7 +78,7 @@ function DebtCard({
         <div className="text-right shrink-0">
           <div className="font-bold text-lg text-amber-200">{debt.amount} ₺</div>
           {progressPct > 0 && (
-            <div className="text-[10px] text-emerald-300 font-medium">%{progressPct} {t('debt.paid_label')}</div>
+            <div className="text-[11px] text-emerald-300 font-medium">%{progressPct} {t('debt.paid_label')}</div>
           )}
         </div>
       </div>
@@ -105,7 +106,7 @@ function DebtCard({
         <button
           type="button"
           onClick={() => setPartialOpen((v) => !v)}
-          className="text-[12px] px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-muted-c"
+          className="text-[13px] px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-muted-c"
           aria-expanded={partialOpen}
         >
           🤲 {t('debt.partial_pay')}
@@ -115,7 +116,7 @@ function DebtCard({
       {/* Kısmi katkı paneli */}
       {partialOpen && (
         <div className="mt-3 p-3 rounded-xl bg-white/5 border border-amber-500/20">
-          <div className="text-[11px] text-muted-c mb-2">
+          <div className="text-xs text-muted-c mb-2">
             {t('debt.partial_hint')}
           </div>
 
@@ -125,7 +126,7 @@ function DebtCard({
                 key={v}
                 type="button"
                 onClick={() => setPartialValue(String(v))}
-                className="text-[11px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-muted-c"
+                className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-muted-c"
               >
                 {v} ₺
               </button>
@@ -156,7 +157,7 @@ function DebtCard({
           </div>
 
           {partialError && (
-            <div className="text-[11px] text-rose-300 mt-2" role="alert">
+            <div className="text-xs text-rose-300 mt-2" role="alert">
               {partialError}
             </div>
           )}

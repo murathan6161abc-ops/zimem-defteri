@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { useZimemStore } from '@/store/useZimemStore';
 import { WHO5_ITEMS, who5Category, type WHO5Category } from '@/lib/scales';
 import { submitWHO5, fetchMyWHO5History, daysUntilNextTest } from '@/lib/who5';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -32,7 +33,7 @@ export default function WellbeingPage() {
   async function handleSubmit() {
     if (!allAnswered) return;
     setSubmitting(true);
-    const result = await submitWHO5(scores);
+    const result = await submitWHO5(scores, useZimemStore.getState().profile?.ageGroup);
     if (result) {
       setJustSubmitted(result);
       setHistory((prev) => [result, ...prev]);
@@ -56,9 +57,9 @@ export default function WellbeingPage() {
   return (
     <div className="pt-6 space-y-5">
       <div>
-        <h1 className="heading-lg mb-1">🌿 {t('who5.title')}</h1>
+        <h1 className="heading-lg mb-1 flex items-center gap-2"><span aria-hidden>🌿</span><span>{t('who5.title')}</span></h1>
         <p className="text-xs text-muted-c">{t('who5.subtitle')}</p>
-        <p className="text-[10px] text-muted-c mt-1 opacity-70">
+        <p className="text-[11px] text-muted-c mt-1 opacity-70">
           {t('who5.scale_credit')}
         </p>
       </div>
@@ -74,7 +75,7 @@ export default function WellbeingPage() {
         <WHO5ResultCard measurement={justSubmitted} />
       ) : (
         <section className="glass p-4 sm:p-5">
-          <div className="text-[11px] text-muted-c mb-4">{t('who5.instruction')}</div>
+          <div className="text-xs text-muted-c mb-4">{t('who5.instruction')}</div>
           <div className="space-y-4">
             {WHO5_ITEMS.map((item, i) => (
               <div key={item.key}>
@@ -175,12 +176,12 @@ function WHO5Chart({ measurements }: { measurements: WHO5Measurement[] }) {
           : 'from-rose-400 to-rose-600';
         return (
           <div key={m.id} className="flex-1 flex flex-col items-center gap-1" title={`${m.total}/100`}>
-            <div className="text-[9px] text-muted-c">{m.total}</div>
+            <div className="text-[10px] text-muted-c">{m.total}</div>
             <div
               className={`w-full rounded-t-sm bg-gradient-to-t ${colorClass} transition-all`}
               style={{ height: `${Math.max(8, pct)}%` }}
             />
-            <div className="text-[9px] text-muted-c whitespace-nowrap">{dayLabel}</div>
+            <div className="text-[10px] text-muted-c whitespace-nowrap">{dayLabel}</div>
           </div>
         );
       })}

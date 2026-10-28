@@ -41,7 +41,7 @@ export default function AnalizPage() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="pt-6">
-        <h1 className="heading-lg mb-3">🧠 {t('analysis.offline_title')}</h1>
+        <h1 className="heading-lg mb-3 flex items-center gap-2"><span aria-hidden>🧠</span><span>{t('analysis.offline_title')}</span></h1>
         <div className="glass p-8 text-center">
           <div className="text-4xl mb-3">📡</div>
           <p className="text-sm text-muted-c">
@@ -64,7 +64,7 @@ export default function AnalizPage() {
   return (
     <div className="pt-6 space-y-5">
       <div>
-        <h1 className="heading-lg mb-1">🧠 {t('analysis.title')}</h1>
+        <h1 className="heading-lg mb-1 flex items-center gap-2"><span aria-hidden>🧠</span><span>{t('analysis.title')}</span></h1>
         <p className="text-xs text-muted-c">
           {t('analysis.subtitle', { n: Math.min(results.length, 10) })}
         </p>
@@ -179,7 +179,7 @@ export default function AnalizPage() {
               <div className="text-xl font-extrabold text-amber-300">
                 {results.length}
               </div>
-              <div className="text-[10px] uppercase text-muted-c tracking-wider mt-1">
+              <div className="text-[11px] uppercase text-muted-c tracking-wider mt-1">
                 {t('analysis.total_deeds')}
               </div>
             </div>
@@ -187,7 +187,7 @@ export default function AnalizPage() {
               <div className="text-xl font-extrabold text-emerald-300">
                 {debtsPaid}
               </div>
-              <div className="text-[10px] uppercase text-muted-c tracking-wider mt-1">
+              <div className="text-[11px] uppercase text-muted-c tracking-wider mt-1">
                 {t('score.debts_closed')}
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function AnalizPage() {
               <div className="text-xl font-extrabold text-blue-300">
                 ₺{totalDonated.toLocaleString(locale)}
               </div>
-              <div className="text-[10px] uppercase text-muted-c tracking-wider mt-1">
+              <div className="text-[11px] uppercase text-muted-c tracking-wider mt-1">
                 {t('analysis.total_contribution')}
               </div>
             </div>
@@ -203,13 +203,13 @@ export default function AnalizPage() {
               <div className="text-xl font-extrabold text-amber-300">
                 {streak} 🔥
               </div>
-              <div className="text-[10px] uppercase text-muted-c tracking-wider mt-1">
+              <div className="text-[11px] uppercase text-muted-c tracking-wider mt-1">
                 {t('profile.streak')}
               </div>
             </div>
           </section>
 
-          <div className="text-center text-[11px] text-muted-c">
+          <div className="text-center text-xs text-muted-c">
             ⚡ {t('analysis.total_xp')}: {xp.toLocaleString(locale)}
           </div>
         </>
