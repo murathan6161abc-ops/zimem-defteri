@@ -139,7 +139,7 @@ export default function AccountSecurity({ username }: { username: string }) {
   );
 }
 
-// ─── Kurtarma e-postası ─────────────────────────────────────
+// Kurtarma e-postası
 function RecoveryEmailCard({
   user,
   username,
@@ -299,7 +299,7 @@ function RecoveryEmailCard({
   );
 }
 
-// ─── Google hesabı bağlama ──────────────────────────────────
+// Google hesabı bağlama
 function GoogleLinkCard({ user }: { user: User }) {
   const { t } = useI18n();
   const linked = (user.identities ?? []).some((i) => i.provider === 'google');
@@ -353,7 +353,7 @@ function GoogleLinkCard({ user }: { user: User }) {
   );
 }
 
-// ─── İki adımlı doğrulama (TOTP) ────────────────────────────
+// İki adımlı doğrulama (TOTP)
 function TwoFactorCard() {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -462,7 +462,7 @@ function TwoFactorCard() {
           {/* Yalnızca otpauth: şeması — sunucu yanıtı ne olursa olsun javascript: vb. bağlantı basılmaz. */}
           {enrollment.uri.startsWith('otpauth://') && (
             <a href={enrollment.uri} className="btn w-full text-center block no-underline">
-              📲 {t('security.mfa_open_app')}
+              {t('security.mfa_open_app')}
             </a>
           )}
           <div className="text-xs text-muted-c">{t('security.mfa_secret')}</div>

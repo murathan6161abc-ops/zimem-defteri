@@ -75,8 +75,8 @@ function onScanPage(): boolean {
   return typeof window !== 'undefined' && /\/esnaf\/tara\/?$/.test(window.location.pathname);
 }
 
-function notify(emoji: string, title: string, desc?: string) {
-  useZimemStore.getState().pushToast({ emoji, title, desc });
+function notify(_emoji: string, title: string, desc?: string) {
+  useZimemStore.getState().pushToast({ title, desc });
 }
 
 const EMPTY = {

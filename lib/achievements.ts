@@ -13,95 +13,96 @@ export interface AchievementDef extends Achievement {
   condition: (s: AchievementState) => boolean;
 }
 
-// name/desc yerine i18n anahtarı tutulur; metin sözlükten gelir (ach.*_name / ach.*_desc)
+// Ad ve açıklama çeviri sözlüğünden gelir (ach.*_name / ach.*_desc). mark, rozetin
+// içinde yazan kısa ifadedir.
 export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'first_deed',
     nameKey: 'ach.first_deed_name',
     descKey: 'ach.first_deed_desc',
-    emoji: '🎯',
+    mark: '1',
     condition: (s) => s.debtsPaid >= 1,
   },
   {
     id: 'five_deeds',
     nameKey: 'ach.five_deeds_name',
     descKey: 'ach.five_deeds_desc',
-    emoji: '🖐️',
+    mark: '5',
     condition: (s) => s.debtsPaid >= 5,
   },
   {
     id: 'ten_deeds',
     nameKey: 'ach.ten_deeds_name',
     descKey: 'ach.ten_deeds_desc',
-    emoji: '🔟',
+    mark: '10',
     condition: (s) => s.debtsPaid >= 10,
   },
   {
     id: 'big_heart',
     nameKey: 'ach.big_heart_name',
     descKey: 'ach.big_heart_desc',
-    emoji: '❤️',
+    mark: '₺',
     condition: (s) => s.totalDonated >= 1000,
   },
   {
     id: 'streak_3',
     nameKey: 'ach.streak_3_name',
     descKey: 'ach.streak_3_desc',
-    emoji: '🔥',
+    mark: '3',
     condition: (s) => s.streak >= 3,
   },
   {
     id: 'streak_7',
     nameKey: 'ach.streak_7_name',
     descKey: 'ach.streak_7_desc',
-    emoji: '🌈',
+    mark: '7',
     condition: (s) => s.streak >= 7,
   },
   {
     id: 'level_up',
     nameKey: 'ach.level_up_name',
     descKey: 'ach.level_up_desc',
-    emoji: '💚',
+    mark: '150',
     condition: (s) => s.xp >= 150,
   },
   {
     id: 'vakif',
     nameKey: 'ach.vakif_name',
     descKey: 'ach.vakif_desc',
-    emoji: '🏛️',
+    mark: '350',
     condition: (s) => s.xp >= 350,
   },
   {
     id: 'master',
     nameKey: 'ach.master_name',
     descKey: 'ach.master_desc',
-    emoji: '👑',
+    mark: '1000',
     condition: (s) => s.xp >= 1000,
   },
   {
     id: 'high_xp_single',
     nameKey: 'ach.high_xp_single_name',
     descKey: 'ach.high_xp_single_desc',
-    emoji: '⚡',
+    mark: '50+',
     condition: (s) => s.history.some((h) => h.xp >= 50),
   },
   {
     id: 'all_categories',
     nameKey: 'ach.all_categories_name',
     descKey: 'ach.all_categories_desc',
-    emoji: '🎨',
+    mark: '4',
     condition: (s) => new Set(s.history.map((h) => h.category)).size >= 4,
   },
   {
     id: 'tree_bloomed',
     nameKey: 'ach.tree_bloomed_name',
     descKey: 'ach.tree_bloomed_desc',
-    emoji: '🌸',
+    mark: '10',
     condition: (s) => s.history.length >= 10,
   },
 ];
 
-/** Returns newly unlocked achievement IDs after a state change. */
+/** Bu durumda yeni kazanılan rozetler. */
 export function checkUnlocks(state: AchievementState): AchievementDef[] {
   return ACHIEVEMENTS.filter(
     (a) => !state.unlocked.has(a.id) && a.condition(state),

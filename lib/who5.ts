@@ -1,7 +1,5 @@
-// ============================================================
 // WHO-5 İyilik Hali İndeksi — Supabase CRUD
 // Haftalık takip için (7 gün cooldown önerisi).
-// ============================================================
 
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';

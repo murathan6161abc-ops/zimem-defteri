@@ -3,14 +3,6 @@ import { useEffect, useState } from 'react';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 
-const POST_EMOTION_EMOJI: Record<string, string> = {
-  mutlu: '😊', dingin: '🌿', hafiflemis: '🕊️', gururlu: '🌟',
-};
-
-const PRE_EMOTION_EMOJI: Record<string, string> = {
-  merak: '🤔', sorumluluk: '🛡️', huzur: '🕊️', heyecan: '✨',
-};
-
 export default function EmotionTrend() {
   const history = useZimemStore((s) => s.history);
   const { t } = useI18n();
@@ -31,76 +23,58 @@ export default function EmotionTrend() {
     <div className="glass p-5">
       <div className="section-title">{t('stats.emotion_journey')}</div>
       {total === 0 ? (
-        <div className="text-sm text-muted-c text-center py-4">
-          {t('stats.no_data')}
-        </div>
+        <div className="text-sm text-muted-c text-center py-4">{t('stats.no_data')}</div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-xs text-muted-c mb-2">{t('stats.before_intent')}</div>
-            <div className="space-y-1.5">
-              {Object.entries(preCounts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => (
-                  <Row
-                    key={k}
-                    emoji={PRE_EMOTION_EMOJI[k] || '•'}
-                    label={t(`pretest.emo_${k}`)}
-                    value={v}
-                    total={total}
-                    color="#a855f7"
-                  />
-                ))}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-c mb-2">{t('stats.after_impact')}</div>
-            <div className="space-y-1.5">
-              {Object.entries(postCounts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => (
-                  <Row
-                    key={k}
-                    emoji={POST_EMOTION_EMOJI[k] || '•'}
-                    label={t(`posttest.emo_${k}`)}
-                    value={v}
-                    total={total}
-                    color="#10b981"
-                  />
-                ))}
-            </div>
-          </div>
+          <EmotionColumn
+            title={t('stats.before_intent')}
+            counts={preCounts}
+            total={total}
+            label={(k) => t(`pretest.emo_${k}`)}
+            color="#a855f7"
+          />
+          <EmotionColumn
+            title={t('stats.after_impact')}
+            counts={postCounts}
+            total={total}
+            label={(k) => t(`posttest.emo_${k}`)}
+            color="#10b981"
+          />
         </div>
       )}
     </div>
   );
 }
 
-function Row({
-  emoji,
-  label,
-  value,
+function EmotionColumn({
+  title,
+  counts,
   total,
+  label,
   color,
 }: {
-  emoji: string;
-  label: string;
-  value: number;
+  title: string;
+  counts: Record<string, number>;
   total: number;
+  label: (key: string) => string;
   color: string;
 }) {
-  const pct = (value / total) * 100;
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-base">{emoji}</span>
-      <span className="text-muted-c flex-1 truncate">{label}</span>
-      <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-full"
-          style={{ width: `${pct}%`, background: color }}
-        />
+    <div>
+      <div className="text-xs text-muted-c mb-2">{title}</div>
+      <div className="space-y-1.5">
+        {Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([k, v]) => (
+            <div key={k} className="flex items-center gap-2 text-xs">
+              <span className="text-muted-c flex-1 truncate">{label(k)}</span>
+              <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-full" style={{ width: `${(v / total) * 100}%`, background: color }} />
+              </div>
+              <span className="font-semibold text-white w-5 text-end tabular-nums">{v}</span>
+            </div>
+          ))}
       </div>
-      <span className="font-semibold text-white w-5 text-right">{value}</span>
     </div>
   );
 }

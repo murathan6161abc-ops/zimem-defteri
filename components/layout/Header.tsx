@@ -6,6 +6,7 @@ import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 import LocaleSwitcher from './LocaleSwitcher';
 import { ESNAF_TABS, VATANDAS_TABS, isNavHidden, isTabActive } from './navTabs';
+import LogoMark from './LogoMark';
 
 // Telefonda sekmeler alttaki menüdedir (BottomNav); burada yalnızca sm ve üstünde görünür.
 
@@ -32,9 +33,7 @@ export default function Header() {
             href={role === 'esnaf' ? '/esnaf' : '/'}
             className="flex items-center gap-2 sm:gap-3 no-underline text-inherit min-w-0"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 via-fuchsia-500 to-blue-500 flex items-center justify-center text-base sm:text-lg shadow-lg shrink-0">
-              <span>📖</span>
-            </div>
+            <LogoMark />
             <div className="min-w-0">
               <div className="font-extrabold tracking-tight text-sm sm:text-base leading-tight">
                 D-Zimem
@@ -53,7 +52,6 @@ export default function Header() {
                 className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all max-w-[120px] sm:max-w-[140px] truncate no-underline text-inherit"
                 title={t('nav.profile')}
               >
-                <span>{role === 'esnaf' ? '🏪' : '🤝'}</span>
                 <span className="font-medium truncate">{profile.displayName}</span>
               </Link>
             )}
@@ -75,8 +73,7 @@ export default function Header() {
                   href={tab.href}
                   className={`tab-btn shrink-0 !text-[13px] sm:!text-[13px] !px-3 sm:!px-4 ${active ? 'active' : ''}`}
                 >
-                  <span aria-hidden>{tab.icon}</span>
-                  <span>{t(tab.labelKey)}</span>
+                  {t(tab.labelKey)}
                 </Link>
               );
             })}

@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Debt, HistoryEntry, PostTestData, PreTestData } from '@/types';
 
-// Ağ sınırı: Supabase istemcisi yerine ödeme RPC'sini ve tablo yazımını taklit eden sahte istemci.
+// Ağ sınırı: Supabase istemcisi yerine tablo yazımını yakalayan sahte istemci.
 const { inserts, fakeClient } = vi.hoisted(() => {
   const inserts: Record<string, unknown>[] = [];
   const fakeClient = {
-    rpc: async () => ({
-      data: [{ id: 'debt-1', paid_amount: 480, new_amount: 0, closed: true, closed_at: '2026-10-24T09:00:00Z' }],
-      error: null,
-    }),
     from: () => ({
       insert: async (row: Record<string, unknown>) => {
         inserts.push(row);
@@ -30,7 +26,6 @@ const debt: Debt = {
   description: 'Temel gıda',
   amount: 480,
   urgency: 3,
-  icon: '🍞',
 };
 const pre: PreTestData = { huzur: 5, emotion: 'merak', emotionValue: 2, likert: 4 };
 const post: PostTestData = { huzur: 8, emotion: 'mutlu', emotionValue: 4, likert: 5, willRepeat: 'evet' };
@@ -54,7 +49,7 @@ describe('syncSurveySubmission', () => {
   });
 
   it('PANAS bölümü atlanınca toplamları 0 değil boş (null) yazar', async () => {
-    await syncSurveySubmission({ debt, pre, post, entry, profile: null, payAmount: 480 });
+    await syncSurveySubmission({ debt, pre, post, entry, profile: null });
 
     expect(inserts).toHaveLength(1);
     expect(inserts[0]).toMatchObject({
@@ -75,7 +70,6 @@ describe('syncSurveySubmission', () => {
       post: { ...post, panasPos },
       entry,
       profile: null,
-      payAmount: 480,
     });
 
     expect(inserts[0]).toMatchObject({
@@ -84,5 +78,11 @@ describe('syncSurveySubmission', () => {
       panas_pos_scores: panasPos,
       panas_pos_total: 20,
     });
+  });
+
+  it('borç tutarı yerine sunucunun düştüğü katkı tutarını yazar', async () => {
+    await syncSurveySubmission({ debt, pre, post, entry: { ...entry, amount: 120 }, profile: null });
+
+    expect(inserts[0]).toMatchObject({ debt_id: 'debt-1', debt_amount: 120 });
   });
 });

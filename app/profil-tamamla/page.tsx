@@ -7,9 +7,10 @@ import { signOut } from '@/lib/auth';
 import type { Role } from '@/types';
 import ConsentBlock from '@/components/auth/ConsentBlock';
 import { consentComplete, type AgeGroup } from '@/lib/research';
+import LogoMark from '@/components/layout/LogoMark';
 
 // Google ile ilk kez giren hesap: rol, takma ad ve araştırma onamı alınır.
-// Google'ın paylaştığı gerçek ad KULLANILMAZ; kişi anonim bir takma ad seçer.
+// Google'ın paylaştığı gerçek ad kullanılmaz; kişi anonim bir takma ad seçer.
 const inputCls =
   'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all';
 
@@ -83,7 +84,9 @@ export default function CompleteProfilePage() {
     <div className="min-h-[80vh] flex items-center justify-center py-4">
       <div className="glass-strong w-full max-w-lg p-5 sm:p-8">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-purple-500 to-blue-500 grid place-items-center text-3xl shadow-lg shadow-indigo-500/40 ring-1 ring-white/10 mb-3">📖</div>
+          <div className="flex justify-center mb-3">
+            <LogoMark size="lg" />
+          </div>
           <h1 className="heading-lg">{t('complete.title')}</h1>
           <p className="text-sm text-muted-c mt-1">{t('complete.subtitle')}</p>
         </div>
@@ -97,7 +100,6 @@ export default function CompleteProfilePage() {
               onClick={() => setRole(r)}
               className={`emotion-card !p-4 ${role === r ? 'selected' : ''}`}
             >
-              <div className="text-4xl mb-1">{r === 'esnaf' ? '🏪' : '🤝'}</div>
               <div className="font-bold text-sm">{r === 'esnaf' ? t('register.merchant') : t('register.citizen')}</div>
             </button>
           ))}

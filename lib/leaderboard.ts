@@ -1,6 +1,4 @@
-// ============================================================
 // Liderlik tablosu — güvenli RPC üzerinden ilk 10 katılımcıyı çekme
-// ============================================================
 
 import { getSupabase } from './supabase';
 

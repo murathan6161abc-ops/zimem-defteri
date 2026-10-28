@@ -1,13 +1,11 @@
-// ============================================================
 // Veresiye defteri tarama — istemci tarafı
 // ────────────────────────────────────────────────────────────
 // 1. Fotoğrafı cihazda küçültür (≤2000 px JPEG) ve karanlık/bulanıksa uyarır
 // 2. Supabase'deki scan_jobs kuyruğuna "pending" iş olarak yazar
 // 3. Yöneticinin bilgisayarındaki tarama programı (yerel Ollama modeli) işi
 //    okur, sonucu yazar ve fotoğrafı siler; uygulama sonucu bekleyip alır
-// 4. Müşteri baş harflerini YALNIZCA bu cihazda saklar (sunucuya gitmez)
+// 4. Müşteri baş harflerini yalnızca bu cihazda saklar (sunucuya gitmez)
 // Fotoğraf hiçbir yapay zekâ şirketine (Google vb.) gönderilmez.
-// ============================================================
 
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
@@ -273,8 +271,8 @@ export function scanErrorKey(code: ScanErrorCode): string {
   return `scan.err_${code}`;
 }
 
-// ─── Müşteri baş harfleri: yalnızca bu cihazda ────────────────
-// Borç havuzu tüm kullanıcılara açıktır; kimlik ipucu ASLA sunucuya yazılmaz.
+// Müşteri baş harfleri: yalnızca bu cihazda
+// Borç havuzu tüm kullanıcılara açıktır; kimlik ipucu asla sunucuya yazılmaz.
 // Esnaf, bir borç kapandığında fiziksel defterde hangi müşteriyi sileceğini
 // bu yerel etiketten anlar.
 const REFS_KEY = 'd-zimem-ledger-refs';

@@ -21,7 +21,7 @@ export interface Debt {
   description: string;
   amount: number;
   urgency: 1 | 2 | 3;
-  icon: string;
+  icon?: string; // yoksa türden türetilir (iconOf)
   kind?: DebtKind; // yoksa category'den türetilir (eski kayıtlar)
 }
 
@@ -30,26 +30,26 @@ export interface PreTestData {
   emotion: 'merak' | 'sorumluluk' | 'huzur' | 'heyecan';
   emotionValue: number; // 1-4
   likert: number; // 1-5
-  // PANAS-SF Negatif Afekt: 5 madde × 1-5 likert (akademik standart)
+  // PANAS negatif afekt: 5 madde, 1-5 arası
   panasNeg?: Record<string, number>;
 }
 
 export interface PostTestData {
-  huzur: number; // 1-10 — iyilik sonrası ölçülen huzur (pre ile karşılaştırmalı)
+  huzur: number; // 1-10, ön testteki huzur sorusuyla aynı
   emotion: 'mutlu' | 'dingin' | 'hafiflemis' | 'gururlu';
   emotionValue: number; // 1-4
   likert: number; // 1-5
   willRepeat: 'evet' | 'belki' | 'bilmiyorum';
-  // PANAS-SF Pozitif Afekt: 5 madde × 1-5 likert
+  // PANAS pozitif afekt: 5 madde, 1-5 arası
   panasPos?: Record<string, number>;
 }
 
-// WHO-5 İyilik Hali İndeksi ölçümü (haftalık)
+// WHO-5 ölçümü (haftada bir)
 export interface WHO5Measurement {
   id: string;
   user_id: string;
   scores: Record<string, number>; // q1..q5, her biri 0-5
-  total: number; // 0-25 ham, ×4 = 0-100 normalize
+  total: number; // 0-100 (ham toplam × 4)
   created_at: string;
 }
 
@@ -73,14 +73,13 @@ export interface Achievement {
   id: string;
   nameKey: string;
   descKey: string;
-  emoji: string;
+  mark: string; // rozetin içinde yazan kısa ifade (ör. "5", "1K")
 }
 
 export interface LevelInfo {
   index: number;
   key: string;
   minXP: number;
-  emoji: string;
 }
 
 export type ModalStep = 'closed' | 'pretest' | 'payment' | 'posttest' | 'result';
@@ -90,11 +89,11 @@ export type Role = 'vatandas' | 'esnaf';
 export interface UserProfile {
   role: Role;
   displayName: string;
-  username?: string; // giriş için kullanıcı adı (Supabase Auth)
+  username?: string; // giriş için kullanıcı adı ya da e-posta
   shopName?: string; // esnaf için
   city?: string;
   createdAt: string;
-  // Bilgilendirilmiş onam (informed consent) zaman damgası — araştırma etiği
+  // Araştırma onamının verildiği an
   consentAt?: string;
   // Yaş grubu (doğum tarihi tutulmaz) ve 18 yaş altı için velinin imzalı onam beyanı
   ageGroup?: 'minor' | 'adult';
@@ -102,7 +101,7 @@ export interface UserProfile {
 }
 
 export interface MerchantDebt extends Debt {
-  addedBy: string; // displayName
+  addedBy: string; // dükkan adı ya da takma ad
   addedAt: string; // ISO
   closed?: boolean;
   closedAt?: string;

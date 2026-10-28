@@ -6,11 +6,12 @@ import { useI18n } from '@/lib/i18n';
 import { PANAS_NEGATIVE } from '@/lib/scales';
 import type { PreTestData } from '@/types';
 
-const EMOTIONS: { key: PreTestData['emotion']; emoji: string; value: number }[] = [
-  { key: 'merak', emoji: '🤔', value: 2 },
-  { key: 'sorumluluk', emoji: '🛡️', value: 4 },
-  { key: 'huzur', emoji: '🕊️', value: 3 },
-  { key: 'heyecan', emoji: '✨', value: 3 },
+// value, puan hesabında kullanılan duygu ağırlığıdır (lib/xp.ts).
+const EMOTIONS: { key: PreTestData['emotion']; value: number }[] = [
+  { key: 'merak', value: 2 },
+  { key: 'sorumluluk', value: 4 },
+  { key: 'huzur', value: 3 },
+  { key: 'heyecan', value: 3 },
 ];
 
 export default function PretestModal({ open }: { open: boolean }) {
@@ -21,11 +22,11 @@ export default function PretestModal({ open }: { open: boolean }) {
   const [huzur, setHuzur] = useState<number | null>(null);
   const [emotion, setEmotion] = useState<PreTestData['emotion'] | null>(null);
   const [likert, setLikert] = useState<number>(0);
-  // PANAS Negatif skorlar — opsiyonel (akademik araştırma için)
+  // PANAS negatif afekt maddeleri; bölüm isteğe bağlı
   const [panasOpen, setPanasOpen] = useState(false);
   const [panasNeg, setPanasNeg] = useState<Record<string, number>>({});
 
-  // PANAS açıksa hepsi cevaplanmış olmalı; kapalıysa zorunlu değil
+  // Bölüm açıldıysa beş maddenin hepsi cevaplanmalı.
   const panasOK = !panasOpen || PANAS_NEGATIVE.every((it) => (panasNeg[it.key] || 0) > 0);
   const canSubmit = huzur !== null && emotion !== null && likert > 0 && panasOK;
 
@@ -85,7 +86,6 @@ export default function PretestModal({ open }: { open: boolean }) {
                 className={`emotion-card ${emotion === e.key ? 'selected' : ''}`}
                 onClick={() => setEmotion(e.key)}
               >
-                <div className="emotion-emoji">{e.emoji}</div>
                 <div className="emotion-label">{t(`pretest.emo_${e.key}`)}</div>
               </button>
             ))}
@@ -109,7 +109,6 @@ export default function PretestModal({ open }: { open: boolean }) {
           </div>
         </section>
 
-        {/* PANAS — opsiyonel akademik ölçek */}
         <section className="border-t border-white/10 pt-4">
           <button
             type="button"
@@ -142,10 +141,10 @@ export default function PretestModal({ open }: { open: boolean }) {
                           onClick={() => setPanasNeg((p) => ({ ...p, [item.key]: v }))}
                           className={`w-7 h-7 rounded-full text-xs font-semibold transition-all ${
                             panasNeg[item.key] === v
-                              ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black scale-110'
+                              ? 'bg-amber-400 text-black'
                               : 'bg-white/5 text-muted-c border border-white/10 hover:bg-white/10'
                           }`}
-                          aria-label={`${item.key} ${v}`}
+                          aria-label={`${t(item.i18nKey)} ${v}`}
                         >
                           {v}
                         </button>

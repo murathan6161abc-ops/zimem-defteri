@@ -1,12 +1,9 @@
-// ============================================================
 // Veresiye defteri okuma — ortak kurallar (bağımlılıksız)
-// ────────────────────────────────────────────────────────────
 // Hem uygulama (lib/ledgerScan.ts) hem de yöneticinin bilgisayarındaki tarama
 // programı (scripts/ledger-reader.mjs, Node'un TS desteğiyle) bu dosyayı kullanır.
 // Modele verilen komut ve satır toplama kuralları scripts/ledger-reader.mjs'te.
 // Böylece model çıktısı iki tarafta da aynı beyaz liste ile temizlenir.
-// Bu dosyaya çalışma zamanında import EKLEME (yalnızca `import type`).
-// ============================================================
+// Bu dosyaya çalışma zamanında import ekleme (yalnızca `import type`).
 
 import type { Category, DebtKind } from '@/types';
 

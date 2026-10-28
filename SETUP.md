@@ -81,7 +81,7 @@ npm run delivery:debug
 
 Çıktılar:
 
-- `dist/D-Zimem-v2.1.0-debug.apk`
+- `dist/D-Zimem-v<sürüm>-debug.apk`
 - `dist/SHA256SUMS.txt`
 - `dist/release-manifest.json`
 

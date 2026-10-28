@@ -34,7 +34,6 @@ export default function MfaCodeForm({
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <div className="text-4xl mb-2">🔐</div>
         <h2 className="heading-lg">{t('security.challenge_title')}</h2>
         <p className="text-sm text-muted-c mt-1">{t('security.challenge_desc')}</p>
       </div>

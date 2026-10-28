@@ -1,7 +1,4 @@
-// ============================================================
-// Kişisel anket analitiği — Huzur değişimi, duygu dağılımı
-// survey_submissions tablosundan kullanıcının kendi verileri çekilir.
-// ============================================================
+// Kişisel analiz: kullanıcının kendi anket kayıtlarından huzur değişimi ve duygu dağılımı.
 
 import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
@@ -9,7 +6,7 @@ import { getCurrentUserId } from './auth';
 export interface SurveyResult {
   id: string;
   created_at: string;
-  pre_huzur: number;
+  pre_huzur: number | null;
   pre_emotion: string;
   pre_likert: number;
   post_huzur: number | null;
@@ -45,18 +42,6 @@ export async function fetchMySurveyResults(): Promise<SurveyResult[]> {
   return (data || []) as SurveyResult[];
 }
 
-/**
- * LEGACY fallback — yalnızca post_huzur ölçümü eklenmeden ÖNCE kaydedilmiş
- * eski satırlar için. Yeni kayıtlarda post_huzur doğrudan ölçülür (Posttest'teki
- * 1-10 huzur sorusu). Eski satırlarda post_huzur null olduğundan grafik boş
- * kalmasın diye post_likert'tan tahmin ediyoruz.
- *   Likert 1 → -1, 2 → 0, 3 → +1, 4 → +2, 5 → +3
- */
-export function computePostHuzur(preHuzur: number, postLikert: number): number {
-  const offset = (postLikert || 3) - 2;
-  return Math.max(1, Math.min(10, preHuzur + offset));
-}
-
 export interface HuzurStats {
   avgPre: number;
   avgPost: number;
@@ -65,32 +50,21 @@ export interface HuzurStats {
   emotionCounts: Record<string, number>;
 }
 
+/**
+ * Son 10 kaydın özeti. Huzur ortalamaları yalnızca hem ön hem son testte huzur puanı
+ * ölçülmüş kayıtlardan hesaplanır; eski sürümlerden kalan, son test huzuru boş
+ * kayıtlar için tahmin yapılmaz.
+ */
 export function aggregateHuzurStats(results: SurveyResult[]): HuzurStats {
-  if (results.length === 0) {
-    return { avgPre: 0, avgPost: 0, change: 0, count: 0, emotionCounts: {} };
-  }
-  const recent = results.slice(0, 10); // son 10
-  const preSum = recent.reduce((s, r) => s + (r.pre_huzur || 5), 0);
-  // Ölçülmüş post_huzur varsa onu kullan; yoksa (eski kayıtlar) tahmine düş.
-  const postSum = recent.reduce(
-    (s, r) => s + (r.post_huzur ?? computePostHuzur(r.pre_huzur || 5, r.post_likert || 3)),
-    0,
-  );
-  const avgPre = preSum / recent.length;
-  const avgPost = postSum / recent.length;
+  const recent = results.slice(0, 10);
+  const paired = recent.filter((r) => r.pre_huzur != null && r.post_huzur != null);
+  const avgPre = paired.length ? paired.reduce((s, r) => s + (r.pre_huzur as number), 0) / paired.length : 0;
+  const avgPost = paired.length ? paired.reduce((s, r) => s + (r.post_huzur as number), 0) / paired.length : 0;
 
   const emotionCounts: Record<string, number> = {};
-  recent.forEach((r) => {
-    if (r.post_emotion) {
-      emotionCounts[r.post_emotion] = (emotionCounts[r.post_emotion] || 0) + 1;
-    }
-  });
+  for (const r of recent) {
+    if (r.post_emotion) emotionCounts[r.post_emotion] = (emotionCounts[r.post_emotion] || 0) + 1;
+  }
 
-  return {
-    avgPre,
-    avgPost,
-    change: avgPost - avgPre,
-    count: recent.length,
-    emotionCounts,
-  };
+  return { avgPre, avgPost, change: avgPost - avgPre, count: paired.length, emotionCounts };
 }

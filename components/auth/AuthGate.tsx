@@ -47,16 +47,22 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { t } = useI18n();
   const profile = useZimemStore((s) => s.profile);
-  // Legacy modda hemen hazır; auth modunda oturum kontrolü bitince hazır.
-  const [ready, setReady] = useState(!authMode);
+  // Yönlendirme kararı ilk kareden sonra verilir. Sayfa canlanırken (hydration) store
+  // ilk karede sunucudaki boş durumu döndürür; o anda karar verilirse kayıtlı profil
+  // "yok" sayılıp kayıt sayfasına gidilir ve oradaki çıkış kuralı yerel veriyi siler.
+  // Supabase modunda ayrıca oturum kontrolünün bitmesi beklenir.
+  const [ready, setReady] = useState(false);
   const hydratedUid = useRef<string | null>(null);
   // Google ile ilk kez giren hesapta rol/takma ad/araştırma onayı yok → tamamlatılır.
   const [needsProfile, setNeedsProfile] = useState(false);
   const [googleError, setGoogleError] = useState(false);
 
-  // ─── Oturum bootstrap (yalnızca Supabase yapılandırılmışsa) ──────────
+  // Oturum kontrolü (Supabase ayarlıysa)
   useEffect(() => {
-    if (!authMode) return;
+    if (!authMode) {
+      setReady(true);
+      return;
+    }
     const client = getSupabase();
     if (!client) {
       setReady(true);
@@ -66,7 +72,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
     const applySession = async (session: Session | null) => {
       const store = useZimemStore.getState();
-      // 2FA'lı hesapta yalnızca şifre girilmişse (aal1) uygulamaya ALINMAZ:
+      // 2FA'lı hesapta yalnızca şifre girilmişse (aal1) uygulamaya alınmaz:
       // profil yüklenmez, kullanıcı giriş ekranındaki kod adımına yönlenir.
       // (Veritabanı da aal1 oturuma hiçbir veri vermez — asıl koruma orada.)
       // Aynı şekilde e-posta kodu doğrulanmış ama şifre/profil adımı bitmemiş
@@ -169,14 +175,13 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     router.replace(useZimemStore.getState().profile ? '/profil/' : `${LOGIN}?google=hata`);
   }, [googleError, router]);
 
-  // ─── Yönlendirme ─────────────────────────────────────────────────────
+  // Yönlendirme
   useEffect(() => {
     if (!ready) return;
 
-    // Kayıt-tamamlanma bayrağı YALNIZCA /register → ana sayfa geçişi içindir.
-    // /register dışındaki her yolda temizle ki bayatlamasın; aksi halde sonraki
-    // "Kayıt Ol" ziyaretinde AuthGate logout'u atlayıp kullanıcıyı eski profille
-    // uygulamaya düşürüyordu (kayıt formu hiç görünmüyordu).
+    // Kayıt bayrakları yalnızca /register'dan ana sayfaya geçiş için tutulur. Başka
+    // sayfada silinmezse sonraki "Kayıt ol" ziyaretinde çıkış atlanır ve kayıt
+    // formu yerine eski profil açılır.
     if (!isRegister(pathname)) {
       try {
         sessionStorage.removeItem('d-zimem-skip-register-logout');
@@ -204,8 +209,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
     // Kayıt sayfasına oturum açıkken gelmek = "yeni hesap aç" niyeti.
     // Paylaşılan cihazda kalan oturumu kapat ki kayıt formu görünsün.
-    // AMA: kayıt yeni tamamlandıysa (handleFinish bayrağı) oturumu KORU — aksi
-    // halde signIn'in kurduğu oturum hemen silinip kimlik cihaza düşüyordu.
+    // Kayıt yeni tamamlandıysa oturum korunur; yoksa az önce açılan oturum silinir.
     if (profile && isRegister(pathname)) {
       let justRegistered = false;
       try {

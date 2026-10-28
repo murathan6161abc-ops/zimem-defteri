@@ -64,7 +64,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Android / mobil webview optimizasyonları ── */
+/* Android WebView ayarları */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -76,7 +76,7 @@ body {
   -webkit-overflow-scrolling: touch;
   padding-bottom: env(safe-area-inset-bottom, 0px);  /* alt jest çubuğu güvenli alanı */
 }
-/* Butonlar/linkler uzun basınca metin seçilmesin (app hissi) */
+/* Butonlara uzun basınca metin seçilmesin */
 button, a, .btn, .tab-btn, .nav-tab { -webkit-user-select: none; user-select: none; }
 /* Form alanlarında seçim/kopyalama serbest kalsın */
 input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
@@ -253,7 +253,7 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 
 .emotion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .emotion-card {
-  padding: 14px;
+  padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid var(--border-soft);
   background: rgba(255,255,255,0.04);
@@ -266,7 +266,6 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
   border-color: var(--purple);
   background: rgba(168, 85, 247, 0.15);
 }
-.emotion-emoji { font-size: 28px; margin-bottom: 4px; }
 .emotion-label { font-size: 13px; color: var(--text-primary); font-weight: 500; }
 
 .likert-stars { display: flex; gap: 6px; justify-content: center; }
@@ -318,7 +317,6 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
   backdrop-filter: blur(14px);
   animation: slideIn .35s cubic-bezier(.16,.84,.44,1);
 }
-.toast-emoji { font-size: 28px; }
 .toast-title { font-weight: 700; color: var(--gold); font-size: 14px; }
 .toast-desc { font-size: 12px; color: var(--text-muted); }
 
@@ -341,7 +339,6 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes confetti-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 @keyframes leafGrow { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-@keyframes glow-pulse { 0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.7)); } 50% { filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.95)); } }
 
 .progress-track {
   width: 100%;
@@ -380,6 +377,10 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 .urgency-1 { background: #6b7280; }
 .urgency-2 { background: var(--amber); }
 .urgency-3 { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+.dot-gida { background: var(--emerald); }
+.dot-egitim { background: var(--blue); }
+.dot-fatura { background: var(--amber); }
+.dot-saglik { background: var(--pink); }
 
 .section-title {
   font-size: 12px;
@@ -409,16 +410,13 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
   .toast { min-width: 280px; width: auto; }
 }
 
-/* ── RTL desteği (Arapça için) ───────────────────────── */
-[dir="rtl"] body {
-  font-family: 'Segoe UI', 'Tahoma', sans-serif;
-}
+/* Arapça (sağdan sola). Inter Arapça harf içermediği için sistem yazı tipi kullanılır. */
 [dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }
 [dir="rtl"] .mr-auto { margin-right: 0; margin-left: auto; }
 [dir="rtl"] .text-right { text-align: left; }
 [dir="rtl"] .text-left { text-align: right; }
-/* Arapça font ayarı (Inter Arapçayı desteklemez) */
-[dir="rtl"] {
+[dir="rtl"],
+[dir="rtl"] body {
   font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
 }
 

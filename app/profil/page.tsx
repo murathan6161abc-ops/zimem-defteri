@@ -6,6 +6,7 @@ import { useI18n, type Locale } from '@/lib/i18n';
 import { getLevelInfo } from '@/lib/levels';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { isAdminUser } from '@/lib/auth';
+import { formatTL } from '@/lib/debts';
 import AccountSecurity from '@/components/profile/AccountSecurity';
 
 const DATE_LOCALE: Record<Locale, string> = { tr: 'tr-TR', en: 'en-US', ar: 'ar' };
@@ -33,8 +34,8 @@ export default function ProfilePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Admin paneline dair tek "kapı": app_metadata.role sunucudan gelir,
-  // profil (user_metadata'dan türetilir) bunu taşımaz — oturumdan ayrıca sorulur.
+  // Yönetici yetkisi sunucunun yönettiği app_metadata.role'dedir; profil bunu taşımadığı
+  // için oturumdan ayrıca okunur.
   useEffect(() => {
     const sb = getSupabase();
     if (!sb) return;
@@ -76,14 +77,17 @@ export default function ProfilePage() {
       <section className="glass-strong p-7 mb-6 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-fuchsia-500 to-blue-500 flex items-center justify-center text-3xl shrink-0 shadow-lg">
-            {isEsnaf ? '🏪' : '🤝'}
+          <div
+            className="w-16 h-16 rounded-2xl bg-amber-400 text-[#1a1207] flex items-center justify-center text-2xl font-black shrink-0 uppercase"
+            aria-hidden
+          >
+            {Array.from(profile.displayName.trim() || '?')[0]}
           </div>
           <div className="min-w-0">
             <div className="section-title">{isEsnaf ? t('profile.role_merchant') : t('profile.role_citizen')}</div>
             <h1 className="heading-xl truncate">{profile.displayName}</h1>
             {isEsnaf && profile.shopName && (
-              <div className="text-sm text-muted-c mt-0.5 truncate">🛍️ {profile.shopName}</div>
+              <div className="text-sm text-muted-c mt-0.5 truncate">{profile.shopName}</div>
             )}
           </div>
         </div>
@@ -119,7 +123,6 @@ export default function ProfilePage() {
         ) : (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-3xl">{level.current.emoji}</div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold">{t(`levels.${level.current.key}`)}</div>
                 {level.next && (
@@ -132,36 +135,35 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-3">
               <Stat label={t('profile.total_xp')} value={xp} color="text-amber-300" />
               <Stat label={t('profile.closed_debt')} value={debtsPaid} color="text-emerald-300" />
-              <Stat label={t('profile.donated_short')} value={`${totalDonated} ₺`} color="text-emerald-300" />
-              <Stat label={t('profile.streak_short')} value={`${streak} 🔥`} color="text-amber-300" />
+              <Stat label={t('profile.donated_short')} value={formatTL(totalDonated, locale)} color="text-emerald-300" />
+              <Stat label={t('profile.streak_short')} value={t('score.streak_days', { n: streak })} color="text-amber-300" />
             </div>
           </>
         )}
       </section>
 
-      {/* Daha fazla bölüm — sekmeden gizlenen sayfalara hızlı erişim */}
+      {/* Sekmelerde yer almayan sayfalar */}
       {!isEsnaf && (
         <section className="glass p-5 mb-6">
           <div className="section-title mb-3">{t('profile.more')}</div>
           <div className="space-y-2">
-            <ProfileLink router={router} href="/iyilik-hali" emoji="🌿" title={t('profile.link_wellbeing_title')} desc={t('profile.link_wellbeing_desc')} />
-            <ProfileLink router={router} href="/achievements" emoji="🎖️" title={t('profile.link_ach_title')} desc={t('profile.link_ach_desc')} />
-            <ProfileLink router={router} href="/tree" emoji="🌳" title={t('profile.link_tree_title')} desc={t('profile.link_tree_desc')} />
-            <ProfileLink router={router} href="/stats" emoji="📊" title={t('profile.link_stats_title')} desc={t('profile.link_stats_desc')} />
+            <ProfileLink router={router} href="/iyilik-hali" title={t('profile.link_wellbeing_title')} desc={t('profile.link_wellbeing_desc')} />
+            <ProfileLink router={router} href="/achievements" title={t('profile.link_ach_title')} desc={t('profile.link_ach_desc')} />
+            <ProfileLink router={router} href="/tree" title={t('profile.link_tree_title')} desc={t('profile.link_tree_desc')} />
+            <ProfileLink router={router} href="/stats" title={t('profile.link_stats_title')} desc={t('profile.link_stats_desc')} />
           </div>
         </section>
       )}
 
       {isAdmin && (
         <section className="glass p-5 mb-6">
-          <div className="section-title mb-3">Yönetim</div>
+          <div className="section-title mb-3">{t('profile.admin_section')}</div>
           <div className="space-y-2">
             <ProfileLink
               router={router}
               href="/admin"
-              emoji="🛡️"
-              title="Admin Paneli"
-              desc="Anket verileri, grafikler ve araştırma özeti"
+              title={t('profile.admin_link_title')}
+              desc={t('profile.admin_link_desc')}
             />
           </div>
         </section>
@@ -183,17 +185,16 @@ export default function ProfilePage() {
 }
 
 function ProfileLink({
-  router, href, emoji, title, desc,
-}: { router: ReturnType<typeof useRouter>; href: string; emoji: string; title: string; desc: string }) {
-  // Düz <a href> Capacitor/APK'da tam sayfa navigasyonu tetikleyip başarısız
-  // oluyor (statik export + WebView) — dahili yollar router.push ile gitmeli.
+  router, href, title, desc,
+}: { router: ReturnType<typeof useRouter>; href: string; title: string; desc: string }) {
+  // APK'da (statik dışa aktarım + WebView) düz <a href> tam sayfa yüklemesi yapıp
+  // başarısız oluyor; uygulama içi yollar router.push ile açılır.
   return (
     <button
       type="button"
       onClick={() => router.push(href.endsWith('/') ? href : `${href}/`)}
       className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/15 transition-all text-inherit text-left"
     >
-      <span className="text-2xl shrink-0">{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold truncate">{title}</div>
         <div className="text-xs text-muted-c truncate">{desc}</div>

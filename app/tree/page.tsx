@@ -47,11 +47,11 @@ export default function TreePage() {
 
       <div className="mt-6 grid sm:grid-cols-3 gap-3 text-xs text-muted-c">
         <div className="glass p-4">
-          <div className="font-semibold mb-1 text-white">🌱 0–50 XP</div>
+          <div className="font-semibold mb-1 text-white">🌱 0–149 XP</div>
           {t('tree.stage1_desc')}
         </div>
         <div className="glass p-4">
-          <div className="font-semibold mb-1 text-white">💚 150–350 XP</div>
+          <div className="font-semibold mb-1 text-white">💚 150–599 XP</div>
           {t('tree.stage2_desc')}
         </div>
         <div className="glass p-4">

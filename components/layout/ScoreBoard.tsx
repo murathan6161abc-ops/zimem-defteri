@@ -43,10 +43,7 @@ export default function ScoreBoard({ withStats = false }: { withStats?: boolean 
 
         <div className="text-right min-w-0">
           <div className="section-title">{t('score.level')}</div>
-          <div className="flex items-center gap-1.5 justify-end">
-            <span className="text-xl sm:text-2xl">{current.emoji}</span>
-            <span className="font-bold text-sm sm:text-lg truncate">{t(`levels.${current.key}`)}</span>
-          </div>
+          <div className="font-bold text-sm sm:text-lg truncate">{t(`levels.${current.key}`)}</div>
           {next && (
             <div className="text-xs sm:text-xs text-muted-c mt-0.5 truncate">
               {t('score.to_next', { level: t(`levels.${next.key}`), xp: remaining })}

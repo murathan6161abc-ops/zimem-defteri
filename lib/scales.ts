@@ -1,16 +1,14 @@
-// ============================================================
 // Psikometrik Ölçekler
 // PANAS-SF (Positive and Negative Affect Schedule — Kısa Form)
 // WHO-5 İyilik Hali İndeksi
 // Akademik geçerli, dünya çapında kullanılan ölçekler.
-// ============================================================
 
 export interface ScaleItem {
   key: string;       // veritabanı/JSON anahtarı
   i18nKey: string;   // çeviri sözlüğü yolu
 }
 
-// ─── PANAS-SF Negatif Afekt ─────────────────────────────────
+// PANAS-SF Negatif Afekt
 // Watson, Clark & Tellegen (1988) — Türkçe uyarlama: Gençöz (2000)
 // 5 madde × 1-5 Likert → toplam 5-25
 // Pre-test'te uygulanır (kişinin ana baz halinin negatif duygu durumu)
@@ -22,7 +20,7 @@ export const PANAS_NEGATIVE: ScaleItem[] = [
   { key: 'upset',  i18nKey: 'panas.neg_upset'  },
 ];
 
-// ─── PANAS-SF Pozitif Afekt ─────────────────────────────────
+// PANAS-SF Pozitif Afekt
 // 5 madde × 1-5 Likert → toplam 5-25
 // Post-test'te uygulanır (iyilik sonrası pozitif duygu durumu)
 export const PANAS_POSITIVE: ScaleItem[] = [
@@ -33,7 +31,7 @@ export const PANAS_POSITIVE: ScaleItem[] = [
   { key: 'active',     i18nKey: 'panas.pos_active'     },
 ];
 
-// ─── WHO-5 İyilik Hali İndeksi ──────────────────────────────
+// WHO-5 İyilik Hali İndeksi
 // Topp et al. (2015) — Türkçe geçerlilik: Eser et al.
 // 5 madde × 0-5 Likert (son 2 hafta) → toplam ×4 = 0-100 skoru
 // 50 altı: düşük iyilik hali (uzman görüşü öneriyor)
@@ -47,7 +45,7 @@ export const WHO5_ITEMS: ScaleItem[] = [
   { key: 'q5', i18nKey: 'who5.q5' },
 ];
 
-// ─── Hesaplama yardımcıları ──────────────────────────────────
+// Hesaplama yardımcıları
 
 /** Alt ölçek toplamı (5-25). Bölüm atlandıysa null: 0 geçerli bir PANAS toplamı değildir. */
 export function panasTotal(scores: Record<string, number> | undefined): number | null {

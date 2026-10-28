@@ -1,8 +1,6 @@
-// ============================================================
 // Seri (art arda iyilik günleri) hesabı
 // Günler UTC'ye göre değil, kullanıcının yerel takvimine göre sayılır:
 // UTC+3'te gece yarısından sonraki işlem yeni bir gündür.
-// ============================================================
 
 /** Yerel takvim günü (YYYY-MM-DD). */
 export function dayKey(d: Date): string {

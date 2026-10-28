@@ -49,8 +49,8 @@ function buildContentSecurityPolicy(): string | null {
 const contentSecurityPolicy = buildContentSecurityPolicy();
 
 export const metadata: Metadata = {
-  title: "Dijital Zimem Defteri",
-  description: "Kadim İyilik, Dijital İz — anonim, sosyal iyilik platformu.",
+  title: "D-Zimem",
+  description: "Mahalle esnafının veresiye defterindeki temel ihtiyaç borçlarını, borçlunun adı görünmeden kapatma uygulaması.",
 };
 
 export const viewport = {

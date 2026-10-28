@@ -1,6 +1,4 @@
-// ============================================================
 // Google ile giriş (Supabase OAuth + PKCE)
-// ────────────────────────────────────────────────────────────
 // Google, uygulama içi WebView'de girişi engeller; bu yüzden APK'da giriş
 // telefonun tarayıcısında (Custom Tab) açılır ve com.dzimem.app://login-callback
 // bağlantısıyla uygulamaya geri dönülür. Web'de normal yönlendirme kullanılır.
@@ -8,7 +6,6 @@
 // Güvenlik: flowType 'pkce' (lib/supabase.ts). Dönüşteki "code", yalnızca bu
 // cihazda saklanan code_verifier ile oturuma çevrilebilir; geri dönüş bağlantısını
 // başka bir uygulama yakalasa bile kodla oturum açamaz.
-// ============================================================
 
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -115,7 +112,7 @@ export async function startGoogleSignIn(): Promise<{ ok: true } | { ok: false; e
 }
 
 /**
- * Oturum açıkken Google hesabını MEVCUT hesaba bağlar (manuel bağlama).
+ * Oturum açıkken Google hesabını mevcut hesaba bağlar (manuel bağlama).
  * Kullanıcı adıyla açılıp sonradan Gmail eklenen hesaplarda Supabase Google'ı
  * otomatik eşleştirmez; bir kez bağlanınca Google ile giriş aynı hesaba açılır.
  * Supabase'de "Allow manual linking" açık olmalı.

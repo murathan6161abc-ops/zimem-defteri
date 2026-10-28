@@ -10,6 +10,7 @@ import { getSupabase } from '@/lib/supabase';
 import MfaCodeForm from '@/components/auth/MfaCodeForm';
 import GoogleButton from '@/components/auth/GoogleButton';
 import { GOOGLE_ERROR_EVENT, takeGoogleError } from '@/lib/googleAuth';
+import LogoMark from '@/components/layout/LogoMark';
 
 
 export default function LoginPage() {
@@ -138,13 +139,11 @@ export default function LoginPage() {
 
         <div className="relative">
           <div className="flex flex-col items-center text-center mb-7">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-500 grid place-items-center text-3xl shadow-lg shadow-indigo-500/40 ring-1 ring-white/10 mb-3">
-              📖
+            <div className="mb-3">
+              <LogoMark size="lg" />
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight leading-none">D-Zimem</h1>
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/90 font-semibold mt-1.5">
-              Kadim İyilik · Dijital İz
-            </p>
+            <p className="text-xs text-amber-300/90 font-semibold mt-1.5">{t('nav.tagline')}</p>
             <p className="text-sm text-muted-c mt-3">{t('auth.login_subtitle')}</p>
           </div>
 

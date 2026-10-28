@@ -6,6 +6,9 @@ import { syncDeviceSnapshot } from '@/lib/sync';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 
+// İlk üç sıranın numara rengi
+const PODIUM = ['text-amber-300', 'text-slate-200', 'text-orange-300'];
+
 export default function LiderlikPage() {
   const { t, locale } = useI18n();
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
@@ -19,7 +22,7 @@ export default function LiderlikPage() {
 
   async function refresh() {
     setLoading(true);
-    // Önce kendi snapshot'ını gönder ki listede güncel görünesin
+    // Kullanıcının kendi satırı listede güncel görünsün diye önce özet gönderilir.
     if (xp > 0) {
       await syncDeviceSnapshot({ profile, xp, debtsPaid, totalDonated, streak });
     }
@@ -47,8 +50,6 @@ export default function LiderlikPage() {
     );
   }
 
-  const medals = ['🥇', '🥈', '🥉'];
-
   return (
     <div className="pt-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -63,18 +64,14 @@ export default function LiderlikPage() {
           onClick={refresh}
           className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
         >
-          🔄 {t('common.refresh')}
+          {t('common.refresh')}
         </button>
       </div>
 
       {loading ? (
-        <div className="glass p-10 text-center">
-          <div className="text-3xl mb-2">⏳</div>
-          <div className="text-sm text-muted-c">{t('common.loading')}</div>
-        </div>
+        <div className="glass p-10 text-center text-sm text-muted-c">{t('common.loading')}</div>
       ) : leaders.length === 0 ? (
         <div className="glass p-10 text-center">
-          <div className="text-5xl mb-3">🌱</div>
           <div className="font-bold text-lg mb-1">{t('leaderboard.empty_title')}</div>
           <div className="text-sm text-muted-c">
             {t('leaderboard.empty_desc')}
@@ -84,7 +81,6 @@ export default function LiderlikPage() {
         <div className="grid gap-2">
           {leaders.map((u, i) => {
             const isMe = u.is_current;
-            const medal = i < 3 ? medals[i] : null;
             return (
               <div
                 key={u.participant_id}
@@ -94,10 +90,12 @@ export default function LiderlikPage() {
                     : ''
                 }`}
               >
-                <div className="w-10 text-center text-xl shrink-0">
-                  {medal ?? (
-                    <span className="text-xs font-bold text-muted-c">#{i + 1}</span>
-                  )}
+                <div
+                  className={`w-10 text-center shrink-0 font-extrabold tabular-nums ${
+                    i < 3 ? `text-lg ${PODIUM[i]}` : 'text-xs text-muted-c'
+                  }`}
+                >
+                  {i + 1}
                 </div>
 
                 <div className="flex-1 min-w-0">

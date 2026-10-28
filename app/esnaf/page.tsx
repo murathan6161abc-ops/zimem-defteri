@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useZimemStore } from '@/store/useZimemStore';
 import { tStatic, useI18n, type Locale } from '@/lib/i18n';
-import { KIND_META, iconOf, kindChipStyle, kindOf } from '@/lib/debts';
+import { KIND_META, formatTL, iconOf, kindChipStyle, kindOf } from '@/lib/debts';
 import { forgetLedgerRef, readLedgerRefs } from '@/lib/ledgerScan';
 import { getSupabase } from '@/lib/supabase';
 import { fetchMyMerchantDebts, subscribeToMyDebts } from '@/lib/supabaseDebts';
@@ -66,7 +66,7 @@ export default function EsnafHomePage() {
       if (!active) return;
       unsubscribe = subscribeToMyDebts(userId, (debt) => {
         if (applyMerchantDebtChange(debt)) {
-          pushToast({ emoji: '✅', title: tStatic('debt.toast_closed_title'), desc: debt.title });
+          pushToast({ title: tStatic('debt.toast_closed_title'), desc: debt.title });
         }
       });
       document.addEventListener('visibilitychange', onVisible);
@@ -125,7 +125,7 @@ export default function EsnafHomePage() {
         <div className="stat-card">
           <div className="stat-label">{t('merchant.open_amount')}</div>
           <div className="stat-value text-amber-300" suppressHydrationWarning>
-            {totalOpen} ₺
+            {formatTL(totalOpen, locale)}
           </div>
         </div>
         <div className="stat-card">
@@ -137,7 +137,7 @@ export default function EsnafHomePage() {
         <div className="stat-card">
           <div className="stat-label">{t('merchant.granted')}</div>
           <div className="stat-value text-emerald-300" suppressHydrationWarning>
-            {totalClosed} ₺
+            {formatTL(totalClosed, locale)}
           </div>
         </div>
       </div>
@@ -145,7 +145,6 @@ export default function EsnafHomePage() {
       <h2 className="heading-lg mb-3">{t('merchant.open_debts')}</h2>
       {open.length === 0 ? (
         <div className="glass p-10 text-center mb-6">
-          <div className="text-5xl mb-3">📒</div>
           <div className="font-bold text-lg mb-1">{t('merchant.empty_title')}</div>
           <div className="text-sm text-muted-c mb-4">
             {t('merchant.empty_desc')}
@@ -190,7 +189,7 @@ export default function EsnafHomePage() {
                   <div className="text-xs text-muted-c truncate">{d.description}</div>
                 </div>
                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <div className="font-bold text-lg text-amber-200">{d.amount} ₺</div>
+                  <div className="font-bold text-lg text-amber-200 tabular-nums">{formatTL(d.amount, locale)}</div>
                   <button
                     type="button"
                     className="text-xs text-muted-c hover:text-red-400 transition"
@@ -202,7 +201,7 @@ export default function EsnafHomePage() {
                       });
                     }}
                   >
-                    🗑️ {t('common.delete')}
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -233,14 +232,15 @@ export default function EsnafHomePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-muted-c mb-1">
-                      ✓ {t('merchant.closed_label')} · {d.closedAt && fmtDate(d.closedAt, locale)}
-                      {refs[d.id] && <span className="text-amber-200/90"> · 🔒 {refs[d.id]}</span>}
+                      {t('merchant.closed_label')}
+                      {d.closedAt && ` · ${fmtDate(d.closedAt, locale)}`}
+                      {refs[d.id] && <span className="text-amber-200/90"> · {refs[d.id]}</span>}
                     </div>
                     <div className="font-semibold text-sm truncate line-through opacity-70">
                       {d.title}
                     </div>
                   </div>
-                  <div className="font-bold text-emerald-300">{d.amount} ₺</div>
+                  <div className="font-bold text-emerald-300 tabular-nums">{formatTL(d.amount, locale)}</div>
                 </div>
               );
             })}

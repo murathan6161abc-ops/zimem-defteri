@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-// ============================================================
 // D-Zimem — Tarama bilgisayarı
-// ────────────────────────────────────────────────────────────
 // Supabase'deki scan_jobs kuyruğunu izler; esnafın gönderdiği veresiye defteri
 // fotoğrafını BU bilgisayardaki yerel görsel modelle (Ollama) okur, sonucu
 // yazar ve fotoğrafı veritabanından siler. Fotoğraf hiçbir yapay zekâ
@@ -13,7 +11,6 @@
 // Ayarlar (.env.tarama, isteğe bağlı olanlar):
 //   OLLAMA_MODEL  varsayılan qwen3.5:9b
 //   OLLAMA_URL    varsayılan http://127.0.0.1:11434
-// ============================================================
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,7 +30,7 @@ const STALE_JOB_MS = 5 * 60_000; // telefon sırada en fazla 4 dk bekler; daha e
 const OLLAMA_TIMEOUT_MS = 170_000; // uygulama 180 sn bekler (kalabalık sayfa ~60 sn)
 const KEEP_DAYS = 3;
 
-// ─── Ayarlar ─────────────────────────────────────────────────
+// Ayarlar
 function readEnvFile(file) {
   if (!fs.existsSync(file)) return {};
   const out = {};
@@ -71,7 +68,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false },
 });
 
-// ─── Kurulum: tarama hesabını oluştur ─────────────────────────
+// Kurulum: tarama hesabını oluştur
 async function setup() {
   console.log(`Sunucu: ${new URL(SUPABASE_URL).host}`);
   if (env.TARAMA_SIFRE) {
@@ -117,7 +114,7 @@ Sonra programı başlat:
 `);
 }
 
-// ─── Ollama ──────────────────────────────────────────────────
+// Ollama
 async function checkOllama() {
   let tags;
   try {
@@ -171,7 +168,7 @@ async function ensureSession() {
   await refreshing;
 }
 
-// ─── İş döngüsü ──────────────────────────────────────────────
+// İş döngüsü
 async function finish(id, patch) {
   const { error } = await supabase
     .from('scan_jobs')

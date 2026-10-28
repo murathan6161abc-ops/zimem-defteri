@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { parseAmountText as parseAmount, useScanStore, type ReviewRow } from '@/store/useScanStore';
 import { useI18n } from '@/lib/i18n';
-import { DEBT_KINDS, KIND_META, kindChipStyle, kindOf } from '@/lib/debts';
+import { DEBT_KINDS, KIND_META, MAX_DEBT_AMOUNT, kindChipStyle, kindOf } from '@/lib/debts';
 import {
   getScannerStatus,
   prepareImage,
@@ -48,7 +48,7 @@ const STAGE_KEY: Record<ScanStage, string> = {
 const STAGE_PROGRESS: Record<ScanStage, string> = { uploading: '20%', queued: '45%', processing: '75%' };
 
 function isValidAmount(n: number) {
-  return n >= 1 && n <= 100000;
+  return n >= 1 && n <= MAX_DEBT_AMOUNT;
 }
 
 export default function ScanLedgerPage() {
@@ -227,7 +227,7 @@ export default function ScanLedgerPage() {
     </>
   );
 
-  // Bilgisayarın kapalı olduğu KESİN biliniyorsa fotoğraf göndermeyi engelle;
+  // Bilgisayarın kapalı olduğu kesin biliniyorsa fotoğraf göndermeyi engelle;
   // durum okunamadıysa (null) denemeye izin ver, kuyruk zaman aşımı zaten yakalar.
   const scannerOffline = scanner?.online === false;
 
@@ -405,9 +405,7 @@ export default function ScanLedgerPage() {
                       onChange={(e) => updateRow(r.key, { selected: e.target.checked })}
                       className="w-5 h-5 accent-amber-400"
                     />
-                    <span className="text-sm font-semibold">
-                      {r.ref ? `🔒 ${r.ref}` : '—'}
-                    </span>
+                    <span className="text-sm font-semibold">{r.ref || '—'}</span>
                   </label>
                   {r.date && <span className="text-xs text-muted-c">{r.date}</span>}
                   {r.paid && (
@@ -567,8 +565,7 @@ export default function ScanLedgerPage() {
 
       {phase === 'saving' && (
         <div className="glass p-6 text-center">
-          <div className="text-3xl mb-2 animate-pulse">📒</div>
-          <div className="font-semibold">
+          <div className="font-semibold animate-pulse">
             {t('scan.saving', { done: progress.done, count: progress.count })}
           </div>
         </div>
@@ -576,8 +573,9 @@ export default function ScanLedgerPage() {
 
       {phase === 'done' && (
         <div className="glass p-6 text-center space-y-3">
-          <div className="text-5xl">✅</div>
-          <div className="font-bold text-lg">{t('scan.done_title', { count: result.saved })}</div>
+          <div className="font-bold text-lg">
+            {result.saved > 0 ? t('scan.done_title', { count: result.saved }) : t('scan.done_none')}
+          </div>
           {result.failed > 0 && (
             <>
               <p className="text-sm text-amber-300">{t('scan.done_failed', { count: result.failed })}</p>

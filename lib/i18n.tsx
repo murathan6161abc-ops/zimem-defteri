@@ -1,9 +1,6 @@
 'use client';
-// ============================================================
-// i18n — basit, bağımsız (next-intl olmadan)
-// 3 dil: Türkçe (tr, varsayılan), İngilizce (en), Arapça (ar)
-// Arapça için RTL desteği (body[dir=rtl])
-// ============================================================
+// Küçük bir çeviri katmanı: Türkçe (varsayılan), İngilizce ve Arapça. Arapçada sayfa
+// yönü sağdan sola çevrilir (html[dir=rtl]).
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import tr, { type Dict } from './locales/tr';
 import en from './locales/en';
@@ -29,7 +26,7 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-// Derin yol getter: t('debt.full_pay') gibi
+// t('debt.full_pay') → sözlükteki değer; bulunamazsa anahtarın kendisi
 function getByPath(obj: unknown, path: string): string {
   const parts = path.split('.');
   let cur: unknown = obj;
@@ -37,13 +34,13 @@ function getByPath(obj: unknown, path: string): string {
     if (cur && typeof cur === 'object' && p in (cur as Record<string, unknown>)) {
       cur = (cur as Record<string, unknown>)[p];
     } else {
-      return path; // fallback: anahtarın kendisini göster
+      return path;
     }
   }
   return typeof cur === 'string' ? cur : path;
 }
 
-// Değişken yerleştirme: 'gün sonra {days}' → 'gün sonra 3'
+// '{days} gün sonra' + { days: 3 } → '3 gün sonra'
 function interpolate(s: string, vars?: Record<string, string | number>): string {
   if (!vars) return s;
   return s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
@@ -61,7 +58,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  // Locale değiştiğinde body yönünü güncelle (RTL için)
   useEffect(() => {
     if (!mounted) return;
     document.documentElement.lang = locale;
@@ -87,7 +83,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useI18n(): I18nContextValue {
   const ctx = useContext(I18nContext);
   if (!ctx) {
-    // Sağlayıcı dışından çağrılırsa Türkçe fallback
+    // Sağlayıcı dışında Türkçe kullanılır.
     const t = (p: string, vars?: Record<string, string | number>) =>
       interpolate(getByPath(tr, p), vars);
     return { locale: 'tr', dict: tr, setLocale: () => {}, t };
@@ -99,8 +95,8 @@ export function useT() {
   return useI18n().t;
 }
 
-// React dışı yerlerden (ör. zustand store toast'ları) çeviri için bağımsız
-// yardımcı: aktif dili localStorage'dan okur, okunamazsa Türkçe'ye düşer.
+// React dışından (ör. store'daki bildirimler) çeviri: dili localStorage'dan okur,
+// okunamazsa Türkçe kullanır.
 export function tStatic(path: string, vars?: Record<string, string | number>): string {
   let loc: Locale = 'tr';
   try {

@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { DEBT_KINDS, KIND_META, MAX_DEBT_AMOUNT } from '@/lib/debts';
-import { parseAmount } from '@/lib/ledgerParse';
+import { DEBT_KINDS, KIND_META, MAX_DEBT_AMOUNT, parseWholeAmount } from '@/lib/debts';
 import type { DebtKind } from '@/types';
 
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
+
+const inputCls =
+  'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all';
 
 export default function NewMerchantDebtPage() {
   const router = useRouter();
@@ -24,8 +26,7 @@ export default function NewMerchantDebtPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Türkçe yazım: "1.250" bin iki yüz elli, "12,50" on iki buçuk (taramayla aynı kural).
-  const amountNum = parseAmount(amount);
+  const amountNum = parseWholeAmount(amount);
   const amountInRange = amountNum >= 1 && amountNum <= MAX_DEBT_AMOUNT;
   // Başlık isteğe bağlı: boşsa türe göre hazır başlık kullanılır.
   const finalTitle = title.trim().length >= 3 ? title.trim() : t(`debt.kind_title_${kind}`);
@@ -63,9 +64,7 @@ export default function NewMerchantDebtPage() {
           {t('merchant.back_to_book')}
         </Link>
         <h1 className="heading-xl mt-2">{t('merchant.new_record')}</h1>
-        <p className="text-sm text-muted-c">
-          {t('merchant.new_record_desc')}
-        </p>
+        <p className="text-sm text-muted-c">{t('merchant.new_record_desc')}</p>
       </div>
 
       <div className="glass p-6 space-y-5">
@@ -127,11 +126,11 @@ export default function NewMerchantDebtPage() {
             <div className="text-sm font-medium mb-1">{t('merchant.step_amount')}</div>
             <input
               type="text"
-              inputMode="decimal"
+              inputMode="numeric"
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
               placeholder="180"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-400 focus:bg-white/10 outline-none text-sm transition-all"
+              className={inputCls}
             />
             {amount && !amountInRange && (
               <div className="text-[11px] text-rose-300 mt-1" role="alert">
@@ -152,6 +151,7 @@ export default function NewMerchantDebtPage() {
                       ? 'border-amber-400 bg-amber-400/20 text-amber-200'
                       : 'border-white/10 bg-white/5 text-muted-c hover:bg-white/10'
                   }`}
+                  aria-pressed={urgency === u}
                 >
                   <span className={`urgency-dot urgency-${u}`} />
                   <span>{t(URGENCY_KEY[u])}</span>

@@ -28,7 +28,7 @@ export default function DebtList() {
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false);
 
-  // ─── İlk yükleme + Realtime aboneliği ─────────────────────────
+  // İlk yükleme ve Realtime aboneliği
   useEffect(() => {
     setMounted(true);
     if (initialized.current) return;
@@ -37,7 +37,7 @@ export default function DebtList() {
     let unsubscribe: (() => void) | null = null;
 
     async function bootstrap() {
-      // Supabase yoksa → yerel SAMPLE_DEBTS göster
+      // Supabase ayarlı değilse örnek borçlarla çalışılır.
       if (!isSupabaseConfigured()) {
         setOpenDebts(SAMPLE_DEBTS);
         setLoading(false);
@@ -50,15 +50,10 @@ export default function DebtList() {
       setOpenDebts(debts);
       setLoading(false);
 
-      // Realtime'a abone ol
       unsubscribe = subscribeToDebts({
         onInsert: (debt) => {
           applyRemoteDebtInsert(debt);
-          pushToast({
-            emoji: '📋',
-            title: tStatic('debt.toast_new_title'),
-            desc: debt.title,
-          });
+          pushToast({ title: tStatic('debt.toast_new_title'), desc: debt.title });
         },
         onUpdate: (debt) => {
           applyRemoteDebtUpdate(debt);
@@ -67,11 +62,7 @@ export default function DebtList() {
           // Kendi ödememizle kapanan borç listeden zaten çıkmıştır; bildirim
           // yalnızca borcu başka biri kapattığında gösterilir.
           if (applyRemoteDebtClose(id)) {
-            pushToast({
-              emoji: '✅',
-              title: tStatic('debt.toast_closed_title'),
-              desc: tStatic('debt.toast_closed_desc'),
-            });
+            pushToast({ title: tStatic('debt.toast_closed_title'), desc: tStatic('debt.toast_closed_desc') });
           }
         },
         onDelete: (id) => {
@@ -115,10 +106,7 @@ export default function DebtList() {
       <DebtFilters active={filter} onChange={setFilter} counts={kindCounts} />
 
       {mounted && loading ? (
-        <div className="glass p-10 text-center">
-          <div className="text-3xl mb-2">⏳</div>
-          <div className="text-sm text-muted-c">{t('debt.loading_debts')}</div>
-        </div>
+        <div className="glass p-10 text-center text-sm text-muted-c">{t('debt.loading_debts')}</div>
       ) : mounted && visible.length === 0 ? (
         <div className="glass p-10 text-center">
           {openDebts.length > 0 ? (
