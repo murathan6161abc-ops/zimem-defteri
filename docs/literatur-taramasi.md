@@ -81,7 +81,7 @@ platformlar, (6) oyunlaştırma ve sürdürme.
 - **Birincil kaynak adayları (maddenin kaynakçasından):**
   - Yıldırım, M. (2023). Nakdî sermaye aktarımı ve borçlu portföyü açısından para vakıfları: İstanbul örneği (1710–1715). *Dicle Üniversitesi İİBF Dergisi, 13*(25), 142-. https://doi.org/10.53092/duiibfd.1229769
   - Yıldırım, S., Yeniyurt, M., & Mete, Ö. F. Galata para vakıflarında kredi çeşitlendirmesi: Zimem kayıtları üzerinden bir inceleme (1680–1690). (dergipark.org.tr, makale dosyası 4273876)
-  - Özdemir, Ö. (2023). Marife Dini Araştırmalar Dergisi, 23(2), 553–572. (Kaynak 1'in de atıfları arasında.)
+  - Özdemir, Ö. (2023). *Marife Dini Araştırmalar Dergisi, 23*(2), 553–572. https://doi.org/10.33420/marife.1328884 (Kaynak 1'de de atıf var. İki kaynakta başlık ve dergi adı farklı yazılmış, nihai künye DOI'den doğrulanmalı.)
 - **Not:** Maddedeki bazı cümleler eksik (1680–1690 için bölge adı düşmüş). Rakamlar yalnızca asıl makalelerden doğrulandıktan sonra kullanılmalı.
 
 ## Yapılacaklar
