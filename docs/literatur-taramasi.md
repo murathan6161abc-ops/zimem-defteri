@@ -81,7 +81,7 @@ platformlar, (6) oyunlaştırma ve sürdürme.
 - **Birincil kaynak adayları (maddenin kaynakçasından):**
   - Yıldırım, M. (2023). Nakdî sermaye aktarımı ve borçlu portföyü açısından para vakıfları: İstanbul örneği (1710–1715). *Dicle Üniversitesi İİBF Dergisi, 13*(25), 142-. https://doi.org/10.53092/duiibfd.1229769
   - Yıldırım, S., Yeniyurt, M., & Mete, Ö. F. Galata para vakıflarında kredi çeşitlendirmesi: Zimem kayıtları üzerinden bir inceleme (1680–1690). (dergipark.org.tr, makale dosyası 4273876)
-  - Özdemir, Ö. (2023). *Marife Dini Araştırmalar Dergisi, 23*(2), 553–572. https://doi.org/10.33420/marife.1328884 (Kaynak 1'de de atıf var. İki kaynakta başlık ve dergi adı farklı yazılmış, nihai künye DOI'den doğrulanmalı.)
+  - Özdemir, Ö. (2023). *Marife Dini Araştırmalar Dergisi, 23*(2), 553–572. https://doi.org/10.33420/marife.1328884 (Makalenin kendisi okundu, bkz. Kaynak 8. Bu künye doğru.)
 - **Not:** Maddedeki bazı cümleler eksik (1680–1690 için bölge adı düşmüş). Rakamlar yalnızca asıl makalelerden doğrulandıktan sonra kullanılmalı.
 
 ### 7. MÜSİAD (t.y.) — Zimem Defteri sosyal sorumluluk sayfası — Eksen 1 ve 5 (kurum sayfası, gri literatür)
@@ -100,9 +100,32 @@ platformlar, (6) oyunlaştırma ve sürdürme.
   - Geleneğin günümüzde sivil toplum eliyle yeniden canlandırıldığını gösteren örneklerden biri. e-Zimem (Kaynak 4) kamu eliyle yürütülen bir örnek. Birlikte "geleneğin çağdaş uygulamaları" alt başlığında kullanılabilir.
   - Kampanyanın Ramazan'dan yıl geneline yayılması, D-Zimem'in sürekli kullanım hedefine (seri, XP) bağlanabilir. Eksen 6 için zayıf ama ilgili bir dayanak.
 
+### 8. Özdemir (2023) — Eksen 1 (anonimliğin gerekçesi, hakemli)
+- **Künye:** Özdemir, Ö. (2023). Osmanlı'da bazı vakıf hizmetlerinin değerler eğitimi açısından incelenmesi. *Marife Dini Araştırmalar Dergisi, 23*(2), 553–572. https://doi.org/10.33420/marife.1328884
+  - Künye makalenin kendisinden alındı. Kaynak 1'in kaynakçasındaki başlık ve dergi adı hatalı. KÜRE'deki (Kaynak 6) künye doğru.
+- **Amaç:** Osmanlı'daki beş vakıf hizmetini (kuş evleri, kervansaraylar, zimem defterleri, sadaka taşları, imaretler) değerler eğitimi açısından incelemek ve bunların eğitime nasıl katılabileceğine dair öneri sunmak.
+- **Yöntem:** Nitel durum çalışması. Veri doküman incelemesiyle toplanmış (kitap, tez, makale), içerik analiziyle çözümlenmiş. Örneklem ve ölçek yok. İki hakemli.
+- **Bulgular:**
+  - Zimem uygulaması: hayırsever, özellikle Ramazan'da, tanınmadığı bir mahallede dükkân boşken defteri açtırır, herhangi bir sayfadaki borcun tamamını öder ve sildirir (s. 565).
+  - Anonimliğin iki yönlü işlevi açıkça yazılıyor. Borcu ödenen kişi mahcubiyet ve ezilik hissetmez, borcu ödeyen de gurur ve kibire kapılmaz (s. 565). Sadaka taşlarında da aynı ilke geçerli: verenin gururlanması ve alanın onurunun zedelenmesi önlenir (s. 566). Dini dayanak olarak Bakara 271 anılıyor ("gizleyerek fakirlere verirseniz bu sizin için daha hayırlıdır").
+  - Tablo 1'e göre zimem defterleri 12 değerle ilişkili: merhamet, şefkat, saygı, nezaket, yardımseverlik, paylaşma, dayanışma, empati, sorumluluk, duyarlılık, samimiyet, diğerkâmlık (s. 568).
+  - Sonuçta, vakıf hizmetlerinin "bilimsel ve teknolojik imkânlardan faydalanarak güncel formlarda yeniden canlandırılması" gerektiği söyleniyor (s. 569).
+- **Sınırlılık:**
+  - Zimem bölümünün tek kaynağı bir haber sitesi (Fikriyat, 2023). Arşiv belgesi kullanılmamış.
+  - Değer eşleştirmesi yazarın yorumuna dayanıyor. Kodlama süreci veya ikinci kodlayıcı bildirilmemiş. Metindeki değer listesi (s. 565, örneğin fedakârlık) ile Tablo 1 tam örtüşmüyor.
+  - Görgül ölçüm yok.
+- **D-Zimem bağlantısı:**
+  - Anonimliğin gerekçesi için şimdiye kadarki en güçlü hakemli kaynak. Bu noktada KÜRE (Kaynak 6) yerine bu makaleye atıf yapılmalı. Kaynak 1 tarihsel belgeyi, bu makale ahlaki ve psikolojik gerekçeyi veriyor.
+  - s. 569'daki "teknolojik imkânlarla güncel formlarda yeniden canlandırma" çağrısı, D-Zimem'in amaç ve önem bölümü için doğrudan dayanak.
+  - **Tartışma notu:** Gelenekte veren gösterişten ve gururdan uzak durur. D-Zimem'de ise XP ve liderlik tablosu var ("en çok XP kazanan ilk 10 anonim iyilik elçisi"), takma adla da olsa. Jüri bu gerilimi sorabilir. Eksen 6'da tanınmanın yardım davranışına etkisini inceleyen çalışmalarla ele alınmalı.
+  - Makalenin değerler eğitimi önerileri (gençlerin gönüllü etkinliklere katılımı, s. 569–570), projenin eğitsel boyutuna bağlanabilir.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
 - [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
 - [ ] Kaynak 6'daki Yıldırım (2023) ve Yıldırım ve ark. makalelerini bul, doğrula
 - [ ] MÜSİAD girişiminin başlangıç yılını haber kaynaklarından doğrula
+- [ ] Çetin, E. (2014), askıda kahve ve sadaka taşı (*Akademik Bakış, 41*): Kaynak 1, 5 ve 8'de atıf var, ama sayfa aralıkları farklı (85–96 / 1–12 / 0-0). Asıl makaleyi bul.
+- [ ] Anonim yardımın alan kişiye etkisi için aday: Fisher, Nadler ve Whitcher-Alagna (1982), "Recipient reactions to aid", *Psychological Bulletin* (doğrulanacak)
+- [ ] Eksen 6, tanınma ve yardım davranışı için adaylar: Harbaugh (1998); Ariely, Bracha ve Meier (2009) (doğrulanacak)
 - [ ] Yeni makaleleri buraya ekle
