@@ -39,9 +39,17 @@ const INKS = ['#1d3b8a', '#22305e', '#1b1b1b', '#3a2a6e'];
 const tl = (n) => (n >= 1000 ? `${Math.floor(n / 1000)}.${String(n % 1000).padStart(3, '0')}` : String(n));
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
+// Sayfa düzeni: yazı 150 px'ten başlar, her satır 54 px; 1700 px'i geçen müşteri sayfaya
+// sığmaz ve doğru cevaba da eklenmez (kesik satır yanlış ölçüm üretir).
+const LINE_H = 54;
+const FIRST_Y = 150;
+const LAST_Y = 1700;
+const blockHeight = (c) => LINE_H * (1 + c.debts.length + (c.payment ? 1 : 0) + (c.writeTotal ? 1 : 0)) + 18;
+
 function makeCustomers(count) {
   const used = new Set();
   const customers = [];
+  let y = FIRST_Y;
   while (customers.length < count) {
     const name = `${pick(FIRST)} ${pick(LAST)}`;
     const ref = toInitials(name);
@@ -54,15 +62,18 @@ function makeCustomers(count) {
     const total = debts.reduce((s, d) => s + d.amount, 0);
     const payment = rnd() < 0.3 && total > 40 ? Math.min(total - 5, between(1, Math.floor(total / 10)) * 5) : 0;
     const closed = rnd() < 0.2 ? pick(['cizgi', 'yazi']) : null;
-    customers.push({ name, ref, debts, payment, closed, writeTotal: payment > 0 && rnd() < 0.6 });
+    const customer = { name, ref, debts, payment, closed, writeTotal: payment > 0 && rnd() < 0.6 };
+    if (y + blockHeight(customer) - LINE_H > LAST_Y) break;
+    y += blockHeight(customer);
+    customers.push(customer);
   }
   return customers;
 }
 
 function pageSvg(customers, font, ink) {
   const width = 1240;
-  const lineH = 54;
-  let y = 150;
+  const lineH = LINE_H;
+  let y = FIRST_Y;
   const parts = [];
   parts.push(`<rect width="100%" height="100%" fill="#fbf8ee"/>`);
   for (let ly = 120; ly < 1750; ly += lineH) parts.push(`<line x1="40" y1="${ly + 14}" x2="${width - 40}" y2="${ly + 14}" stroke="#b9cbe0" stroke-width="2"/>`);
