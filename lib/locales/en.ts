@@ -135,7 +135,7 @@ const en: Dict = {
     err_google_not_configured: 'Google sign-in is not enabled yet. The administrator must finish the Supabase setup.',
     err_google_cancelled: 'Google sign-in was cancelled.',
     err_google_network: 'Cannot reach the server. Check your internet connection.',
-    err_google_no_callback: 'Google sign-in did not finish and could not return to the app. If you did not cancel, try again; if it keeps happening the administrator must add com.dzimem.app://login-callback to Supabase → Redirect URLs.',
+    err_google_no_callback: 'Google sign-in did not finish: the browser could not return to the app. If you did not cancel, try again; if it keeps happening the Google and Supabase sign-in settings need checking.',
     err_google_generic: 'Google sign-in could not be completed. If you added this Gmail as a recovery email to an account, sign in to that account with your username first and tap Profile → “Link Google account”.',
     err_too_many_attempts: 'Too many failed attempts. Try again in 15 minutes.',
     err_google_already_linked: 'This Google account is already linked to another D-Zimem account.',

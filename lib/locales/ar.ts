@@ -136,7 +136,7 @@ const ar: Dict = {
     err_google_not_configured: 'تسجيل الدخول عبر Google غير مفعّل بعد. يجب على المسؤول إكمال إعدادات Supabase.',
     err_google_cancelled: 'أُلغي تسجيل الدخول عبر Google.',
     err_google_network: 'تعذّر الوصول إلى الخادم. تحقّق من اتصال الإنترنت.',
-    err_google_no_callback: 'لم يكتمل تسجيل الدخول عبر Google وتعذّرت العودة إلى التطبيق. إن لم تلغِه فحاول مجددًا؛ وإذا استمر الأمر فعلى المسؤول إضافة com.dzimem.app://login-callback إلى Supabase ← Redirect URLs.',
+    err_google_no_callback: 'لم يكتمل تسجيل الدخول عبر Google: تعذّرت العودة من المتصفح إلى التطبيق. إن لم تلغِه فحاول مجددًا؛ وإذا استمر الأمر فيجب فحص إعدادات Google وSupabase.',
     err_google_generic: 'تعذّر إكمال تسجيل الدخول عبر Google. إذا أضفت هذا البريد كبريد استرداد لحساب ما، فسجّل الدخول إلى ذلك الحساب باسم المستخدم أولًا واضغط الملف الشخصي ← «اربط حساب Google».',
     err_too_many_attempts: 'محاولات فاشلة كثيرة. حاول مجددًا بعد 15 دقيقة.',
     err_google_already_linked: 'حساب Google هذا مرتبط بحساب D-Zimem آخر.',

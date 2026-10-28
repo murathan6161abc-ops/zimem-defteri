@@ -6,7 +6,7 @@ import { useZimemStore } from '@/store/useZimemStore';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { fetchAccountData, profileFromMetadata, setAuthCache } from '@/lib/auth';
 import { sessionNeedsMfa } from '@/lib/accountSecurity';
-import { completeWebOAuthIfPresent, listenForNativeOAuth } from '@/lib/googleAuth';
+import { completeWebOAuthIfPresent, listenForNativeOAuth, publishGoogleError } from '@/lib/googleAuth';
 import { useI18n } from '@/lib/i18n';
 
 const LOGIN = '/login/';
@@ -120,10 +120,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       // Giriş sayfasında değil burada yapılır: oturum açıkken giriş sayfası hiç açılmaz.
       const web = await completeWebOAuthIfPresent();
       if (active && web && !web.ok) {
-        try {
-          sessionStorage.setItem('d-zimem-google-error', web.error);
-          if (web.detail) sessionStorage.setItem('d-zimem-google-error-detail', web.detail);
-        } catch {}
+        publishGoogleError(web.error, web.detail);
         setGoogleError(true);
       }
     })();
@@ -134,10 +131,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
     // APK: Google girişinden com.dzimem.app://login-callback ile dönüşü yakala.
     const stopOAuth = listenForNativeOAuth((code, detail) => {
-      try {
-        sessionStorage.setItem('d-zimem-google-error', code);
-        if (detail) sessionStorage.setItem('d-zimem-google-error-detail', detail);
-      } catch {}
+      publishGoogleError(code, detail);
       if (active) setGoogleError(true);
     });
 

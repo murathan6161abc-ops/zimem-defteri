@@ -138,7 +138,7 @@ const tr = {
     err_google_not_configured: 'Google ile giriş henüz etkinleştirilmemiş. Yönetici Supabase ayarlarını tamamlamalı.',
     err_google_cancelled: 'Google ile giriş iptal edildi.',
     err_google_network: 'Sunucuya ulaşılamıyor. İnternet bağlantını kontrol et.',
-    err_google_no_callback: 'Google girişi tamamlanamadı, uygulamaya geri dönülemedi. İptal etmediysen tekrar dene; sorun sürerse yönetici Supabase → Redirect URLs listesine com.dzimem.app://login-callback adresini eklemeli.',
+    err_google_no_callback: 'Google girişi tamamlanamadı: tarayıcıdan uygulamaya geri dönülemedi. İptal etmediysen tekrar dene; sorun sürerse Google ve Supabase giriş ayarları kontrol edilmeli.',
     err_google_generic: 'Google ile giriş tamamlanamadı. Bu Gmail adresini daha önce bir hesaba kurtarma e-postası olarak eklediysen, önce o hesaba kullanıcı adınla gir ve Profil → “Google hesabını bağla”ya bas.',
     err_too_many_attempts: 'Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene.',
     err_google_already_linked: 'Bu Google hesabı başka bir D-Zimem hesabına bağlı.',

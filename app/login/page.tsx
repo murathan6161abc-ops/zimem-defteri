@@ -9,6 +9,7 @@ import { needsMfa } from '@/lib/accountSecurity';
 import { getSupabase } from '@/lib/supabase';
 import MfaCodeForm from '@/components/auth/MfaCodeForm';
 import GoogleButton from '@/components/auth/GoogleButton';
+import { GOOGLE_ERROR_EVENT, takeGoogleError } from '@/lib/googleAuth';
 
 
 export default function LoginPage() {
@@ -27,19 +28,26 @@ export default function LoginPage() {
   // Google hatalarında Supabase'in teknik açıklaması (teşhis için küçük yazıyla)
   const [errorDetail, setErrorDetail] = useState('');
 
+  // Google dönüş hatası: sayfa açılırken (?google=hata) ve sayfa zaten açıkken (olay) gösterilir.
+  const showGoogleError = () => {
+    const found = takeGoogleError();
+    if (!found) return;
+    setError(t(`auth.err_google_${found.code}`));
+    setErrorDetail(found.detail);
+  };
+
+  useEffect(() => {
+    window.addEventListener(GOOGLE_ERROR_EVENT, showGoogleError);
+    return () => window.removeEventListener(GOOGLE_ERROR_EVENT, showGoogleError);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t dil değişince yenilenir; dinleyici yeniden kurulmalı
+  }, [t]);
+
   useEffect(() => {
     setMounted(true);
     void (async () => {
       // APK: Google dönüşü başarısız olduysa AuthGate ?google=hata ile buraya yollar.
       if (new URLSearchParams(window.location.search).get('google') === 'hata') {
-        let code = 'generic';
-        try {
-          code = sessionStorage.getItem('d-zimem-google-error') || 'generic';
-          setErrorDetail(sessionStorage.getItem('d-zimem-google-error-detail') || '');
-          sessionStorage.removeItem('d-zimem-google-error');
-          sessionStorage.removeItem('d-zimem-google-error-detail');
-        } catch {}
-        setError(t(`auth.err_google_${code}`));
+        showGoogleError();
         window.history.replaceState(null, '', window.location.pathname);
       }
       // AuthGate, kodu girilmemiş (aal1) oturumu buraya yönlendirir.

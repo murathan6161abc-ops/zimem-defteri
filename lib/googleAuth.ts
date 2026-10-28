@@ -52,6 +52,38 @@ function mapError(message: string | undefined): GoogleAuthError {
   return 'generic';
 }
 
+// Dönüş hatası: AuthGate yayınlar, giriş ekranı / profil kartı dinler. Giriş sayfası
+// zaten açıkken adres yalnızca "?google=hata" olarak değişir ve sayfa yeniden
+// kurulmaz; bu yüzden hata, sessionStorage'a ek olarak bir olayla da bildirilir.
+export const GOOGLE_ERROR_EVENT = 'd-zimem-google-error';
+const GOOGLE_ERROR_KEY = 'd-zimem-google-error';
+const GOOGLE_ERROR_DETAIL_KEY = 'd-zimem-google-error-detail';
+
+export function publishGoogleError(code: GoogleAuthError, detail?: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(GOOGLE_ERROR_KEY, code);
+    if (detail) sessionStorage.setItem(GOOGLE_ERROR_DETAIL_KEY, detail);
+    else sessionStorage.removeItem(GOOGLE_ERROR_DETAIL_KEY);
+  } catch {}
+  window.dispatchEvent(new Event(GOOGLE_ERROR_EVENT));
+}
+
+/** Bekleyen Google hatasını okur ve siler. */
+export function takeGoogleError(): { code: string; detail: string } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const code = sessionStorage.getItem(GOOGLE_ERROR_KEY);
+    if (!code) return null;
+    const detail = sessionStorage.getItem(GOOGLE_ERROR_DETAIL_KEY) || '';
+    sessionStorage.removeItem(GOOGLE_ERROR_KEY);
+    sessionStorage.removeItem(GOOGLE_ERROR_DETAIL_KEY);
+    return { code, detail };
+  } catch {
+    return null;
+  }
+}
+
 export function googleErrorKey(code: GoogleAuthError): string {
   return `auth.err_google_${code}`;
 }

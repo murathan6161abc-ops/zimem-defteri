@@ -5,7 +5,7 @@ import { useI18n } from '@/lib/i18n';
 import { getSupabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { isValidUsername, signOut } from '@/lib/auth';
-import { googleErrorKey, startGoogleLink } from '@/lib/googleAuth';
+import { GOOGLE_ERROR_EVENT, googleErrorKey, startGoogleLink, takeGoogleError } from '@/lib/googleAuth';
 import {
   cancelTotpEnrollment,
   deleteMyAccount,
@@ -307,17 +307,18 @@ function GoogleLinkCard({ user }: { user: User }) {
   const [error, setError] = useState('');
   const [detail, setDetail] = useState('');
 
-  // Uygulamaya dönüşte bağlama başarısız olduysa AuthGate kodu buraya bırakır.
+  // Uygulamaya dönüşte bağlama başarısız olduysa AuthGate hatayı yayınlar (kart açıkken olayla,
+  // yeni açılırken sessionStorage'dan).
   useEffect(() => {
-    try {
-      const code = sessionStorage.getItem('d-zimem-google-error');
-      if (code) {
-        setDetail(sessionStorage.getItem('d-zimem-google-error-detail') || '');
-        sessionStorage.removeItem('d-zimem-google-error');
-        sessionStorage.removeItem('d-zimem-google-error-detail');
-        setError(t(`auth.err_google_${code}`));
-      }
-    } catch {}
+    const show = () => {
+      const found = takeGoogleError();
+      if (!found) return;
+      setDetail(found.detail);
+      setError(t(`auth.err_google_${found.code}`));
+    };
+    show();
+    window.addEventListener(GOOGLE_ERROR_EVENT, show);
+    return () => window.removeEventListener(GOOGLE_ERROR_EVENT, show);
   }, [t]);
 
   const link = async () => {
