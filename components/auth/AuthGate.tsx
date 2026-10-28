@@ -5,7 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useZimemStore } from '@/store/useZimemStore';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { fetchAccountData, profileFromMetadata, setAuthCache } from '@/lib/auth';
-import { sessionNeedsMfa } from '@/lib/accountSecurity';
+import { MFA_REQUIRED_EVENT, sessionNeedsMfa, signedInWithGoogle } from '@/lib/accountSecurity';
 import { completeWebOAuthIfPresent, listenForNativeOAuth, publishGoogleError } from '@/lib/googleAuth';
 import { useI18n } from '@/lib/i18n';
 
@@ -72,7 +72,26 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       // Aynı şekilde e-posta kodu doğrulanmış ama şifre/profil adımı bitmemiş
       // (yarım kalmış) kayıt da giriş yapılmış sayılmaz.
       const signupUnfinished = session?.user?.user_metadata?.signupCompleted === false;
-      if (session?.user && (signupUnfinished || sessionNeedsMfa(session))) {
+      if (session?.user && sessionNeedsMfa(session)) {
+        setAuthCache(null);
+        hydratedUid.current = null;
+        setNeedsProfile(false);
+        if (store.profile) store.clearProfile();
+        // Giriş ekranı zaten açıksa (ör. Google dönüşü) kod adımını kendisi açamaz; haber ver.
+        window.dispatchEvent(new Event(MFA_REQUIRED_EVENT));
+        return;
+      }
+      // Bu Gmail ile daha önce e-posta kaydı başlatılıp yarım bırakıldıysa Supabase, Google
+      // girişini o hesaba bağlar ve "signupCompleted: false" kalır. Google'la girende şifre
+      // adımı gerekmez: oturumu atmak yerine profil/onam tamamlatılır (orası bayrağı kapatır).
+      if (session?.user && signupUnfinished && signedInWithGoogle(session)) {
+        setAuthCache(session.user.id);
+        hydratedUid.current = null;
+        setNeedsProfile(true);
+        if (store.profile) store.clearProfile();
+        return;
+      }
+      if (session?.user && signupUnfinished) {
         setAuthCache(null);
         hydratedUid.current = null;
         setNeedsProfile(false);

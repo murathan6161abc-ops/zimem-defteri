@@ -402,6 +402,20 @@ function decodeJwtClaim(token: string, claim: string): unknown {
   }
 }
 
+/** AuthGate → giriş ekranı: oturum 2FA kodu bekliyor (sayfa zaten açıkken de kod adımı açılsın). */
+export const MFA_REQUIRED_EVENT = 'd-zimem-mfa-required';
+
+/** Oturum Google ile mi açıldı (ya da hesaba bağlı bir Google kimliği var mı)? */
+export function signedInWithGoogle(session: { user: Pick<User, 'identities' | 'app_metadata'> } | null | undefined): boolean {
+  if (!session) return false;
+  const providers = (session.user.app_metadata?.providers ?? []) as unknown[];
+  return (
+    session.user.app_metadata?.provider === 'google' ||
+    providers.includes('google') ||
+    (session.user.identities ?? []).some((i) => i.provider === 'google')
+  );
+}
+
 export function sessionNeedsMfa(
   session: { access_token: string; user: Pick<User, 'factors'> } | null | undefined,
 ): boolean {

@@ -5,7 +5,7 @@ import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
 import type { User } from '@supabase/supabase-js';
 import { signIn, signOut, fetchAccountData, profileFromMetadata, authErrorKey } from '@/lib/auth';
-import { needsMfa } from '@/lib/accountSecurity';
+import { MFA_REQUIRED_EVENT, needsMfa } from '@/lib/accountSecurity';
 import { getSupabase } from '@/lib/supabase';
 import MfaCodeForm from '@/components/auth/MfaCodeForm';
 import GoogleButton from '@/components/auth/GoogleButton';
@@ -35,6 +35,13 @@ export default function LoginPage() {
     setError(t(`auth.err_google_${found.code}`));
     setErrorDetail(found.detail);
   };
+
+  // Google dönüşünden sonra 2FA kodu gerekiyorsa (sayfa zaten açıkken) kod adımını aç.
+  useEffect(() => {
+    const openMfa = () => setMfaStep(true);
+    window.addEventListener(MFA_REQUIRED_EVENT, openMfa);
+    return () => window.removeEventListener(MFA_REQUIRED_EVENT, openMfa);
+  }, []);
 
   useEffect(() => {
     window.addEventListener(GOOGLE_ERROR_EVENT, showGoogleError);
