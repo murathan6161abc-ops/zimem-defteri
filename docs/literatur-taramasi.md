@@ -67,7 +67,25 @@ platformlar, (6) oyunlaştırma ve sürdürme.
   - Kaynak 1 ile birlikte "zimem defteri" tanımı için ikili dayanak olur.
   - Alıntı yapılan Çetin (2014) ve Muldrew (2001, güvene dayalı kredi) aday atıf olarak notlandı, asıl kaynaktan doğrulanmadı.
 
+### 6. Erdoğan (2025) — KÜRE Ansiklopedi "Zimem Defteri" maddesi — Eksen 1 (ikincil kaynak)
+- **Künye:** Erdoğan, S. (2025, 26 Şubat). Zimem defteri. *KÜRE Dijital Ansiklopedi*. https://kureansiklopedi.com/tr/detay/zimem-defteri (Erişim: 28.10.2026)
+- **Tür:** Ansiklopedi maddesi. Sayfada "Bu madde yapay zeka desteği ile üretilmiştir" notu var. Doğrudan atıf için zayıf. Asıl kaynaklara gidilmeli.
+- **İçerik:**
+  - "Zimem" zimmetin çoğuludur. Tarihte iki anlamı var: (a) para vakıfları muhasebesinde kredi verilen borçluların kayıtlandığı bölüm, (b) esnafın tuttuğu veresiye defteri.
+  - Ramazan'da varlıklı kişiler tanımadıkları dükkânlarda defterin rastgele sayfalarındaki borçları öder, bazen tüm defteri kapatırdı. Temel ilke gizlilik: borcu ödeyen borçluyu, borçlu da ödeyeni tanımaz. Amaç, yardım alanın onurunu korumak ve yardım edenin gösteriş ve kibirden uzak kalmasıdır ("sağ elin verdiğini sol el bilmesin").
+  - Para vakfı verileri (Yıldırım): İstanbul 1710–1715 kayıtlarında borçluların yaklaşık %14'ü kadın. Ortalama kredi erkeklerde 5.578 akçe, kadınlarda 1.601 akçe. Galata 1680–1690 kayıtlarında krediler askerî, esnaf, kadın ve gayrimüslim gruplara dağılmış.
+  - 1826'da Evkâf-ı Hümâyûn Nezâreti ile vakıflar merkezileşti. 1925'te vakıfların nakit borç verme yöntemi yasaklandı.
+- **D-Zimem bağlantısı:**
+  - Anonimliğin amacını (alanın onuru, verenin gösterişten uzak kalması) açıkça veren kısa bir kaynak. D-Zimem'in anonim borç havuzu tasarımının gerekçesine bağlanabilir.
+  - Kaynak 1 ve 5'teki esnaf zimemi ile bu kaynaktaki para vakfı zimemi ayrı kavramlar. Yazımda bu ayrım korunmalı.
+- **Birincil kaynak adayları (maddenin kaynakçasından):**
+  - Yıldırım, M. (2023). Nakdî sermaye aktarımı ve borçlu portföyü açısından para vakıfları: İstanbul örneği (1710–1715). *Dicle Üniversitesi İİBF Dergisi, 13*(25), 142-. https://doi.org/10.53092/duiibfd.1229769
+  - Yıldırım, S., Yeniyurt, M., & Mete, Ö. F. Galata para vakıflarında kredi çeşitlendirmesi: Zimem kayıtları üzerinden bir inceleme (1680–1690). (dergipark.org.tr, makale dosyası 4273876)
+  - Özdemir, Ö. (2023). Marife Dini Araştırmalar Dergisi, 23(2), 553–572. (Kaynak 1'in de atıfları arasında.)
+- **Not:** Maddedeki bazı cümleler eksik (1680–1690 için bölge adı düşmüş). Rakamlar yalnızca asıl makalelerden doğrulandıktan sonra kullanılmalı.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
 - [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
+- [ ] Kaynak 6'daki Yıldırım (2023) ve Yıldırım ve ark. makalelerini bul, doğrula
 - [ ] Yeni makaleleri buraya ekle
