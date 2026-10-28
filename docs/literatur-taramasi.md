@@ -40,6 +40,18 @@ platformlar, (6) oyunlaştırma ve sürdürme.
   - Etkinin zaten mutlu olanlarda daha belirgin olması, D-Zimem analizinde başlangıç düzeyine göre alt grup incelemesi için gerekçe sağlar.
 - **Takip için aday atıflar:** Lyubomirsky ve Lepper (1999); Fredrickson (2001, genişlet ve inşa et); Emmons ve McCullough (2003); Peterson ve Seligman (2004). Bu atıfların künyeleri makalenin kaynakçasından alındı, ancak asıl kaynaklardan doğrulanmadı.
 
+### 4. e-Zimem / Zimem Defteri (Çilimli) — Eksen 5 (benzer platform, gri literatür)
+- **Künye:** Çilimli Kaymakamlığı ve Çilimli Belediyesi. (2026). *Zimem Defteri (e-Zimem)* [Web sitesi]. https://www.zimemdefteri.com/ (Erişim: 28.10.2026)
+- **Tür:** Kurumsal proje sitesi. Akademik değil, kaynakça yok.
+- **İçerik:**
+  - Çilimli'de (Düzce) ihtiyaç sahibi ailelerin esnaf borçlarını kapatan dijital sosyal dayanışma platformu.
+  - İçişleri Bakanlığı Sivil Toplumla İlişkiler Genel Müdürlüğü desteğiyle yürütülüyor.
+  - Borçlar kaymakamlık onayıyla teyit ediliyor. Esnaf "gönül indirimi" yapıyor.
+  - Bağışçı genel, düzenli aylık veya belirli aileye bağış yapabiliyor. Listede isimler KVKK gereği maskeli.
+  - Sitede Ramazan 2026'da 2.040.302 TL borcun kapatıldığı bildiriliyor.
+- **Dikkat:** Sayaçlar boş, denetim raporu bağlantısı çalışmıyor, "çok yakında" ve "kapatıldı" ifadeleri bir arada. Rakamlar bağımsız doğrulanamadı. Atıfta "kurum açıklaması" olarak belirtilmeli.
+- **D-Zimem bağlantısı:** Aynı geleneğin kurumsal ve dijital uygulaması. D-Zimem ile farkı: onay mekanizması kamu eliyle, ölçüm/araştırma bileşeni yok. D-Zimem'in PANAS-SF/WHO-5 ile ön/son test ölçümü bu boşluğa konumlanabilir (alıntı yapılacak akademik bir değerlendirme bulunamazsa "literatürdeki boşluk" iddiası için ayrıca arama gerekir).
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
 - [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
