@@ -69,3 +69,15 @@ Ayrıca:
   Uygulama giriş için kod kullandığından şu an sorun çıkarmıyor; web sürümü yayınlanırsa onun adresine çekin.
 - Tarama bilgisayarı doğruluğu: `npm run tarama:sentetik` ve `npm run tarama:test -- tarama-test/sentetik`
   ile sentetik sayfalarda ölçülür; sahte isimlerle elle yazılmış sayfalarla da ölçün.
+
+## Tarama bilgisayarı: ölçüm (29.10.2026, 8 sentetik sayfa, 46 müşteri)
+
+| Model | Açık borç doğru | Ödenmişi borç sanma | Gereksiz "kontrol et" | Süre |
+| --- | --- | --- | --- | --- |
+| qwen3.5:9b (şu an kullanılan) | 36/36 | 2 (ikisi de "kontrol et" işaretli) | 2 | 34,8 sn/sayfa |
+| qwen3-vl:8b-instruct | 36/36 | 1 ("kontrol et" işaretli) | 1 | 38,9 sn/sayfa |
+
+Sayfalar el yazısına benzeyen basılı fontlarla üretildi; gerçek el yazısından kolaydır, bu
+sonuç bir üst sınırdır. En zayıf nokta "ödendi" notuyla kapanmış hesaplar; bunlar sessizce
+havuza girmiyor, esnafa "kontrol et" diye gösteriliyor. Raporda yöntem bölümüne bu ölçüm,
+sınırlılıklar bölümüne de el yazısıyla ayrıca doğrulama gerektiği yazılabilir.

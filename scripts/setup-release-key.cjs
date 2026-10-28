@@ -17,8 +17,17 @@ const keystoreDirectory = process.env.DZIMEM_KEYSTORE_DIR || path.join(os.homedi
 const keystoreName = 'dzimem-release.keystore';
 const keystoreFile = path.join(keystoreDirectory, keystoreName);
 
+const backupProperties = path.join(keystoreDirectory, 'keystore.properties');
+
 if (fs.existsSync(propertiesFile)) {
   console.log('Release imza anahtarı zaten var (android/keystore.properties).');
+  process.exit(0);
+}
+// Başka bir klasörde (ör. yeni bir klon) daha önce üretilmiş anahtar varsa onu kullan.
+if (fs.existsSync(backupProperties) && fs.existsSync(keystoreFile)) {
+  fs.copyFileSync(backupProperties, propertiesFile);
+  fs.chmodSync(propertiesFile, 0o600);
+  console.log(`Mevcut imza anahtarı kullanılıyor: ${keystoreFile}`);
   process.exit(0);
 }
 if (fs.existsSync(keystoreFile)) {
@@ -72,6 +81,8 @@ fs.writeFileSync(
   ].join('\n'),
   { mode: 0o600 },
 );
+fs.copyFileSync(propertiesFile, backupProperties);
+fs.chmodSync(backupProperties, 0o600);
 fs.chmodSync(keystoreFile, 0o600);
 console.log(`Release imza anahtarı üretildi: ${keystoreFile} (+ android/keystore.properties)`);
 console.log('Bu iki dosyanın yedeğini güvenli bir yere al (ör. şifreli bir USB bellek).');
