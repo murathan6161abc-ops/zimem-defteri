@@ -17,7 +17,7 @@ export const ESNAF_TABS: NavTab[] = [
 ];
 
 // Menünün gösterilmediği sayfalar (giriş/kayıt akışı)
-const NO_NAV_PREFIXES = ['/register', '/login', '/profil-tamamla', '/sifremi-unuttum'];
+const NO_NAV_PREFIXES = ['/register', '/login', '/profil-tamamla', '/sifremi-unuttum', '/onam-formlari'];
 
 /** "/esnaf/" → "/esnaf" (static export sondaki / ile çalışır) */
 export function normalizePath(pathname: string | null): string {

@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
 import { RESEARCH_CONTACT, type AgeGroup } from '@/lib/research';
 
@@ -61,7 +62,12 @@ export default function ConsentBlock({
             />
             <span className="text-[13px] leading-relaxed">{t('register.guardian_checkbox')}</span>
           </label>
-          <p className="mt-2 text-xs text-muted-c leading-relaxed">{t('register.guardian_hint')}</p>
+          <p className="mt-2 text-xs text-muted-c leading-relaxed">
+            {t('register.guardian_hint')}{' '}
+            <Link href="/onam-formlari/" target="_blank" rel="noopener noreferrer" className="underline text-amber-200">
+              {t('register.guardian_form_link')}
+            </Link>
+          </p>
         </div>
       )}
 

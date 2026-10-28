@@ -20,6 +20,8 @@ const ADMIN_PATHS = ['/admin', '/admin/'];
 const FORGOT_PATHS = ['/sifremi-unuttum', '/sifremi-unuttum/'];
 const COMPLETE = '/profil-tamamla/';
 const COMPLETE_PATHS = ['/profil-tamamla', '/profil-tamamla/'];
+// Yazdırılabilir onam formları: veli ya da araştırmacı giriş yapmadan açabilir.
+const FORMS_PATHS = ['/onam-formlari', '/onam-formlari/'];
 
 // Supabase yapılandırılmışsa gerçek oturum (kullanıcı adı+şifre) modu;
 // değilse eski yerel-profil moduna düşülür (env'siz derlemeler için).
@@ -36,7 +38,7 @@ function isAdmin(p: string) {
   return ADMIN_PATHS.includes(p);
 }
 function isPublic(p: string) {
-  return isLogin(p) || isRegister(p) || isAdmin(p) || FORGOT_PATHS.includes(p) || COMPLETE_PATHS.includes(p);
+  return isLogin(p) || isRegister(p) || isAdmin(p) || FORGOT_PATHS.includes(p) || COMPLETE_PATHS.includes(p) || FORMS_PATHS.includes(p);
 }
 function startsWithEsnaf(p: string) {
   return p === '/esnaf' || p === '/esnaf/' || p.startsWith('/esnaf/');

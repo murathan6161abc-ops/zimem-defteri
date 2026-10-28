@@ -3,10 +3,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const pkg = require('../package.json');
 
+// node scripts/package-apk.cjs            → debug APK
+// node scripts/package-apk.cjs --release  → imzalı release APK (katılımcılara dağıtılacak olan)
+const buildType = process.argv.includes('--release') ? 'release' : 'debug';
 const root = path.resolve(__dirname, '..');
-const source = path.join(root, 'android/app/build/outputs/apk/debug/app-debug.apk');
+const source = path.join(root, `android/app/build/outputs/apk/${buildType}/app-${buildType}.apk`);
 const outputDirectory = path.join(root, 'dist');
-const outputName = `D-Zimem-v${pkg.version}-debug.apk`;
+const outputName = `D-Zimem-v${pkg.version}-${buildType}.apk`;
 const destination = path.join(outputDirectory, outputName);
 
 if (!fs.existsSync(source)) {
@@ -30,7 +33,7 @@ fs.writeFileSync(
       version: pkg.version,
       artifact: outputName,
       sha256: checksum,
-      buildType: 'debug',
+      buildType,
       createdAt: new Date().toISOString(),
     },
     null,

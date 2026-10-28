@@ -89,6 +89,7 @@ const en: Dict = {
       'My parent/legal guardian has been informed about this research and has handed the signed guardian consent form to the research team.',
     guardian_hint:
       'People under 18 cannot take part without the guardian consent form. You can get the form from the research team.',
+    guardian_form_link: 'View the form',
     consent_checkbox:
       'I have read the information above and agree to take part in the study anonymously and voluntarily.',
     footer: 'Your real name is never requested. Your email is only for sign-in and password recovery; research data is stored anonymously under your nickname.',

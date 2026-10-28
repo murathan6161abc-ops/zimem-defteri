@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { SubmissionRow } from '@/app/admin/page';
 import type { Category } from '@/types';
+import { DATA_DICTIONARY, anonymizedCsv, buildStatsMarkdown } from '@/lib/researchStats';
 
 const CATEGORIES: Category[] = ['gida', 'egitim', 'fatura', 'saglik'];
 
@@ -72,9 +73,10 @@ Oluşturulma: ${new Date().toLocaleString('tr-TR')}
 
 ${categoryLines}
 
+${buildStatsMarkdown(rows)}
 ## Yorumlama Notu
 
-Bu çıktı betimsel istatistiktir. Nedensellik veya istatistiksel anlamlılık iddiası içermez. Küçük örneklem, öz-seçim ve öz-bildirim yanlılığı raporlanmalıdır.
+Kontrol grubu olmadan nedensellik iddia edilemez. Küçük örneklem, öz-seçim ve öz-bildirim yanlılığı raporlanmalıdır.
 `;
 }
 
@@ -86,15 +88,26 @@ export default function ResearchReportPanel({ rows, isCapacitor }: { rows: Submi
     setReport(buildResearchReport(rows));
   }
 
-  function download() {
-    if (!report) return;
-    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8' });
+  function saveFile(name: string, content: string, mime: string) {
+    // Capacitor/APK'da <a download> güvenilir çalışmıyor; orada panoya kopyalanır.
+    if (isCapacitor) {
+      void navigator.clipboard.writeText(content).then(() => alert(`${name} panoya kopyalandı.`));
+      return;
+    }
+    const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `zimem-arastirma-ozeti-${new Date().toISOString().slice(0, 10)}.md`;
+    anchor.download = name;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  function download() {
+    if (!report) return;
+    saveFile(`zimem-arastirma-ozeti-${today}.md`, report, 'text/markdown;charset=utf-8');
   }
 
   return (
@@ -122,7 +135,21 @@ export default function ResearchReportPanel({ rows, isCapacitor }: { rows: Submi
               Kopyala
             </button>
           )}
+          <button
+            type="button"
+            className="btn"
+            disabled={rows.length === 0}
+            onClick={() => saveFile(`zimem-anonim-${today}.csv`, '\ufeff' + anonymizedCsv(rows), 'text/csv;charset=utf-8')}
+          >
+            Anonim CSV
+          </button>
+          <button type="button" className="btn" onClick={() => saveFile('zimem-veri-sozlugu.md', DATA_DICTIONARY, 'text/markdown;charset=utf-8')}>
+            Veri sözlüğü
+          </button>
         </div>
+        <p className="text-xs text-muted-c mt-3">
+          Anonim CSV takma ad, şehir, borç başlığı ve hesap kimliği içermez; rapor ekine ve JASP/SPSS analizine uygundur.
+        </p>
 
         {report && (
           <div className="mt-5 glass p-5 max-h-[600px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">

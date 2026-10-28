@@ -37,6 +37,9 @@ export interface SubmissionRow {
   // PANAS toplamları; bölüm atlandıysa null
   panas_neg_total: number | null;
   panas_pos_total: number | null;
+  // Madde puanları (Cronbach alfa ve anonim dışa aktarma için)
+  panas_neg_scores: Record<string, number> | null;
+  panas_pos_scores: Record<string, number> | null;
 }
 
 type AccessState = 'checking' | 'signed_out' | 'mfa' | 'forbidden' | 'authorized';
@@ -141,7 +144,7 @@ export default function AdminPage() {
     const since = new Date(Date.now() - days * 86400000).toISOString();
     const { data, error: err } = await sb
       .from('survey_submissions')
-      .select('id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, xp_gained, app_version, age_group, created_at')
+      .select('id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, panas_neg_scores, panas_pos_scores, xp_gained, app_version, age_group, created_at')
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(2000);

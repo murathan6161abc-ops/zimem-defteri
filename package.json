@@ -12,7 +12,10 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "android:sync": "npm run build && cap sync android",
     "android:debug": "npm run android:sync && node scripts/run-gradle.cjs assembleDebug",
-    "delivery:debug": "npm run android:debug && node scripts/package-debug-apk.cjs",
+    "android:release": "npm run android:sync && node scripts/run-gradle.cjs assembleRelease",
+    "delivery:debug": "npm run android:debug && node scripts/package-apk.cjs",
+    "release:key": "node scripts/setup-release-key.cjs",
+    "delivery:release": "node scripts/setup-release-key.cjs && npm run android:release && node scripts/package-apk.cjs --release",
     "tarama": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs",
     "tarama:kurulum": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-worker.mjs --kurulum",
     "tarama:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/scan-bench.mjs"

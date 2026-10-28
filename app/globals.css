@@ -541,3 +541,26 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
   0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); }
   100% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
 }
+
+/* ─── Yazdırılabilir onam formları (/onam-formlari) ───────────────── */
+.consent-forms .form-page {
+  background: #fff;
+  color: #111;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.consent-forms h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.consent-forms h3 { font-size: 14px; font-weight: 700; margin: 14px 0 6px; }
+.consent-forms p { margin-bottom: 6px; }
+.consent-forms .form-field { margin-top: 10px; }
+.consent-forms .form-line { color: #999; letter-spacing: 1px; }
+
+@media print {
+  header, nav, .no-print { display: none !important; }
+  html, body { background: #fff !important; color: #111 !important; }
+  .consent-forms { padding: 0 !important; max-width: none !important; }
+  .consent-forms .form-page { border-radius: 0; padding: 0; margin: 0; break-after: page; }
+}

@@ -88,6 +88,7 @@ const tr = {
       'Velim/yasal temsilcim bu araştırma hakkında bilgilendirildi ve imzalı veli onam formunu araştırma ekibine teslim etti.',
     guardian_hint:
       'Veli onam formu olmadan 18 yaşından küçükler katılamaz. Formu araştırma ekibinden alabilirsin.',
+    guardian_form_link: 'Formu görüntüle',
     consent_checkbox:
       'Yukarıdaki aydınlatma metnini okudum; çalışmaya anonim ve gönüllü olarak katılmayı kabul ediyorum.',
     footer: 'Gerçek adın hiçbir zaman istenmez. E-postan yalnızca giriş ve şifre kurtarma içindir; araştırma verileri takma adınla anonim saklanır.',
