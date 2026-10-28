@@ -1,8 +1,27 @@
 # D-Zimem — 2204-A Literatür Taraması (çalışma notları)
 
+> **Bu dosya yapay zekâ (ÜYZ) desteğiyle hazırlanmış çalışma notlarıdır.** Rapora kopyalanmamalıdır: raporlar intihal yazılımıyla taranıyor ve metnin öğrencilerce yazılması gerekiyor. Her kaynağı orijinalinden okuyup doğrulayın, rapor metnini kendi cümlelerinizle yazın. Yapay zekâ kullanımı raporda beyan edilmeli. Kurallar için bkz. `docs/2204a-uyum-notlari.md`.
+
 Eksenler: (1) Zimem/askıda iyilik geleneği, (2) prososyal davranış ve iyi oluş,
 (3) PANAS-SF / WHO-5, (4) ön test–son test müdahale desenleri, (5) benzer dijital
 platformlar, (6) oyunlaştırma ve sürdürme.
+
+Raporda Giriş bölümü bu notlara dayanacak. Bölüm bilimsel makalelere dayanmalı, D-Zimem'in benzer çalışmalardan farkını göstermeli ve araştırma sorusu ile hipotezle bitmeli. Eksen 1 (tarihçe) raporda kısa tutulmalı, çünkü şablon genel konu ve tarihçe anlatımından kaçınmayı istiyor. Eksenlerin önceliği ana alan kararına göre değişir (bkz. uyum notları).
+
+## Kaynak doğrulama tablosu
+
+Yapay zekâ özetleri hatalı olabilir. "Yapay zekâ özeti" yazan kaynakların, özellikle de sayısal bulguların, orijinalinden kontrol edilmesi öncelikli.
+
+| # | Kaynak | Tür | Nasıl incelendi | Öğrenci orijinalden doğruladı |
+|---|---|---|---|---|
+| 1 | Sürmen ve Abdioğlu (2026) | Hakemli makale | PDF tam metin okundu | [ ] |
+| 2 | Bulunmaz (t.y.) | Bilgilendirme yazısı (ikincil) | Web sayfası, yapay zekâ özeti | [ ] |
+| 3 | Otake ve ark. (2006) | Hakemli makale | Web (PMC), yapay zekâ özeti. İstatistikler kontrol edilmeli | [ ] |
+| 4 | e-Zimem (2026) | Kurum sitesi (gri literatür) | Web sayfası, yapay zekâ özeti | [ ] |
+| 5 | Ateş (2026) | Hakemli makale | PDF tam metin okundu | [ ] |
+| 6 | Erdoğan (2025), KÜRE | Ansiklopedi maddesi (yapay zekâ destekli, ikincil) | Metin sohbete yapıştırıldı | [ ] |
+| 7 | MÜSİAD (t.y.) | Kurum sayfası (gri literatür) | Web sayfası, yapay zekâ özeti | [ ] |
+| 8 | Özdemir (2023) | Hakemli makale | PDF tam metin okundu | [ ] |
 
 ## Kaynak notları
 
@@ -147,4 +166,6 @@ Sonuçlar:
 - [ ] Çetin, E. (2014), askıda kahve ve sadaka taşı (*Akademik Bakış, 41*): Kaynak 1, 5 ve 8'de atıf var, ama sayfa aralıkları farklı (85–96 / 1–12 / 0-0). Asıl makaleyi bul.
 - [ ] Anonim yardımın alan kişiye etkisi için aday: Fisher, Nadler ve Whitcher-Alagna (1982), "Recipient reactions to aid", *Psychological Bulletin* (doğrulanacak)
 - [ ] Eksen 6, tanınma ve yardım davranışı için adaylar: Harbaugh (1998); Ariely, Bracha ve Meier (2009) (doğrulanacak)
+- [ ] Ana alan kararına göre eksenlerin önceliğini güncelle
+- [ ] PANAS ve WHO-5 Türkçe formları için ölçek kullanım izni (bkz. uyum notları)
 - [ ] Yeni makaleleri buraya ekle
