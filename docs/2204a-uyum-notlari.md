@@ -21,6 +21,15 @@ Yarışma sayfası: https://tubitak.gov.tr/tr/yarismalar/icerik-lise-ogrencileri
 - Başvurular 23 Eylül 2026'da açıldı ve **4 Ocak 2027 saat 17:30**'da kapanıyor. Sistem bu saatte kapanır, sonrasında hiçbir değişiklik kabul edilmez (Çağrı 4.2.14).
 - Başvuru anında proje **tamamlanmış** olmalı. Fikir aşamasındaki ya da hâlâ süren projelerle başvurulamaz (Çağrı 4.1.7). Yani veri toplama ve analiz bu tarihten önce bitmeli.
 
+## Ekibin durumu (28.10.2026)
+
+| Konu | Yanıt | Sonuç |
+|---|---|---|
+| Ana alan | Değerler Eğitimi | Tematik alan henüz seçilmedi. Öneri: Değerler Eğitimi (alternatif: Somut Olmayan Kültürel Miras). |
+| Katılımcılar | Okuldaki öğrenci, öğretmen ve veliler; 18 yaş altı katılımcılar; okul dışından yetişkinler; esnaf | MEB Araştırma Uygulama İzni gerekiyor, çünkü hedef kitlenin bir kısmı MEB paydaşı (Çağrı 4.2.7). 18 yaş altındakiler için imzalı veli onamı, herkes için imzalı gönüllü katılım formu gerekiyor. Bir kurum aracılığıyla çalışılıyorsa o kurumdan izin belgesi de gerekiyor. |
+| Veri toplama | Henüz başlamadı | İzinler, formlar ve ölçüm düzeni veri toplamadan önce kesinleştirilebilir. |
+| Önceki başvuru | Yok | Çağrı 4.1.8 ve 4.1.9 açısından sorun yok. |
+
 ## Elenme riskleri ve D-Zimem için anlamı
 
 Ön değerlendirme ve sergi formları şu durumlarda projenin eleneceğini söylüyor: etik izin belgesi eksikliği, veri uydurma veya çarpıtma, kaynak göstermeme, kişisel verilerin gizliliğinin ihlali, çalışmanın ekip tarafından yapılmadığının anlaşılması.
@@ -57,12 +66,23 @@ Yarışma sayfası: https://tubitak.gov.tr/tr/yarismalar/icerik-lise-ogrencileri
 
 ### Ana alana göre literatürün ağırlığı
 
+**Seçilen ana alan: Değerler Eğitimi** (28.10.2026). Tablo karşılaştırma için duruyor.
+
 | Ana alan (önerilen tematik alan) | Araştırma sorusu örneği | Literatürde ağırlık | Ek gereksinim |
 |---|---|---|---|
 | Psikoloji (Siber Psikoloji) | Anonim dijital iyilik, yapan kişinin huzurunu ve iyi oluşunu artırıyor mu? | Eksen 2, 3, 4 ve anonimlik | Ölçüm düzeltmeleri gerekli. Rehber, bir müdahalenin etkililiğinin test edilmesini ve mobil uygulamaları açıkça destekliyor (3.6.7). |
 | Yazılım (Oyun ve Oyunlaştırma veya Yoksullukla Mücadele) | Anonim ve oyunlaştırılmış bir dijital zimem sistemi nasıl tasarlanır, ne kadar kullanışlı olur? | Eksen 5, 6; yazılım geliştirme modeli; mahremiyet | Geliştirme modeli, testler ve mevcut çözümlerle karşılaştırma gerekli (3.6.12). |
 | Değerler Eğitimi (Değerler Eğitimi) | Uygulama, kullanıcıların yardımseverlik değerini güçlendiriyor mu? | Eksen 1, Özdemir (2023), değerler eğitimi literatürü | Yardımseverlik için geçerliği gösterilmiş bir ölçek ve daha uzun süreli bir uygulama gerekli. Yardımseverlik, rehberdeki 10 kök değerden biri (3.6.3). |
 | Sosyoloji (Somut Olmayan Kültürel Miras) | Geleneğin dijital ortama taşınması, dayanışmaya katılımı nasıl etkiliyor? | Eksen 1, 5; toplumsal dayanışma kuramları | Dayanışmayı ölçen bir araç ya da nitel veri gerekli. |
+
+## Değerler Eğitimi için notlar (Rehber 1.3 ve 3.6.3)
+
+- **Kök değerler:** Rehber 10 kök değer sayıyor: adalet, dostluk, dürüstlük, öz denetim, sabır, saygı, sevgi, sorumluluk, vatanseverlik, yardımseverlik. D-Zimem'in doğrudan hedeflediği değer yardımseverlik.
+- **Tematik alanla uyum:** "Değerler Eğitimi" tematik alanı şu tür projeleri örnek veriyor: çocuk, genç ve yaşlıların değerler eğitimiyle günlük yaşamda karşılaşmasını sağlayan projeler, değerler eğitiminin teorik ve pratik boyutunu bir araya getiren projeler. D-Zimem bu tanıma uyuyor.
+- **Somut adım beklentisi:** Rehber, araştırmanın değerini sonucunda somut adım atılıp atılmamasıyla ilişkilendiriyor. Bir müdahale olan uygulama bu açıdan güçlü.
+- **Ölçme:** Ana sonuç değişkeni bir değer olmalı (ör. yardımseverlik). Başkasının geliştirdiği bir ölçek kullanılacaksa geliştiricisinden izin alınmalı.
+- **Etik:** Her türlü ayrımcılığa konu olabilecek unsurdan kaçınılmalı. Katılımcıları fiziksel ya da ruhsal olarak etkileyebilecek durumlar yaratılmamalı. Kurum izni, katılımcı onamı ve 18 yaş altı için veli izni alınmalı.
+- **Dil:** Zimem'in kökeni betimleyici bir dille anlatılmalı. Ölçülen değer (yardımseverlik) farklı inançlardan katılımcıları dışlamayacak şekilde, evrensel bir değer olarak tanımlanmalı (Çağrı 4.1.11).
 
 ## Yapay zekâ kullanımı
 
@@ -81,14 +101,30 @@ Dayanak: Proje Yazım Şablonu ("Yapay Zeka Araçları Kullanım Beyanı"), TÜB
 
 Beyandaki "insan müdahalesi" kısmını ekip dolduracak: hangi kaynakların orijinalinden okunup doğrulandığı (bkz. `docs/literatur-taramasi.md`, kaynak doğrulama tablosu) ve notlarda nelerin değiştirildiği.
 
+## Taslak zaman planı
+
+Bu bir öneri, kesin takvimi ekip ve danışman belirler. Asıl risk, MEB izninin ne zaman çıkacağının bilinmemesi.
+
+| Dönem | İş | Önce bitmesi gereken |
+|---|---|---|
+| 29 Ekim – 8 Kasım | Ölçekleri seç, kullanım izni için yazarlara yaz. Gönüllü katılım ve veli onam formlarını hazırla. Uygulamadaki ölçüm düzenini düzelt. ARBİS kayıtlarını tamamla. | — |
+| Ölçekler ve formlar hazır olur olmaz | MEB Araştırma Uygulama İzni başvurusu | Ölçekler ve formlar kesinleşmiş olmalı |
+| İzin beklenirken | Kaynakları oku ve doğrula. MEB paydaşı olmayan yetişkin ve esnaf grubunda imzalı formla veri toplamaya başla. | Formlar |
+| MEB onayı gelince | Öğrenci, öğretmen ve veli grubunda ön test, birkaç haftalık kullanım, son test | MEB onayı, veli onamları |
+| Aralık sonu | Analiz | Son test |
+| 20 Aralık – 2 Ocak | Rapor, özet, yapay zekâ beyanı, intihal kontrolü | Analiz |
+| En geç 2 Ocak | TYBS başvurusu ve onay | ARBİS kayıtları |
+
+MEB onayı Aralık başına kadar gelmezse öğrenci grubunda ön ve son test arasında yeterli süre kalmayabilir. Bu ihtimale karşı, araştırmayı MEB paydaşı olmayan yetişkin ve esnaf grubuyla sınırlama seçeneğini danışmanınızla şimdiden konuşun.
+
 ## Yapılacaklar (öncelik sırasıyla)
 
-1. [ ] Ana alanı ve tematik alanı danışmanla birlikte kararlaştırın.
+1. [ ] Tematik alanı danışmanla kararlaştırın. Ana alan Değerler Eğitimi olarak seçildi. Tematik alan için öneri Değerler Eğitimi.
 2. [ ] ARBİS: Her öğrenci ve danışman kayıt olsun, kimlik bilgilerini güncellesin, İletişim bölümünde e-posta, telefon ve adresi eksiksiz doldursun. Sitedeki 2026 v2 kılavuzunu kullanın.
-3. [ ] Katılımcı kitlesini netleştirin (yaş, MEB paydaşı olup olmadığı). Gerekli izinleri buna göre başlatın. MEB izni gerekiyorsa hemen başvurun.
+3. [ ] Katılımcılar arasında öğrenci, öğretmen ve veli olduğu için MEB Araştırma Uygulama İzni'ne başvurun. Başvurudan önce ölçekler ve formlar kesinleşmiş olmalı.
 4. [ ] Gönüllü katılım formu ve veli onam formu hazırlayın, imzalatın ve saklayın. Uygulamadaki onay kutusunun imzalı formun yerine geçip geçmediğini 2204a@tubitak.gov.tr adresine sorun.
-5. [ ] PANAS ve WHO-5 Türkçe formları için ölçek kullanım izni isteyin, yazışmaları saklayın.
-6. [ ] Ölçüm düzeltmelerini veri toplamaya başlamadan önce yapın (bkz. `docs/literatur-taramasi.md`, "Ölçüm notları").
+5. [ ] Kullanılacak her ölçeğin geliştiricisinden kullanım izni isteyin, yazışmaları saklayın. Bunlar yardımseverlik ya da prososyal eğilim ölçeği, kalırsa PANAS ve WHO-5.
+6. [ ] Ölçüm düzenini Değerler Eğitimi'ne göre yeniden kurun ve veri toplamaya başlamadan önce uygulamada düzeltin (bkz. `docs/literatur-taramasi.md`, "Ölçüm notları").
 7. [ ] Veri toplamayı ve analizi 4 Ocak'tan önce bitirin.
 8. [ ] Raporu şablonla yazın: özet, yapay zekâ beyanı ve APA kaynakça dahil. Göndermeden önce intihal kontrolü yapın.
 9. [ ] İsterseniz en fazla 3 dakikalık bir tanıtım videosu hazırlayın.

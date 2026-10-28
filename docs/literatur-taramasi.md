@@ -8,6 +8,21 @@ platformlar, (6) oyunlaştırma ve sürdürme.
 
 Raporda Giriş bölümü bu notlara dayanacak. Bölüm bilimsel makalelere dayanmalı, D-Zimem'in benzer çalışmalardan farkını göstermeli ve araştırma sorusu ile hipotezle bitmeli. Eksen 1 (tarihçe) raporda kısa tutulmalı, çünkü şablon genel konu ve tarihçe anlatımından kaçınmayı istiyor. Eksenlerin önceliği ana alan kararına göre değişir (bkz. uyum notları).
 
+## Eksen öncelikleri (ana alan: Değerler Eğitimi, 28.10.2026)
+
+Değerler Eğitimi'nde Giriş'in omurgası değerler eğitimi kuramı ve ölçülecek değer olmalı. Zimem geleneği kısa bir çerçeve olarak kalmalı, iyilik ve iyi oluş literatürü destekleyici olmalı. "Doğrulanacak" yazan künyeler henüz orijinalinden kontrol edilmedi.
+
+| Öncelik | Eksen | Rapordaki işlevi | Eldeki kaynaklar | Aranacak |
+|---|---|---|---|---|
+| 1 | Değerler eğitimi ve kök değerler (yeni eksen) | Kuramsal çerçeve | — | MEB (2018) öğretim programlarındaki kök değerler. Kaymakcan ve Meydan (2014), *Ahlak, değerler ve eğitimi* (Kaynak 8'in kaynakçasından). Schwartz değer kuramı ve Türkçe uyarlaması, Kuşdil ve Kağıtçıbaşı (2000) (doğrulanacak). |
+| 2 | Yardımseverliğin ölçülmesi (yeni eksen) | Yöntem | — | Türkçe geçerlik çalışması yapılmış bir yardımseverlik ya da prososyal eğilim ölçeği. Aday: Prososyal Eğilimler Ölçeği'nin Türkçe uyarlaması, Kumru, Carlo ve Edwards (2004) (doğrulanacak). |
+| 3 | Eksen 1: bir değer pratiği olarak zimem | Problem ve özgünlük, kısa | 8 (temel), 1, 5, 6 | Çetin (2014) |
+| 4 | Eksen 5: benzer uygulamalar ve dijital değerler eğitimi | Özgünlük | 4, 7 | "değerler eğitimi mobil uygulama", "dijital oyun değerler eğitimi", "values education mobile app" |
+| 5 | Eksen 4: araştırma deseni | Yöntem | 3 | Ön test–son test kontrol gruplu desen; bir yöntem kitabı |
+| 6 | Eksen 6: oyunlaştırma ve dışsal ödül | Tartışma | — | XP ve liderlik tablosu, yardım etmeyi ödüle bağlayabilir mi? Deci, Koestner ve Ryan (1999); Warneken ve Tomasello (2008) (doğrulanacak). Kaynak 8'deki gurur notuyla birlikte ele alınmalı. |
+| 7 | Eksen 2: iyilik ve iyi oluş | Önem ve gerekçe, destekleyici | 2, 3 | Curry ve ark. (2018); Hui ve ark. (2020) (doğrulanacak) |
+| — | Eksen 3: PANAS ve WHO-5 | Yalnızca bu ölçekler kalırsa | — | Gençöz (2000); Eser ve ark. |
+
 ## Kaynak doğrulama tablosu
 
 Yapay zekâ özetleri hatalı olabilir. "Yapay zekâ özeti" yazan kaynakların, özellikle de sayısal bulguların, orijinalinden kontrol edilmesi öncelikli.
@@ -155,17 +170,26 @@ Sonuçlar:
 5. "Gururlu" seçeneği, Kaynak 8'deki "veren gurura kapılmaz" ilkesiyle çelişiyor (tartışma notu).
 6. WHO-5 eşikleri kodda ≤50 düşük, 51–70 orta, 71+ yüksek. Yaygın eşik ≤50 (ve ≤28), Topp ve ark. (2015), doğrulanacak. 51–70 ve 71+ bantları için kaynak gösterilmeli.
 
+### Değerler Eğitimi açısından (28.10.2026)
+
+1. Mevcut ölçümler (huzur, PANAS, WHO-5) duyguyu ve iyi oluşu ölçüyor, değeri ölçmüyor. Değerler Eğitimi'nde ana sonuç değişkeni bir değer olmalı, örneğin yardımseverlik.
+2. Yardımseverlik ya da prososyal eğilimler için Türkçe geçerliği ve güvenirliği gösterilmiş bir ölçek seçilmeli. Geliştiricisinden kullanım izni alınmalı (Rehber 3.6.3).
+3. Değerler tek bir iyilikten sonra değişmez. Ön ve son test arasında birkaç haftalık kullanım olmalı. Uygulamayı kullanmayan bir karşılaştırma grubu sonucu güçlendirir.
+4. Huzur, PANAS ve WHO-5 ikincil ölçüm olarak kalabilir ya da katılımcı yükünü azaltmak için çıkarılabilir. Kalırlarsa yukarıdaki 1–6. maddeler geçerli. Bu ekibin kararı.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
-- [ ] PANAS: kullanılan 10 maddenin kaynağını netleştir (Watson ve ark., 1988; Gençöz, 2000 tam form; Thompson, 2007 kısa form)
-- [ ] WHO-5: Topp ve ark. (2015) sistematik derleme; Türkçe geçerlik için Eser ve ark. (kodda yıl yok), künyeyi bul
-- [ ] Tek maddelik iyi oluş/duygu ölçümünün geçerliği için kaynak bul
+- [ ] (Bu ölçek kalırsa) PANAS: kullanılan 10 maddenin kaynağını netleştir (Watson ve ark., 1988; Gençöz, 2000 tam form; Thompson, 2007 kısa form)
+- [ ] (Bu ölçek kalırsa) WHO-5: Topp ve ark. (2015) sistematik derleme; Türkçe geçerlik için Eser ve ark. (kodda yıl yok), künyeyi bul
+- [ ] (Huzur maddesi kalırsa) Tek maddelik iyi oluş/duygu ölçümünün geçerliği için kaynak bul
 - [ ] Eksen 2 meta-analizleri: Curry ve ark. (2018); Hui ve ark. (2020) (doğrulanacak)
 - [ ] Kaynak 6'daki Yıldırım (2023) ve Yıldırım ve ark. makalelerini bul, doğrula
 - [ ] MÜSİAD girişiminin başlangıç yılını haber kaynaklarından doğrula
 - [ ] Çetin, E. (2014), askıda kahve ve sadaka taşı (*Akademik Bakış, 41*): Kaynak 1, 5 ve 8'de atıf var, ama sayfa aralıkları farklı (85–96 / 1–12 / 0-0). Asıl makaleyi bul.
 - [ ] Anonim yardımın alan kişiye etkisi için aday: Fisher, Nadler ve Whitcher-Alagna (1982), "Recipient reactions to aid", *Psychological Bulletin* (doğrulanacak)
 - [ ] Eksen 6, tanınma ve yardım davranışı için adaylar: Harbaugh (1998); Ariely, Bracha ve Meier (2009) (doğrulanacak)
-- [ ] Ana alan kararına göre eksenlerin önceliğini güncelle
-- [ ] PANAS ve WHO-5 Türkçe formları için ölçek kullanım izni (bkz. uyum notları)
+- [x] Ana alan kararına göre eksenlerin önceliğini güncelle (Değerler Eğitimi, 28.10.2026)
+- [ ] Kullanılacak her ölçek için kullanım izni (bkz. uyum notları)
+- [ ] Türkçe geçerlik çalışması olan bir yardımseverlik ya da prososyal eğilim ölçeği bul ve doğrula
+- [ ] Değerler eğitimi kuramsal çerçeve kaynaklarını bul: MEB (2018) programları, Kaymakcan ve Meydan (2014)
 - [ ] Yeni makaleleri buraya ekle
