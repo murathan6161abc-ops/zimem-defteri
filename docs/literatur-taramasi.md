@@ -120,9 +120,28 @@ platformlar, (6) oyunlaştırma ve sürdürme.
   - **Tartışma notu:** Gelenekte veren gösterişten ve gururdan uzak durur. D-Zimem'de ise XP ve liderlik tablosu var ("en çok XP kazanan ilk 10 anonim iyilik elçisi"), takma adla da olsa. Jüri bu gerilimi sorabilir. Eksen 6'da tanınmanın yardım davranışına etkisini inceleyen çalışmalarla ele alınmalı.
   - Makalenin değerler eğitimi önerileri (gençlerin gönüllü etkinliklere katılımı, s. 569–570), projenin eğitsel boyutuna bağlanabilir.
 
+## Ölçüm notları (uygulama kodundan, 28.10.2026)
+
+Eksen 3 ve 4'te hangi kaynakların gerektiğini bunlar belirliyor.
+
+- **Ön test** (`components/modals/PretestModal.tsx`): huzur 1–10 (tek madde), baskın duygu (Merak / Sorumluluk / Huzur / Heyecan), "Sosyal dayanışmaya katılmak senin için ne kadar değerli?" (Likert), isteğe bağlı PANAS olumsuz 5 madde (Gergin, Kızgın, Korkmuş, Suçlu, Üzgün).
+- **Son test** (`components/modals/PosttestModal.tsx`): huzur 1–10 (aynı madde), duygu (Mutlu / Dingin / Hafiflemiş / Gururlu), "İyilik yapan, iyilik yapana da şifadır" sözüne katılım (Likert), 30 gün içinde tekrar, isteğe bağlı PANAS olumlu 5 madde (Heyecanlı, İlgili, Dikkatli, Kararlı, Aktif).
+- **WHO-5** ayrı ve dönemsel uygulanıyor (`lib/who5.ts`).
+
+Sonuçlar:
+1. Ön ve son testte aynı olan tek ölçüm huzur maddesi. Tek maddelik ölçümün geçerliği için kaynak gerekiyor.
+2. PANAS ön testte yalnızca olumsuz, son testte yalnızca olumlu duygu ölçüyor. Bu haliyle iki alt ölçekte de değişim hesaplanamaz.
+3. `lib/scales.ts` kaynak olarak Watson ve ark. (1988) ile Gençöz (2000)'i gösteriyor. Gençöz (2000) 20 maddelik tam formun uyarlaması, kısa form değil. Kullanılan 10 madde bilinen kısa formlarla (ör. Thompson, 2007) birebir eşleşmiyor. Kod anahtarlarındaki "tense" ve "angry" orijinal 20 maddede yok. Türkçe ifadeler Gençöz (2000) ile karşılaştırılmalı.
+4. Son testteki duygu seçeneklerinin hepsi olumlu, Likert maddesi de yönlendirici. Bu, cevapları olumlu yöne itebilir.
+5. "Gururlu" seçeneği, Kaynak 8'deki "veren gurura kapılmaz" ilkesiyle çelişiyor (tartışma notu).
+6. WHO-5 eşikleri kodda ≤50 düşük, 51–70 orta, 71+ yüksek. Yaygın eşik ≤50 (ve ≤28), Topp ve ark. (2015), doğrulanacak. 51–70 ve 71+ bantları için kaynak gösterilmeli.
+
 ## Yapılacaklar
 - [ ] Eksen 2 için birincil kaynakları bul ve doğrula
-- [ ] PANAS-SF ve WHO-5 Türkçe geçerlik çalışmaları
+- [ ] PANAS: kullanılan 10 maddenin kaynağını netleştir (Watson ve ark., 1988; Gençöz, 2000 tam form; Thompson, 2007 kısa form)
+- [ ] WHO-5: Topp ve ark. (2015) sistematik derleme; Türkçe geçerlik için Eser ve ark. (kodda yıl yok), künyeyi bul
+- [ ] Tek maddelik iyi oluş/duygu ölçümünün geçerliği için kaynak bul
+- [ ] Eksen 2 meta-analizleri: Curry ve ark. (2018); Hui ve ark. (2020) (doğrulanacak)
 - [ ] Kaynak 6'daki Yıldırım (2023) ve Yıldırım ve ark. makalelerini bul, doğrula
 - [ ] MÜSİAD girişiminin başlangıç yılını haber kaynaklarından doğrula
 - [ ] Çetin, E. (2014), askıda kahve ve sadaka taşı (*Akademik Bakış, 41*): Kaynak 1, 5 ve 8'de atıf var, ama sayfa aralıkları farklı (85–96 / 1–12 / 0-0). Asıl makaleyi bul.
