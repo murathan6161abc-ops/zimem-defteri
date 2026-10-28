@@ -1,4 +1,6 @@
 // Ana menü sekmeleri — üst başlık (tablet/masaüstü) ve alt menü (telefon) ortak kullanır.
+import { GAMIFICATION } from '@/lib/research';
+
 export type NavTab = { href: string; labelKey: string; shortKey: string; icon: string };
 
 export const VATANDAS_TABS: NavTab[] = [
@@ -7,7 +9,7 @@ export const VATANDAS_TABS: NavTab[] = [
   { href: '/liderlik', labelKey: 'nav.leaderboard', shortKey: 'nav.leaderboard', icon: '🏆' },
   { href: '/history', labelKey: 'nav.history', shortKey: 'nav.history', icon: '🕰️' },
   { href: '/profil', labelKey: 'nav.profile', shortKey: 'nav.profile', icon: '👤' },
-];
+].filter((tab) => GAMIFICATION || tab.href !== '/liderlik');
 
 export const ESNAF_TABS: NavTab[] = [
   { href: '/esnaf', labelKey: 'nav.merchant_book', shortKey: 'nav.book_short', icon: '🏪' },

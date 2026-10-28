@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import LocaleSwitcher from './LocaleSwitcher';
 import { ESNAF_TABS, VATANDAS_TABS, isNavHidden, isTabActive } from './navTabs';
 import LogoMark from './LogoMark';
+import { GAMIFICATION } from '@/lib/research';
 
 // Telefonda sekmeler alttaki menüdedir (BottomNav); burada yalnızca sm ve üstünde görünür.
 
@@ -55,7 +56,7 @@ export default function Header() {
                 <span className="font-medium truncate">{profile.displayName}</span>
               </Link>
             )}
-            {mounted && profile && role !== 'esnaf' && (
+            {GAMIFICATION && mounted && profile && role !== 'esnaf' && (
               <div className="xp-badge !text-xs sm:!text-[13px] !px-2.5 sm:!px-3.5" suppressHydrationWarning>
                 ⚡ <span>{mounted ? xp : 0}</span> XP
               </div>

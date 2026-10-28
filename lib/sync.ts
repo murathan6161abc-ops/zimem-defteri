@@ -2,6 +2,7 @@ import { getSupabase } from './supabase';
 import { getCurrentUserId } from './auth';
 import { panasTotal } from './scales';
 import { APP_VERSION } from './version';
+import { surveyAppVersion } from './research';
 import type {
   Debt,
   HistoryEntry,
@@ -49,7 +50,7 @@ export async function syncSurveySubmission(args: {
       post_likert: post.likert,
       will_repeat: post.willRepeat,
       xp_gained: entry.xp,
-      app_version: APP_VERSION,
+      app_version: surveyAppVersion(APP_VERSION),
       age_group: profile?.ageGroup ?? null,
       // PANAS-SF skorları (akademik ölçek)
       panas_neg_scores: pre.panasNeg || null,

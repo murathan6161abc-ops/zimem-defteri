@@ -8,6 +8,7 @@ import { getLevelInfo } from '@/lib/levels';
 import { formatTL } from '@/lib/debts';
 import Confetti from '@/components/ui/Confetti';
 import AchievementBadge from '@/components/achievements/AchievementBadge';
+import { GAMIFICATION } from '@/lib/research';
 
 export default function ResultModal({ open }: { open: boolean }) {
   const closeModal = useZimemStore((s) => s.closeModal);
@@ -34,11 +35,15 @@ export default function ResultModal({ open }: { open: boolean }) {
       {showConfetti && <Confetti />}
       <ModalShell open={open} onClose={closeModal}>
         <div className="text-center">
-          <div className="section-title">{t('result.earned')}</div>
-          <div className="heading-xl mb-1 text-amber-300 tabular-nums">+{lastResult.xp} XP</div>
-          <div className="text-sm text-muted-c mb-4">
-            {t('result.current_level')} <span className="text-white font-semibold">{t(`levels.${current.key}`)}</span>
-          </div>
+          {GAMIFICATION && (
+            <>
+              <div className="section-title">{t('result.earned')}</div>
+              <div className="heading-xl mb-1 text-amber-300 tabular-nums">+{lastResult.xp} XP</div>
+              <div className="text-sm text-muted-c mb-4">
+                {t('result.current_level')} <span className="text-white font-semibold">{t(`levels.${current.key}`)}</span>
+              </div>
+            </>
+          )}
 
           <p className="text-sm mb-5">
             {lastResult.remaining > 0
@@ -46,7 +51,7 @@ export default function ResultModal({ open }: { open: boolean }) {
               : t('result.closed_note')}
           </p>
 
-          {newAchievements.length > 0 && (
+          {GAMIFICATION && newAchievements.length > 0 && (
             <div className="mb-5">
               <div className="section-title">{t('result.unlocked_achievements')}</div>
               <div className="grid gap-2">

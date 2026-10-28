@@ -16,5 +16,18 @@ export function consentComplete(ageGroup: AgeGroup | null, guardianConfirmed: bo
   return ageGroup === 'minor' && guardianConfirmed;
 }
 
+/**
+ * Oyunlaştırma (XP, seviye, rozet, liderlik tablosu) açık mı? NEXT_PUBLIC_GAMIFICATION=off
+ * ile derlenen sürümde gizlenir. Puanlar motivasyonu etkileyebileceği için araştırmada
+ * karşılaştırma grubu ya da "araştırma modu" olarak kullanılabilir; hangi sürümden
+ * geldiği anket kaydındaki app_version'dan anlaşılır (bkz. surveyAppVersion).
+ */
+export const GAMIFICATION = process.env.NEXT_PUBLIC_GAMIFICATION !== 'off';
+
+/** Anket kaydına yazılan sürüm: oyunlaştırma kapalı derlemede "-oyunsuz" eki alır. */
+export function surveyAppVersion(version: string): string {
+  return GAMIFICATION ? version : `${version}-oyunsuz`;
+}
+
 /** Araştırma ekibinin iletişim e-postası (aydınlatma metninde gösterilir). */
 export const RESEARCH_CONTACT = (process.env.NEXT_PUBLIC_RESEARCH_CONTACT_EMAIL || '').trim();
