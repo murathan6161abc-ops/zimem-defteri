@@ -30,6 +30,8 @@ Yarışma sayfası: https://tubitak.gov.tr/tr/yarismalar/icerik-lise-ogrencileri
 | Veri toplama | Henüz başlamadı | İzinler, formlar ve ölçüm düzeni veri toplamadan önce kesinleştirilebilir. |
 | Önceki başvuru | Yok | Çağrı 4.1.8 ve 4.1.9 açısından sorun yok. |
 
+Not (18.11.2026): Ekibin `docs/TUBITAK-2204A.md` dosyası (`v2.7.0-onam-ve-yas` dalında) ana alan olarak Psikoloji varsayıyor, uygulamanın ölçümleri ve onam formları da Psikoloji tasarımına göre kurulu. Ana alan kararı 21 Kasım'a kadar netleşmeli (bkz. `docs/yol-haritasi.md`).
+
 ## Elenme riskleri ve D-Zimem için anlamı
 
 Ön değerlendirme ve sergi formları şu durumlarda projenin eleneceğini söylüyor: etik izin belgesi eksikliği, veri uydurma veya çarpıtma, kaynak göstermeme, kişisel verilerin gizliliğinin ihlali, çalışmanın ekip tarafından yapılmadığının anlaşılması.
@@ -98,24 +100,13 @@ Dayanak: Proje Yazım Şablonu ("Yapay Zeka Araçları Kullanım Beyanı"), TÜB
 | Tarih | Araç | Amaç | Çıktı |
 |---|---|---|---|
 | 28.10.2026 | Claude Code (Anthropic). Model ve sürüm bilgisi sohbette verildi. | Literatür arama ve özetleme, kaynak künyelerinin kontrolü, 2204-A belgelerinin özetlenmesi, uygulamadaki ölçeklerin incelenmesi | `docs/literatur-taramasi.md`, bu dosya |
+| 18.11.2026 | Claude Code (Anthropic). Model ve sürüm bilgisi sohbette verildi. | Yol haritası hazırlama (planlama), ekip belgeleriyle karşılaştırma | `docs/yol-haritasi.md` |
 
 Beyandaki "insan müdahalesi" kısmını ekip dolduracak: hangi kaynakların orijinalinden okunup doğrulandığı (bkz. `docs/literatur-taramasi.md`, kaynak doğrulama tablosu) ve notlarda nelerin değiştirildiği.
 
-## Taslak zaman planı
+## Zaman planı
 
-Bu bir öneri, kesin takvimi ekip ve danışman belirler. Asıl risk, MEB izninin ne zaman çıkacağının bilinmemesi.
-
-| Dönem | İş | Önce bitmesi gereken |
-|---|---|---|
-| 29 Ekim – 8 Kasım | Ölçekleri seç, kullanım izni için yazarlara yaz. Gönüllü katılım ve veli onam formlarını hazırla. Uygulamadaki ölçüm düzenini düzelt. ARBİS kayıtlarını tamamla. | — |
-| Ölçekler ve formlar hazır olur olmaz | MEB Araştırma Uygulama İzni başvurusu | Ölçekler ve formlar kesinleşmiş olmalı |
-| İzin beklenirken | Kaynakları oku ve doğrula. MEB paydaşı olmayan yetişkin ve esnaf grubunda imzalı formla veri toplamaya başla. | Formlar |
-| MEB onayı gelince | Öğrenci, öğretmen ve veli grubunda ön test, birkaç haftalık kullanım, son test | MEB onayı, veli onamları |
-| Aralık sonu | Analiz | Son test |
-| 20 Aralık – 2 Ocak | Rapor, özet, yapay zekâ beyanı, intihal kontrolü | Analiz |
-| En geç 2 Ocak | TYBS başvurusu ve onay | ARBİS kayıtları |
-
-MEB onayı Aralık başına kadar gelmezse öğrenci grubunda ön ve son test arasında yeterli süre kalmayabilir. Bu ihtimale karşı, araştırmayı MEB paydaşı olmayan yetişkin ve esnaf grubuyla sınırlama seçeneğini danışmanınızla şimdiden konuşun.
+Güncel plan: `docs/yol-haritasi.md` (18.11.2026).
 
 ## Yapılacaklar (öncelik sırasıyla)
 
