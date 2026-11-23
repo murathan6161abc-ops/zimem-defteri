@@ -4,6 +4,9 @@ Bu belge D-Zimem'in 2204-A Lise Öğrencileri Araştırma Projeleri Yarışması
 toplar. Madde numaraları 2027 çağrı duyurusundandır (Ek-1b). Puanlama kriterleri çağrıda
 değil, yarışmanın web sayfasında ve Proje Rehberi'nde yayımlanır; oradan da kontrol edin.
 
+**Ana alan: Değerler Eğitimi** (28.10.2026'da seçildi, 23.11.2026'da teyit edildi). Ayrıntılı
+uyum notları `docs/2204a-uyum-notlari.md`, literatür notları `docs/literatur-taramasi.md`.
+
 ## Takvim
 
 - TYBS kılavuzundaki ekran görüntüsünde 2204-A başvurusu **04.01.2027 17:30**'da kapanıyor
@@ -19,7 +22,7 @@ değil, yarışmanın web sayfasında ve Proje Rehberi'nde yayımlanır; oradan 
 | 4.1.7, Hatırlatma | Proje öğrencilerin kendi bilgi ve becerisiyle yapılmalı | — | TYBS'deki **Yapay Zekâ Kullanım Beyanı**'nı doğru doldurun; kod ve analiz kararlarını sözlü sunumda açıklayabilecek düzeyde bilin |
 | 4.1.11 | Raporda firma, ticari ürün ya da marka öne çıkarılmaz | Gerçek ödeme ve ödeme markası yok; ödeme simülasyondur | Raporda Supabase/Ollama gibi araçları yalnızca "kullanılan araçlar" olarak anın |
 | 4.1.12 | Gerekli etik izinler alınmazsa proje elenir | — | Etik kurul onayı alın |
-| 4.1.13 | Ana alan, projenin ana amacına göre seçilir | — | Ana amaç iyiliğin duygu durumuna etkisi → büyük olasılıkla **Psikoloji**; yazılım destek alanıdır |
+| 4.1.13 | Ana alan, projenin ana amacına göre seçilir | — | Seçilen ana alan **Değerler Eğitimi**. Ana sonuç değişkeni bir değer (yardımseverlik) olmalı; duygu ölçümleri (huzur, PANAS, WHO-5) ikincil kalır. Yazılım destek alanıdır |
 | 4.2.4 | Rapor şablonla, Türkçe, tek PDF, 2–20 sayfa; özet 150–250 kelime | Yönetim panelindeki "Araştırma Özeti" rapora taslak verir | Proje Yazım Şablonu'nu kullanın |
 | 4.2.5 | Ek belgeler tek PDF, ≤10 MB, dosya adı ≤25 karakter, kişisel bilgi yok | Anonim CSV ve veri sözlüğü panelden indirilir | Anket formu, onam formu boş örneği, veri sözlüğünü ek PDF'e koyun |
 | 4.2.6 | Proje adı en fazla 15 kelime | — | |
