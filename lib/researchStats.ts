@@ -19,33 +19,52 @@ export interface ResearchRow {
   pre_likert: number | null;
   post_likert: number | null;
   will_repeat: string | null;
+  // PANAS. Eski sütun adları: panas_neg_* = ön test negatif, panas_pos_* = son test pozitif.
   panas_neg_total: number | null;
   panas_pos_total: number | null;
   panas_neg_scores?: Record<string, number> | null;
   panas_pos_scores?: Record<string, number> | null;
+  // 2.9.0'dan itibaren eksik iki ölçüm de var; eski gönderimlerde boş.
+  pre_panas_pos_total?: number | null;
+  post_panas_neg_total?: number | null;
+  pre_panas_pos_scores?: Record<string, number> | null;
+  post_panas_neg_scores?: Record<string, number> | null;
   age_group: 'minor' | 'adult' | null;
   app_version: string | null;
 }
 
 type Pair = { before: number; after: number };
 
-/** Her gönderim bir çift: ön ve son test huzur puanı. */
-function submissionPairs(rows: ResearchRow[]): Pair[] {
-  return rows
-    .filter((r) => r.pre_huzur !== null && r.post_huzur !== null)
-    .map((r) => ({ before: r.pre_huzur as number, after: r.post_huzur as number }));
+/** Bir gönderimden ön ve son ölçümü seçer; biri eksikse çift oluşmaz. */
+type Measure = (r: ResearchRow) => [number | null | undefined, number | null | undefined];
+
+const HUZUR: Measure = (r) => [r.pre_huzur, r.post_huzur];
+/** PANAS pozitif duygu: ön test (yeni sütun) → son test. */
+export const PANAS_POS: Measure = (r) => [r.pre_panas_pos_total, r.panas_pos_total];
+/** PANAS negatif duygu: ön test → son test (yeni sütun). */
+export const PANAS_NEG: Measure = (r) => [r.panas_neg_total, r.post_panas_neg_total];
+
+function pairOf(r: ResearchRow, measure: Measure): Pair | null {
+  const [before, after] = measure(r);
+  return typeof before === 'number' && typeof after === 'number' ? { before, after } : null;
+}
+
+/** Her gönderim bir çift: ön ve son test puanı. */
+function submissionPairs(rows: ResearchRow[], measure: Measure = HUZUR): Pair[] {
+  return rows.map((r) => pairOf(r, measure)).filter((p): p is Pair => p !== null);
 }
 
 /**
  * Katılımcı düzeyi: aynı kişinin birden çok gönderimi tek çifte (ortalamalara) indirilir.
  * Gönderimler bağımsız değildir; t testi için asıl birim katılımcıdır.
  */
-export function participantPairs(rows: ResearchRow[]): Pair[] {
+export function participantPairs(rows: ResearchRow[], measure: Measure = HUZUR): Pair[] {
   const byUser = new Map<string, Pair[]>();
   for (const r of rows) {
-    if (r.pre_huzur === null || r.post_huzur === null) continue;
+    const pair = pairOf(r, measure);
+    if (!pair) continue;
     const list = byUser.get(r.user_id) ?? [];
-    list.push({ before: r.pre_huzur, after: r.post_huzur });
+    list.push(pair);
     byUser.set(r.user_id, list);
   }
   return [...byUser.values()].map((list) => ({
@@ -72,7 +91,9 @@ function testLines(label: string, pairs: Pair[]): string {
   return lines.join('\n');
 }
 
-function alphaLine(label: string, rows: ResearchRow[], field: 'panas_neg_scores' | 'panas_pos_scores', keys: string[]): string {
+type ScoreField = 'panas_neg_scores' | 'panas_pos_scores' | 'pre_panas_pos_scores' | 'post_panas_neg_scores';
+
+function alphaLine(label: string, rows: ResearchRow[], field: ScoreField, keys: string[]): string {
   const items = rows
     .map((r) => r[field])
     .filter((s): s is Record<string, number> => !!s)
@@ -91,28 +112,45 @@ export function buildStatsMarkdown(rows: ResearchRow[]): string {
     { label: 'Yaş grubu bilinmeyen', rows: rows.filter((r) => r.age_group === null) },
   ].filter((g) => g.rows.length > 0);
 
-  return `## Çıkarımsal İstatistik (huzur, 1-10)
+  const negKeys = PANAS_NEGATIVE.map((i) => i.key);
+  const posKeys = PANAS_POSITIVE.map((i) => i.key);
+
+  return `## Çıkarımsal İstatistik
 
 Birim katılımcıdır: aynı kişinin birden çok gönderimi ortalamaya indirilir. Gönderim
 düzeyi sonuç yalnızca karşılaştırma içindir (gönderimler birbirinden bağımsız değildir).
 
+### Huzur (1-10)
+
 ${testLines('Katılımcı düzeyi', participantPairs(rows))}
 ${testLines('Gönderim düzeyi', submissionPairs(rows))}
 
-### Yaş gruplarına göre (katılımcı düzeyi)
+#### Yaş gruplarına göre (katılımcı düzeyi)
 
 ${groups.map((g) => testLines(g.label, participantPairs(g.rows))).join('\n') || '- Veri yok'}
 
+### PANAS (5-25, katılımcı düzeyi)
+
+Yalnızca PANAS bölümünü hem ön hem son testte dolduran gönderimler çift oluşturur.
+
+${testLines('Pozitif duygu', participantPairs(rows, PANAS_POS))}
+${testLines('Negatif duygu', participantPairs(rows, PANAS_NEG))}
+
 ## Güvenirlik (Cronbach alfa)
 
-${alphaLine('PANAS negatif duygu (ön test)', rows, 'panas_neg_scores', PANAS_NEGATIVE.map((i) => i.key))}
-${alphaLine('PANAS pozitif duygu (son test)', rows, 'panas_pos_scores', PANAS_POSITIVE.map((i) => i.key))}
+${alphaLine('PANAS pozitif duygu, ön test', rows, 'pre_panas_pos_scores', posKeys)}
+${alphaLine('PANAS pozitif duygu, son test', rows, 'panas_pos_scores', posKeys)}
+${alphaLine('PANAS negatif duygu, ön test', rows, 'panas_neg_scores', negKeys)}
+${alphaLine('PANAS negatif duygu, son test', rows, 'post_panas_neg_scores', negKeys)}
 
 ## Yöntem notları
 
-- Uygulamada PANAS negatif duygu yalnızca ön testte, pozitif duygu yalnızca son testte
-  soruluyor; bu yüzden PANAS için ön-son karşılaştırması yapılamaz. Ön-son karşılaştırma
-  istenirse iki alt ölçek her iki ölçümde de sorulmalıdır.
+- PANAS'ın iki alt ölçeği 2.9.0'dan itibaren hem ön hem son testte aynı maddelerle
+  soruluyor. Daha eski gönderimlerde yalnızca ön test negatif ve son test pozitif duygu
+  vardır; bu gönderimler PANAS ön-son karşılaştırmasına girmez.
+- PANAS maddeleri 20 maddelik formdan seçilmiş 5 + 5 maddedir; doğrulanmış bir kısa
+  form (ör. I-PANAS-SF) değildir. Raporda bu belirtilmeli, alfa değerleri verilmelidir.
+- PANAS bölümü isteğe bağlıdır; dolduranlar örneklemin seçilmiş bir alt kümesi olabilir.
 - Ön testteki ve son testteki tekil likert maddeleri farklı sorulardır; aralarında fark alınmaz.
 - Kontrol grubu olmadığından görülen değişim yalnızca iyilik davranışına bağlanamaz.
 - p değerleri bu panelde sayısal yöntemle hesaplanır; raporda kullanmadan önce JASP/SPSS ile doğrulayın.
@@ -137,10 +175,14 @@ const ANON_COLUMNS = [
   'on_madde',
   'son_madde',
   'tekrar_niyeti',
-  'panas_negatif_toplam',
-  ...PANAS_NEGATIVE.map((i) => `panas_neg_${i.key}`),
-  'panas_pozitif_toplam',
-  ...PANAS_POSITIVE.map((i) => `panas_pos_${i.key}`),
+  'on_panas_pozitif_toplam',
+  ...PANAS_POSITIVE.map((i) => `on_panas_pos_${i.key}`),
+  'on_panas_negatif_toplam',
+  ...PANAS_NEGATIVE.map((i) => `on_panas_neg_${i.key}`),
+  'son_panas_pozitif_toplam',
+  ...PANAS_POSITIVE.map((i) => `son_panas_pos_${i.key}`),
+  'son_panas_negatif_toplam',
+  ...PANAS_NEGATIVE.map((i) => `son_panas_neg_${i.key}`),
   'surum',
 ] as const;
 
@@ -177,10 +219,14 @@ export function anonymizedCsv(rows: ResearchRow[]): string {
       r.pre_likert,
       r.post_likert,
       r.will_repeat,
+      r.pre_panas_pos_total ?? null,
+      ...PANAS_POSITIVE.map((i) => r.pre_panas_pos_scores?.[i.key] ?? null),
       r.panas_neg_total,
       ...PANAS_NEGATIVE.map((i) => r.panas_neg_scores?.[i.key] ?? null),
       r.panas_pos_total,
       ...PANAS_POSITIVE.map((i) => r.panas_pos_scores?.[i.key] ?? null),
+      r.post_panas_neg_total ?? null,
+      ...PANAS_NEGATIVE.map((i) => r.post_panas_neg_scores?.[i.key] ?? null),
       r.app_version,
     ]
       .map(csvCell)
@@ -206,14 +252,17 @@ export const DATA_DICTIONARY = `# D-Zimem Veri Sözlüğü (anonim CSV)
 | on_madde | Ön test: "Sosyal dayanışmaya katılmak senin için ne kadar değerli?" | 1–5 |
 | son_madde | Son test likert maddesi ("iyilik şifadır"); on_madde ile farklı soru | 1–5 |
 | tekrar_niyeti | Yeniden iyilik yapma niyeti | evet, belki, bilmiyorum |
-| panas_negatif_toplam | PANAS kısa form negatif duygu toplamı (ön test); atlandıysa boş | 5–25 |
-| panas_neg_* | Negatif duygu maddeleri (tense, angry, afraid, guilty, upset) | 1–5 |
-| panas_pozitif_toplam | PANAS kısa form pozitif duygu toplamı (son test); atlandıysa boş | 5–25 |
-| panas_pos_* | Pozitif duygu maddeleri (excited, interested, attentive, determined, active) | 1–5 |
+| on_panas_pozitif_toplam / son_panas_pozitif_toplam | PANAS pozitif duygu toplamı, ön / son test; atlandıysa boş | 5–25 |
+| on_panas_pos_* / son_panas_pos_* | Pozitif duygu maddeleri (excited, interested, attentive, determined, active) | 1–5 |
+| on_panas_negatif_toplam / son_panas_negatif_toplam | PANAS negatif duygu toplamı, ön / son test; atlandıysa boş | 5–25 |
+| on_panas_neg_* / son_panas_neg_* | Negatif duygu maddeleri (tense, angry, afraid, guilty, upset) | 1–5 |
 | surum | Gönderimi yapan uygulama sürümü | ör. 2.8.0 |
 
 Notlar:
 - Her satır bir gönderimdir; bir katılımcının birden çok satırı olabilir. Ön-son analizinde
   katılımcı düzeyine indirgeme yapılmalıdır.
 - Takma ad, şehir, borç başlığı ve esnaf adı serbest metin olduğu için dışa aktarılmaz.
+- 2.9.0 öncesi gönderimlerde on_panas_pozitif ve son_panas_negatif sütunları boştur
+  (o sürümler bu iki ölçümü sormuyordu).
+- PANAS maddeleri 20 maddelik formdan seçilmiş 5 + 5 maddedir (doğrulanmış kısa form değil).
 `;

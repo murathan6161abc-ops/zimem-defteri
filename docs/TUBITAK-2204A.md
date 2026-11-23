@@ -29,10 +29,17 @@ değil, yarışmanın web sayfasında ve Proje Rehberi'nde yayımlanır; oradan 
 
 ## Araştırma tasarımı: öneriler
 
-1. **PANAS ön-son karşılaştırması yapılamıyor.** Uygulama negatif duyguyu yalnızca ön testte,
-   pozitif duyguyu yalnızca son testte soruyor. Ön-son değişim iddia edilecekse iki alt ölçek
-   de iki ölçümde sorulmalı. Bu, ölçme aracını değiştirir; danışmanla karar verin ve etik
-   başvurusundan **önce** uygulayın.
+1. **PANAS ön-son karşılaştırması (2.9.0'da yapıldı).** İki alt ölçeğin 10 maddesi artık hem
+   ön hem son testte, aynı sırayla soruluyor; ön testte dolduran kişiye son testte zorunlu.
+   Yönetim paneli pozitif ve negatif duygu için eşleştirilmiş t testi ve dört ölçümün alfasını
+   veriyor. 2.8.0 ve öncesi gönderimler PANAS ön-son analizine girmez; raporda `surum`
+   sütunuyla ayırın. Kalan iki karar danışmanla verilmeli ve etik başvurusundan **önce**
+   uygulanmalı:
+   - **Madde seti:** Maddeler 20 maddelik PANAS'tan seçilmiş 5 + 5 maddedir, doğrulanmış
+     bir kısa form (ör. I-PANAS-SF, Thompson 2007) değildir. Türkçe geçerlik çalışması olan
+     bir formla eşleştirin (Gençöz 2000, 20 madde). Maddeler `lib/scales.ts` ve çeviri
+     dosyalarındaki `panas` bölümünden değiştirilir.
+   - **Zorunluluk:** Bölüm hâlâ isteğe bağlı; ana ölçümse herkese zorunlu yapılmalı.
 2. **Kontrol grubu.** Kontrol grubu olmadan "iyilik duygu durumunu iyileştirdi" diyemezsiniz.
    Oyunlaştırmasız sürüm (`NEXT_PUBLIC_GAMIFICATION=off`) bir karşılaştırma koşulu olarak
    kullanılabilir; kayıtlar `app_version` sonundaki `-oyunsuz` ekiyle ayrılır. Nötr görev
@@ -60,6 +67,11 @@ Supabase SQL Editor'de, sırayla ve daha önce çalıştırılmadıysa:
 2. `20261024100000_panas_empty_totals.sql` (PANAS atlanınca toplam 0 değil boş; mevcut 0'ları düzeltir)
 3. `20261029120000_age_group_and_account_erasure.sql` (yaş grubu ve hesap silme)
 4. `20261029130000_delete_account_requires_mfa.sql` (hesap silme 2FA ister)
+5. `20261123120000_panas_both_timepoints.sql` (PANAS'ın iki alt ölçeği ön ve son testte)
+
+23.11.2026 kontrolünde canlı veritabanında 3. göç uygulanmış, 1. göç uygulanmamış
+görünüyordu. 5. göç uygulanana kadar uygulama gönderimleri kaydeder ama yeni iki PANAS
+ölçümünü (ön test pozitif, son test negatif) saklamaz.
 
 Ayrıca:
 

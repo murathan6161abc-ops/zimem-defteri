@@ -31,6 +31,8 @@ function buildResearchReport(rows: SubmissionRow[]): string {
   const avgPostLikert = average(rows.map((row) => row.post_likert));
   const avgPanasNeg = average(rows.map((row) => row.panas_neg_total));
   const avgPanasPos = average(rows.map((row) => row.panas_pos_total));
+  const avgPrePanasPos = average(rows.map((row) => row.pre_panas_pos_total ?? null));
+  const avgPostPanasNeg = average(rows.map((row) => row.post_panas_neg_total ?? null));
 
   const categoryLines = CATEGORIES.map((category) => {
     const categoryRows = rows.filter((row) => row.debt_category === category);
@@ -66,8 +68,9 @@ Oluşturulma: ${new Date().toLocaleString('tr-TR')}
 - Huzur farkı (son - ön, ${pairedHuzur.length} eşleşmiş kayıt): ${huzurChange}
 - Ön test "dayanışmanın değeri" maddesi (1-5): ${formatAverage(avgPreLikert)}
 - Son test "iyilik şifadır" maddesi (1-5): ${formatAverage(avgPostLikert)}
-- PANAS negatif ön test ortalaması: ${formatAverage(avgPanasNeg)}
-- PANAS pozitif son test ortalaması: ${formatAverage(avgPanasPos)}
+- PANAS pozitif (5-25) ortalaması: ön test ${formatAverage(avgPrePanasPos)}, son test ${formatAverage(avgPanasPos)}
+- PANAS negatif (5-25) ortalaması: ön test ${formatAverage(avgPanasNeg)}, son test ${formatAverage(avgPostPanasNeg)}
+  (ortalamalar farklı gönderim kümelerinden olabilir; eşleşmiş karşılaştırma aşağıda)
 
 ## Kategori Dağılımı
 

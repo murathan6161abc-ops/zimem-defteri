@@ -30,8 +30,9 @@ export interface PreTestData {
   emotion: 'merak' | 'sorumluluk' | 'huzur' | 'heyecan';
   emotionValue: number; // 1-4
   likert: number; // 1-5
-  // PANAS negatif afekt: 5 madde, 1-5 arası
+  // PANAS (bölüm doldurulduysa iki alt ölçek birlikte): her biri 5 madde, 1-5 arası
   panasNeg?: Record<string, number>;
+  panasPos?: Record<string, number>;
 }
 
 export interface PostTestData {
@@ -40,7 +41,8 @@ export interface PostTestData {
   emotionValue: number; // 1-4
   likert: number; // 1-5
   willRepeat: 'evet' | 'belki' | 'bilmiyorum';
-  // PANAS pozitif afekt: 5 madde, 1-5 arası
+  // PANAS (ön testteki aynı maddeler): her biri 5 madde, 1-5 arası
+  panasNeg?: Record<string, number>;
   panasPos?: Record<string, number>;
 }
 

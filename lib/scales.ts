@@ -1,17 +1,23 @@
 // Psikometrik Ölçekler
-// PANAS-SF (Positive and Negative Affect Schedule — Kısa Form)
+// PANAS (Positive and Negative Affect Schedule) — 10 maddelik seçki
 // WHO-5 İyilik Hali İndeksi
-// Akademik geçerli, dünya çapında kullanılan ölçekler.
 
 export interface ScaleItem {
   key: string;       // veritabanı/JSON anahtarı
   i18nKey: string;   // çeviri sözlüğü yolu
 }
 
-// PANAS-SF Negatif Afekt
-// Watson, Clark & Tellegen (1988) — Türkçe uyarlama: Gençöz (2000)
-// 5 madde × 1-5 Likert → toplam 5-25
-// Pre-test'te uygulanır (kişinin ana baz halinin negatif duygu durumu)
+// PANAS: Watson, Clark & Tellegen (1988); Türkçe uyarlama (20 madde): Gençöz (2000).
+// DİKKAT: Aşağıdaki 5 + 5 madde 20 maddelik formdan seçilmiştir; uluslararası kısa
+// form I-PANAS-SF (Thompson, 2007) ile aynı değildir. Madde seti ve Türkçe ifadeler
+// danışmanla, geçerlik çalışması olan bir formla eşleştirilmelidir. Madde değişirse
+// key'ler aynı kalabilir; yalnızca i18n metinleri ve bu listeler güncellenir.
+//
+// Her iki alt ölçek hem ön testte hem son testte sorulur: ön-son karşılaştırması
+// ancak aynı maddeler iki ölçümde de sorulursa yapılabilir.
+// Her madde 1-5 Likert → alt ölçek toplamı 5-25.
+
+/** Negatif duygulanım */
 export const PANAS_NEGATIVE: ScaleItem[] = [
   { key: 'tense',  i18nKey: 'panas.neg_tense'  },
   { key: 'angry',  i18nKey: 'panas.neg_angry'  },
@@ -20,9 +26,7 @@ export const PANAS_NEGATIVE: ScaleItem[] = [
   { key: 'upset',  i18nKey: 'panas.neg_upset'  },
 ];
 
-// PANAS-SF Pozitif Afekt
-// 5 madde × 1-5 Likert → toplam 5-25
-// Post-test'te uygulanır (iyilik sonrası pozitif duygu durumu)
+/** Pozitif duygulanım */
 export const PANAS_POSITIVE: ScaleItem[] = [
   { key: 'excited',    i18nKey: 'panas.pos_excited'    },
   { key: 'interested', i18nKey: 'panas.pos_interested' },
@@ -30,6 +34,33 @@ export const PANAS_POSITIVE: ScaleItem[] = [
   { key: 'determined', i18nKey: 'panas.pos_determined' },
   { key: 'active',     i18nKey: 'panas.pos_active'     },
 ];
+
+/**
+ * Ekranda gösterim sırası: PANAS'ta olduğu gibi olumlu ve olumsuz maddeler karışık
+ * sunulur (hepsi art arda gelince yanıtlar birbirini etkiler). Ön ve son testte aynı sıra.
+ */
+export const PANAS_DISPLAY_ORDER: ScaleItem[] = [
+  PANAS_POSITIVE[1], PANAS_NEGATIVE[3], PANAS_POSITIVE[0], PANAS_NEGATIVE[0], PANAS_POSITIVE[3],
+  PANAS_NEGATIVE[2], PANAS_POSITIVE[2], PANAS_NEGATIVE[4], PANAS_POSITIVE[4], PANAS_NEGATIVE[1],
+];
+
+/** Formdaki 10 cevabı iki alt ölçeğe ayırır; madde eksikse null (bölüm tamamlanmamış). */
+export function splitPanas(
+  answers: Record<string, number>,
+): { panasNeg: Record<string, number>; panasPos: Record<string, number> } | null {
+  const pick = (items: ScaleItem[]) => {
+    const out: Record<string, number> = {};
+    for (const it of items) {
+      const v = answers[it.key];
+      if (!Number.isInteger(v) || v < 1 || v > 5) return null;
+      out[it.key] = v;
+    }
+    return out;
+  };
+  const panasNeg = pick(PANAS_NEGATIVE);
+  const panasPos = pick(PANAS_POSITIVE);
+  return panasNeg && panasPos ? { panasNeg, panasPos } : null;
+}
 
 // WHO-5 İyilik Hali İndeksi
 // Topp et al. (2015) — Türkçe geçerlilik: Eser et al.

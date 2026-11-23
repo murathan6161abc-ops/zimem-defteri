@@ -70,5 +70,5 @@ ataması için [SETUP.md](./SETUP.md), güvenlik modeli için
 
 ## Sürüm
 
-Geçerli uygulama sürümü `2.8.0`'dır. Sürüm artırırken `package.json`,
+Geçerli uygulama sürümü `2.9.0`'dır. Sürüm artırırken `package.json`,
 `lib/version.ts` ve `android/app/build.gradle` birlikte güncellenir.

@@ -245,7 +245,8 @@ const en: Dict = {
   },
   research: {
     detail_toggle: 'Extra questions (PANAS)',
-    detail_sub: 'Five items. Gives the research more detailed data.',
+    detail_sub: 'Ten items. Gives the research more detailed data.',
+    detail_required: 'Rate the same ten items you answered before paying; the two will be compared.',
   },
   payment: {
     title: 'Confirm payment',

@@ -34,13 +34,22 @@ export interface SubmissionRow {
   app_version: string | null;
   age_group: 'minor' | 'adult' | null;
   created_at: string;
-  // PANAS toplamları; bölüm atlandıysa null
+  // PANAS toplamları; bölüm atlandıysa null. panas_neg = ön test, panas_pos = son test.
   panas_neg_total: number | null;
   panas_pos_total: number | null;
   // Madde puanları (Cronbach alfa ve anonim dışa aktarma için)
   panas_neg_scores: Record<string, number> | null;
   panas_pos_scores: Record<string, number> | null;
+  // Ön test pozitif / son test negatif (2.9.0+; göç çalıştırılmadıysa gelmez)
+  pre_panas_pos_total?: number | null;
+  post_panas_neg_total?: number | null;
+  pre_panas_pos_scores?: Record<string, number> | null;
+  post_panas_neg_scores?: Record<string, number> | null;
 }
+
+const SUBMISSION_COLUMNS =
+  'id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, panas_neg_scores, panas_pos_scores, xp_gained, app_version, age_group, created_at';
+const PANAS_BOTH_COLUMNS = 'pre_panas_pos_total, post_panas_neg_total, pre_panas_pos_scores, post_panas_neg_scores';
 
 type AccessState = 'checking' | 'signed_out' | 'mfa' | 'forbidden' | 'authorized';
 
@@ -78,7 +87,7 @@ function rowsToCSV(rows: SubmissionRow[]): string {
     'debt_category', 'debt_amount', 'debt_urgency',
     'pre_huzur', 'pre_emotion', 'pre_emotion_value', 'pre_likert',
     'post_huzur', 'post_emotion', 'post_emotion_value', 'post_likert', 'will_repeat',
-    'panas_neg_total', 'panas_pos_total',
+    'pre_panas_pos_total', 'panas_neg_total', 'panas_pos_total', 'post_panas_neg_total',
     'xp_gained', 'app_version', 'age_group',
   ];
   const header = cols.join(',');
@@ -142,16 +151,22 @@ export default function AdminPage() {
     setError(null);
     const sb = getSupabase()!;
     const since = new Date(Date.now() - days * 86400000).toISOString();
-    const { data, error: err } = await sb
-      .from('survey_submissions')
-      .select('id, user_id, display_name, city, debt_id, debt_title, debt_category, debt_amount, debt_urgency, debt_added_by, pre_huzur, pre_emotion, pre_emotion_value, pre_likert, post_huzur, post_emotion, post_emotion_value, post_likert, will_repeat, panas_neg_total, panas_pos_total, panas_neg_scores, panas_pos_scores, xp_gained, app_version, age_group, created_at')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(2000);
+    const query = (columns: string) =>
+      sb
+        .from('survey_submissions')
+        .select(columns)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(2000);
+    let { data, error: err } = await query(`${SUBMISSION_COLUMNS}, ${PANAS_BOTH_COLUMNS}`);
+    if (err && /column/i.test(err.message) && /(pre_panas_pos|post_panas_neg)/.test(err.message)) {
+      // PANAS ön-son göçü (20261123120000) çalıştırılmamış: eski sütunlarla devam et.
+      ({ data, error: err } = await query(SUBMISSION_COLUMNS));
+    }
     if (err) {
       setError(err.message);
     } else {
-      setRows((data as SubmissionRow[]) || []);
+      setRows((data as unknown as SubmissionRow[]) || []);
     }
     setLoading(false);
   }

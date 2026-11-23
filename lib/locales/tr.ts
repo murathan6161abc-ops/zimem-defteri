@@ -244,7 +244,8 @@ const tr = {
   },
   research: {
     detail_toggle: 'Ek sorular (PANAS)',
-    detail_sub: 'Beş madde. Araştırmaya daha ayrıntılı veri sağlar.',
+    detail_sub: 'On madde. Araştırmaya daha ayrıntılı veri sağlar.',
+    detail_required: 'Ön testte cevapladığın on maddeyi şimdi tekrar işaretle; ikisi karşılaştırılacak.',
   },
   payment: {
     title: 'Ödemeyi onayla',

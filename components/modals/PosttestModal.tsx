@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ModalShell from './ModalShell';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
-import { PANAS_POSITIVE } from '@/lib/scales';
+import { splitPanas } from '@/lib/scales';
+import PanasSection from './PanasSection';
 import type { PostTestData } from '@/types';
 
 // value, puan hesabında kullanılan duygu ağırlığıdır (lib/xp.ts).
@@ -21,17 +22,24 @@ const REPEAT: PostTestData['willRepeat'][] = ['evet', 'belki', 'bilmiyorum'];
 export default function PosttestModal({ open }: { open: boolean }) {
   const submit = useZimemStore((s) => s.submitPosttest);
   const remaining = useZimemStore((s) => s.payment?.remaining ?? 0);
+  // Ön testte PANAS dolduran kişiye son testte aynı maddeler zorunlu sorulur; yoksa
+  // ön ölçümün eşi olmaz ve karşılaştırma yapılamaz.
+  const panasRequired = useZimemStore((s) => !!s.preData?.panasNeg);
   const { t } = useI18n();
 
   const [huzur, setHuzur] = useState<number | null>(null);
   const [emotion, setEmotion] = useState<PostTestData['emotion'] | null>(null);
   const [likert, setLikert] = useState<number>(0);
   const [willRepeat, setWillRepeat] = useState<PostTestData['willRepeat'] | null>(null);
-  // PANAS pozitif afekt maddeleri; bölüm isteğe bağlı
-  const [panasOpen, setPanasOpen] = useState(false);
-  const [panasPos, setPanasPos] = useState<Record<string, number>>({});
+  // PANAS (ön testteki aynı 10 madde)
+  const [panasOpen, setPanasOpen] = useState(panasRequired);
+  const [panas, setPanas] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (open && panasRequired) setPanasOpen(true);
+  }, [open, panasRequired]);
 
-  const panasOK = !panasOpen || PANAS_POSITIVE.every((it) => (panasPos[it.key] || 0) > 0);
+  const panasScores = panasOpen ? splitPanas(panas) : null;
+  const panasOK = !panasOpen || panasScores !== null;
   const canSubmit =
     huzur !== null && emotion !== null && likert > 0 && willRepeat !== null && panasOK;
 
@@ -44,13 +52,14 @@ export default function PosttestModal({ open }: { open: boolean }) {
       emotionValue: found.value,
       likert,
       willRepeat: willRepeat!,
-      panasPos: panasOpen ? panasPos : undefined,
+      panasNeg: panasScores?.panasNeg,
+      panasPos: panasScores?.panasPos,
     });
     setHuzur(null);
     setEmotion(null);
     setLikert(0);
     setWillRepeat(null);
-    setPanasPos({});
+    setPanas({});
     setPanasOpen(false);
   };
 
@@ -126,53 +135,13 @@ export default function PosttestModal({ open }: { open: boolean }) {
           </div>
         </section>
 
-        <section className="border-t border-white/10 pt-4">
-          <button
-            type="button"
-            onClick={() => setPanasOpen(!panasOpen)}
-            className="w-full flex items-center justify-between text-left gap-2"
-          >
-            <div>
-              <div className="text-sm font-semibold flex items-center gap-2">
-                🔬 {t('research.detail_toggle')} <span className="text-[11px] font-normal text-muted-c">{t('common.optional')}</span>
-              </div>
-              <div className="text-xs text-muted-c">
-                {t('research.detail_sub')}
-              </div>
-            </div>
-            <span className={`text-muted-c transition-transform ${panasOpen ? 'rotate-180' : ''}`}>▼</span>
-          </button>
-
-          {panasOpen && (
-            <div className="mt-3">
-              <div className="text-xs text-muted-c mb-3">{t('panas.instruction')}</div>
-              <div className="space-y-2">
-                {PANAS_POSITIVE.map((item) => (
-                  <div key={item.key} className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] text-white/90 min-w-[80px]">{t(item.i18nKey)}</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setPanasPos((p) => ({ ...p, [item.key]: v }))}
-                          className={`w-7 h-7 rounded-full text-xs font-semibold transition-all ${
-                            panasPos[item.key] === v
-                              ? 'bg-emerald-400 text-black'
-                              : 'bg-white/5 text-muted-c border border-white/10 hover:bg-white/10'
-                          }`}
-                          aria-label={`${t(item.i18nKey)} ${v}`}
-                        >
-                          {v}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
+        <PanasSection
+          open={panasOpen}
+          onToggle={() => setPanasOpen(!panasOpen)}
+          answers={panas}
+          onAnswer={(key, v) => setPanas((p) => ({ ...p, [key]: v }))}
+          required={panasRequired}
+        />
 
         <div className="pt-2">
           <button
