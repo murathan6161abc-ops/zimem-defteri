@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTL, parsePartialAmount, parseWholeAmount } from './debts';
+import { SAMPLE_DEBTS, demoOpenDebts, formatTL, parsePartialAmount, parseWholeAmount } from './debts';
 
 describe('parsePartialAmount', () => {
   it('1 ile kalan tutar arasındaki tam sayıyı kabul eder', () => {
@@ -48,5 +48,31 @@ describe('formatTL', () => {
   it('Türkçede binlik ayırıcı olarak nokta kullanır', () => {
     expect(formatTL(1250)).toBe('1.250 ₺');
     expect(formatTL(90)).toBe('90 ₺');
+  });
+});
+
+describe('demoOpenDebts', () => {
+  const [first, second, third] = SAMPLE_DEBTS;
+
+  it('hiç ödeme yoksa örnek borçların hepsi açıktır', () => {
+    expect(demoOpenDebts(SAMPLE_DEBTS, [], {})).toEqual(SAMPLE_DEBTS);
+  });
+
+  it('bu cihazda tamamen kapatılan borç listeye geri dönmez', () => {
+    const open = demoOpenDebts(SAMPLE_DEBTS, [{ debtId: first.id }], {});
+    expect(open.map((d) => d.id)).not.toContain(first.id);
+    expect(open).toHaveLength(SAMPLE_DEBTS.length - 1);
+  });
+
+  it('kısmen ödenen borç kalan tutarla görünür', () => {
+    const open = demoOpenDebts(SAMPLE_DEBTS, [{ debtId: second.id }], { [second.id]: 100 });
+    expect(open.find((d) => d.id === second.id)?.amount).toBe(second.amount - 100);
+    expect(open).toHaveLength(SAMPLE_DEBTS.length);
+  });
+
+  it('örnek listeyi değiştirmez', () => {
+    const before = third.amount;
+    demoOpenDebts(SAMPLE_DEBTS, [{ debtId: third.id }], { [third.id]: 10 });
+    expect(third.amount).toBe(before);
   });
 });

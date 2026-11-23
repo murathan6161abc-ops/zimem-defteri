@@ -65,8 +65,11 @@ export default function ProfilePage() {
   const openDebts = merchantDebts.filter((d) => !d.closed).length;
   const closedDebts = merchantDebts.filter((d) => d.closed).length;
 
+  // Çevrimdışı demoda hesap sunucuda durmaz: çıkış bu cihazdaki her şeyi siler.
+  const demo = !isSupabaseConfigured();
+
   const handleLogout = async () => {
-    if (confirm(t('profile.logout_confirm'))) {
+    if (confirm(t(demo ? 'profile.logout_confirm_demo' : 'profile.logout_confirm'))) {
       await logout();
       router.replace(isSupabaseConfigured() ? '/login/' : '/register/');
     }
@@ -174,7 +177,7 @@ export default function ProfilePage() {
       <section className="glass p-5">
         <div className="section-title mb-1">{t('profile.account')}</div>
         <p className="text-xs text-muted-c mb-4">
-          {t('profile.account_desc')}
+          {t(demo ? 'profile.account_desc_demo' : 'profile.account_desc')}
         </p>
         <button type="button" onClick={handleLogout} className="btn w-full !text-red-300 !border-red-500/30 hover:!bg-red-500/10">
           {t('profile.logout_btn')}

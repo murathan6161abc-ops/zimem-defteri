@@ -3,8 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useZimemStore } from '@/store/useZimemStore';
 import { useI18n } from '@/lib/i18n';
+import type { Role } from '@/types';
 
-const STORAGE_KEY = 'd-zimem-onboarding-shown-v1';
+// Tanıtım rol başına bir kez gösterilir: aynı cihazda (ör. ortak sunum telefonu) önce
+// esnaf sonra vatandaş giriş yaparsa vatandaş da kendi tanıtımını görür.
+const storageKey = (role: Role) => `d-zimem-onboarding-shown-v2-${role}`;
+// Eski sürüm rol ayırmadan tek anahtar tutuyordu; o cihazda tanıtımı görmüş kişi
+// güncellemeden sonra aynı tanıtımı yeniden görmesin diye bir kez taşınır.
+const LEGACY_KEY = 'd-zimem-onboarding-shown-v1';
 
 const SLIDES_CITIZEN = ['c1', 'c2', 'c3'];
 const SLIDES_MERCHANT = ['m1', 'm2', 'm3'];
@@ -18,10 +24,16 @@ export default function OnboardingModal() {
   useEffect(() => {
     if (!profile) return;
     try {
-      if (localStorage.getItem(STORAGE_KEY)) return;
+      const key = storageKey(profile.role);
+      if (localStorage.getItem(LEGACY_KEY)) {
+        localStorage.setItem(key, '1');
+        localStorage.removeItem(LEGACY_KEY);
+      }
+      if (localStorage.getItem(key)) return;
     } catch {
       return;
     }
+    setStep(0);
     setOpen(true);
   }, [profile]);
 
@@ -33,7 +45,7 @@ export default function OnboardingModal() {
 
   const handleClose = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(storageKey(profile.role), '1');
     } catch {}
     setOpen(false);
   };

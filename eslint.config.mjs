@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "android/**",
     "ios/**",
     "public/**",
+    // Claude Code çalışma kopyaları (ayrı git worktree'leri)
+    ".claude/**",
   ]),
   {
     files: ["**/*.{ts,tsx}"],

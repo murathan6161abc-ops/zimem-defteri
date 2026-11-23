@@ -334,6 +334,8 @@ const tr = {
     account_desc: 'Çıkış yapınca verilerin silinmez; tekrar girdiğinde geçmişin ve puanın geri gelir.',
     logout_btn: 'Çıkış yap',
     logout_confirm: 'Çıkış yapmak istiyor musun?',
+    account_desc_demo: 'Bu cihaz çevrimdışı demo modunda. Çıkış yapınca bu cihazdaki puanın, geçmişin ve defterin silinir.',
+    logout_confirm_demo: 'Çevrimdışı demo modundasın; çıkış yapınca bu cihazdaki tüm veriler silinir. Devam edilsin mi?',
     f_email: 'E-posta',
   },
   leaderboard: {

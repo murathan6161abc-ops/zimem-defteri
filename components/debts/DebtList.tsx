@@ -7,7 +7,7 @@ import {
   subscribeToDebts,
 } from '@/lib/supabaseDebts';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { SAMPLE_DEBTS, kindOf } from '@/lib/debts';
+import { SAMPLE_DEBTS, demoOpenDebts, kindOf } from '@/lib/debts';
 import { useI18n, tStatic } from '@/lib/i18n';
 import DebtCard from './DebtCard';
 import DebtFilters from './DebtFilters';
@@ -37,9 +37,11 @@ export default function DebtList() {
     let unsubscribe: (() => void) | null = null;
 
     async function bootstrap() {
-      // Supabase ayarlı değilse örnek borçlarla çalışılır.
+      // Supabase ayarlı değilse örnek borçlarla çalışılır; bu cihazda kapatılanlar
+      // listeye geri dönmez, kısmen ödenenler kalan tutarla görünür.
       if (!isSupabaseConfigured()) {
-        setOpenDebts(SAMPLE_DEBTS);
+        const { history, partialPayments } = useZimemStore.getState();
+        setOpenDebts(demoOpenDebts(SAMPLE_DEBTS, history, partialPayments));
         setLoading(false);
         return;
       }

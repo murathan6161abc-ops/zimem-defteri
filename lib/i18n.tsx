@@ -41,9 +41,14 @@ function getByPath(obj: unknown, path: string): string {
 }
 
 // '{days} gün sonra' + { days: 3 } → '3 gün sonra'
-function interpolate(s: string, vars?: Record<string, string | number>): string {
+// Tekil/çoğul (İngilizce için): '{n} {n:day|days}' + { n: 1 } → '1 day', { n: 3 } → '3 days'
+export function interpolate(s: string, vars?: Record<string, string | number>): string {
   if (!vars) return s;
-  return s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+  return s
+    .replace(/\{(\w+):([^|{}]*)\|([^{}]*)\}/g, (m, k, one, many) =>
+      vars[k] === undefined ? m : Number(vars[k]) === 1 ? one : many,
+    )
+    .replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

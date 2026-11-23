@@ -47,7 +47,9 @@ export default function IyilikTree({
             <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
             <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="trunk" x1="0" x2="0" y1="0" y2="1">
+          {/* userSpaceOnUse: gövde dümdüz dikey bir çizgi, sınır kutusunun genişliği 0.
+              Varsayılan objectBoundingBox birimiyle tarayıcı böyle bir şekli hiç boyamaz. */}
+          <linearGradient id="trunk" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="140" y2="380">
             <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#78350f" />
           </linearGradient>

@@ -1,4 +1,4 @@
-import type { Debt, Category, DebtKind } from '@/types';
+import type { Debt, Category, DebtKind, HistoryEntry } from '@/types';
 import { KIND_GROUP, LEDGER_KINDS } from './ledgerParse';
 
 // ─── Borç türleri ────────────────────────────────────────────
@@ -223,3 +223,24 @@ export const SAMPLE_DEBTS: Debt[] = [
     urgency: 2,
   },
 ];
+
+/**
+ * Çevrimdışı demoda açık borç listesi. Sunucu olmadığı için örnek borçların durumu
+ * yalnızca bu cihazdaki geçmişte ve kısmi katkılarda saklanır; liste her açıldığında
+ * bunlardan yeniden kurulur. Tamamen kapatılan borç çıkarılır, kısmen ödenenin
+ * tutarından ödenen kısım düşülür. (Store, borç kapanınca kısmi katkı kaydını siler:
+ * geçmişte olup kısmi kaydı olmayan borç kapanmıştır.)
+ */
+export function demoOpenDebts(
+  samples: Debt[],
+  history: Pick<HistoryEntry, 'debtId'>[],
+  partialPayments: Record<string, number>,
+): Debt[] {
+  const paidHere = new Set(history.map((h) => h.debtId));
+  return samples.flatMap((d) => {
+    const partial = partialPayments[d.id] || 0;
+    if (paidHere.has(d.id) && partial <= 0) return [];
+    const remaining = d.amount - partial;
+    return remaining > 0 ? [{ ...d, amount: remaining }] : [];
+  });
+}
