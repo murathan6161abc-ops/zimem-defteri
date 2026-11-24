@@ -171,6 +171,21 @@ function merchantDebt(id: string, patch: Partial<MerchantDebt> = {}): MerchantDe
   };
 }
 
+describe('muhtar onaylı borç', () => {
+  it('simülasyon akışını başlatmaz: yalnızca esnafa gerçek ödemeyle kapanır', () => {
+    useZimemStore.setState({ openDebts: [{ ...debt('v1'), verification: 'verified' }] });
+    useZimemStore.getState().startFlow('v1');
+    expect(useZimemStore.getState().modalStep).toBe('closed');
+    expect(useZimemStore.getState().activeDebt).toBeNull();
+  });
+
+  it('onay bekleyen borçta simülasyon akışı açılır', () => {
+    useZimemStore.setState({ openDebts: [{ ...debt('p1'), verification: 'pending' }] });
+    useZimemStore.getState().startFlow('p1');
+    expect(useZimemStore.getState().modalStep).toBe('pretest');
+  });
+});
+
 describe('setMerchantDebts', () => {
   it('kapanan borcun son bilinen tutarını korur, sunucudaki yeni borcu ekler', () => {
     useZimemStore.setState({

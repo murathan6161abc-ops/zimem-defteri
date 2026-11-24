@@ -18,6 +18,7 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import { fetchMyMerchantDebts, getCurrentUserId, signOut, type AccountData } from '@/lib/auth';
 import { tStatic } from '@/lib/i18n';
 import { iconOf, kindOf } from '@/lib/debts';
+import type { Pledge } from '@/lib/pledges';
 
 interface ToastMsg {
   id: string;
@@ -45,6 +46,8 @@ interface ZimemState {
   history: HistoryEntry[];
   openDebts: Debt[];
   merchantDebts: MerchantDebt[];
+  // Gerçek ödeme taahhütleri (vatandaş). Çevrimiçinde sunucudan tazelenir.
+  myPledges: Pledge[];
 
   // Bu cihazdan yapılan kısmi katkılar: { borçId: toplam }
   partialPayments: Record<string, number>;
@@ -84,6 +87,8 @@ interface ZimemState {
 
   // Esnafın defterini sunucudaki listeyle değiştirir.
   setMerchantDebts: (debts: MerchantDebt[]) => void;
+  setMyPledges: (pledges: Pledge[]) => void;
+  upsertMyPledge: (pledge: Pledge) => void;
   // Sunucudan gelen tek borç değişikliğini deftere uygular; true → borç bu değişiklikle kapandı.
   applyMerchantDebtChange: (debt: MerchantDebt) => boolean;
 
@@ -121,6 +126,7 @@ const initialState = {
   // Açık borçlar her açılışta sunucudan yüklenir.
   openDebts: [] as Debt[],
   merchantDebts: [] as MerchantDebt[],
+  myPledges: [] as Pledge[],
   partialPayments: {} as Record<string, number>,
 
   ...closedFlow,
@@ -170,6 +176,7 @@ export const useZimemStore = create<ZimemState>()(
           lastActionDate: data.lastActionDate,
           history: data.history,
           merchantDebts: data.merchantDebts,
+          myPledges: [],
           unlockedAchievements: unlocked,
           partialPayments: {},
           ...closedFlow,
@@ -205,6 +212,14 @@ export const useZimemStore = create<ZimemState>()(
         if (s.activeDebt?.id === id) return false;
         return wasOpen;
       },
+
+      setMyPledges: (pledges) => set({ myPledges: pledges }),
+      upsertMyPledge: (pledge) =>
+        set((s) => ({
+          myPledges: s.myPledges.some((p) => p.id === pledge.id)
+            ? s.myPledges.map((p) => (p.id === pledge.id ? { ...p, ...pledge } : p))
+            : [pledge, ...s.myPledges],
+        })),
 
       setMerchantDebts: (debts) =>
         set((s) => {
@@ -288,7 +303,8 @@ export const useZimemStore = create<ZimemState>()(
 
       startFlow: (debtId, partialAmount = null) => {
         const debt = get().openDebts.find((d) => d.id === debtId);
-        if (!debt) return;
+        // Muhtar onaylı borç yalnızca esnafa doğrudan gerçek ödemeyle kapanır.
+        if (!debt || debt.verification === 'verified') return;
         const partial = partialAmount !== null && partialAmount > 0 && partialAmount < debt.amount ? partialAmount : null;
         set({
           ...closedFlow,
@@ -446,6 +462,7 @@ export const useZimemStore = create<ZimemState>()(
         history: s.history,
         partialPayments: s.partialPayments,
         merchantDebts: s.merchantDebts,
+        myPledges: s.myPledges,
       }),
     },
   ),

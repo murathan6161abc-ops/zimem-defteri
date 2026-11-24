@@ -147,6 +147,8 @@ export const SAMPLE_DEBTS: Debt[] = [
     description: '5 günlük temel gıda ihtiyacı için mahalle bakkalına olan borç.',
     amount: 180,
     urgency: 3,
+    // Demoda gerçek ödeme akışını göstermek için (çevrimdışında para hareketi olmaz).
+    verification: 'verified',
   },
   {
     id: 'd2',

@@ -14,7 +14,7 @@ import {
 } from './sanitize';
 import type { Category, DebtKind, MerchantDebt } from '@/types';
 import { CATEGORIES, iconOf, isDebtKind, KIND_META, MAX_DEBT_AMOUNT } from './debts';
-import { DEBT_COLUMNS, DEBT_COLUMNS_LEGACY, isMissingColumnError, rowToDebt, withDebtColumns } from './debtRows';
+import { DEBT_COLUMNS, DEBT_COLUMNS_KIND, DEBT_COLUMNS_LEGACY, isMissingColumnError, rowToDebt, withDebtColumns } from './debtRows';
 
 export { rowToDebt };
 
@@ -36,7 +36,8 @@ export async function fetchOpenDebts(): Promise<MerchantDebt[]> {
     console.warn('[supabaseDebts] fetchOpenDebts hatası:', error.message);
     return [];
   }
-  return ((data || []) as unknown as Record<string, unknown>[]).map(rowToDebt);
+  // Muhtarın teyit etmediği borçlar bağışçılara gösterilmez (esnaf kendi defterinde görür).
+  return ((data || []) as unknown as Record<string, unknown>[]).map(rowToDebt).filter((d) => d.verification !== 'rejected');
 }
 
 export interface MerchantPaymentResult {
@@ -129,8 +130,13 @@ export async function insertMerchantDebt(args: {
   const insert = (row: Record<string, unknown>, columns: string) =>
     client.from('merchant_debts').insert(row).select(columns).single();
 
-  let { data, error } = await insert(kind ? { ...base, kind, icon } : base, DEBT_COLUMNS);
-  // Tür/ikon sütunları henüz eklenmemişse (SQL çalıştırılmadıysa) onlarsız kaydet.
+  const row = kind ? { ...base, kind, icon } : base;
+  let { data, error } = await insert(row, DEBT_COLUMNS);
+  // Doğrulama sütunları yoksa onlarsız; tür/ikon sütunları da yoksa (SQL çalıştırılmadıysa)
+  // onlar da olmadan kaydet.
+  if (isMissingColumnError(error)) {
+    ({ data, error } = await insert(row, DEBT_COLUMNS_KIND));
+  }
   if (isMissingColumnError(error)) {
     ({ data, error } = await insert(base, DEBT_COLUMNS_LEGACY));
   }
@@ -236,7 +242,7 @@ export function subscribeToDebts(handlers: {
       { event: 'INSERT', schema: 'public', table: 'merchant_debts' },
       (payload) => {
         const row = payload.new as Record<string, unknown>;
-        if (row?.closed) return;
+        if (row?.closed || row?.verification_status === 'rejected') return;
         handlers.onInsert?.(rowToDebt(row));
       },
     )
@@ -247,6 +253,9 @@ export function subscribeToDebts(handlers: {
         const row = payload.new as Record<string, unknown>;
         if (row?.closed) {
           handlers.onClose?.(String(row.id));
+        } else if (row?.verification_status === 'rejected') {
+          // Muhtar teyit etmedi: "kapandı" denmez, listeden sessizce çıkar.
+          handlers.onDelete?.(String(row.id));
         } else {
           handlers.onUpdate?.(rowToDebt(row));
         }

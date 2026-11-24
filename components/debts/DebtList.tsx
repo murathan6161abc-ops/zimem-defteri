@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useZimemStore } from '@/store/useZimemStore';
-import type { DebtKind } from '@/types';
+import type { Debt, DebtKind } from '@/types';
 import {
   fetchOpenDebts,
   subscribeToDebts,
@@ -11,6 +11,8 @@ import { SAMPLE_DEBTS, demoOpenDebts, kindOf } from '@/lib/debts';
 import { useI18n, tStatic } from '@/lib/i18n';
 import DebtCard from './DebtCard';
 import DebtFilters from './DebtFilters';
+import MyPledges from './MyPledges';
+import RealPaymentModal from '@/components/modals/RealPaymentModal';
 
 export default function DebtList() {
   const { t } = useI18n();
@@ -22,6 +24,10 @@ export default function DebtList() {
   const applyRemoteDebtClose = useZimemStore((s) => s.applyRemoteDebtClose);
   const pushToast = useZimemStore((s) => s.pushToast);
   const closedByMe = useZimemStore((s) => s.history.length);
+  // Gerçek ödeme kayıtta 18 yaş ve üzeri beyan edenlere açık (sunucu da denetler).
+  const canPayReal = useZimemStore((s) => s.profile?.ageGroup === 'adult');
+  const [realDebt, setRealDebt] = useState<Debt | null>(null);
+  const openRealPay = useCallback((debt: Debt) => setRealDebt(debt), []);
 
   const [filter, setFilter] = useState<DebtKind | 'all'>('all');
   const [mounted, setMounted] = useState(false);
@@ -99,6 +105,7 @@ export default function DebtList() {
 
   return (
     <section>
+      <MyPledges />
       <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
         <h2 className="heading-lg">{t('debt.open_debts')}</h2>
         <div className="text-xs text-muted-c">
@@ -136,10 +143,11 @@ export default function DebtList() {
       ) : (
         <div className="grid gap-3">
           {visible.map((d) => (
-            <DebtCard key={d.id} debt={d} onSelect={startFlow} />
+            <DebtCard key={d.id} debt={d} onSelect={startFlow} onRealPay={openRealPay} canPayReal={canPayReal} />
           ))}
         </div>
       )}
+      <RealPaymentModal debt={realDebt} onClose={() => setRealDebt(null)} />
     </section>
   );
 }

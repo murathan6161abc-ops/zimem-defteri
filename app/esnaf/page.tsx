@@ -7,9 +7,17 @@ import { KIND_META, formatTL, iconOf, kindChipStyle, kindOf } from '@/lib/debts'
 import { forgetLedgerRef, readLedgerRefs } from '@/lib/ledgerScan';
 import { getSupabase } from '@/lib/supabase';
 import { fetchMyMerchantDebts, subscribeToMyDebts } from '@/lib/supabaseDebts';
+import IncomingPledges from '@/components/merchant/IncomingPledges';
+import PaymentInfoCard from '@/components/merchant/PaymentInfoCard';
+import type { Verification } from '@/types';
 
 const DATE_LOCALE: Record<Locale, string> = { tr: 'tr-TR', en: 'en-US', ar: 'ar' };
 const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const;
+const VERIFICATION_CHIP: Record<Verification, { key: string; className: string }> = {
+  pending: { key: 'realpay.badge_pending', className: 'text-amber-200/90' },
+  verified: { key: 'realpay.badge_verified', className: 'text-emerald-300' },
+  rejected: { key: 'realpay.badge_rejected', className: 'text-rose-300' },
+};
 
 function fmtDate(iso: string, locale: Locale) {
   return new Date(iso).toLocaleDateString(DATE_LOCALE[locale], {
@@ -87,6 +95,8 @@ export default function EsnafHomePage() {
 
   return (
     <div className="pt-6">
+      {/* Bekleyen ödemeler en üstte: esnaf uygulamayı her açtığında önce bunu görür. */}
+      <IncomingPledges />
       <section className="glass-strong p-5 sm:p-7 mb-6 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
@@ -142,7 +152,12 @@ export default function EsnafHomePage() {
         </div>
       </div>
 
+      <PaymentInfoCard />
+
       <h2 className="heading-lg mb-3">{t('merchant.open_debts')}</h2>
+      {open.some((d) => d.verification) && (
+        <p className="text-xs text-muted-c -mt-1 mb-3">{t('realpay.m_verify_info')}</p>
+      )}
       {open.length === 0 ? (
         <div className="glass p-10 text-center mb-6">
           <div className="font-bold text-lg mb-1">{t('merchant.empty_title')}</div>
@@ -185,6 +200,11 @@ export default function EsnafHomePage() {
                       <span className="text-xs text-amber-200/90">· 🔒 {refs[d.id]}</span>
                     )}
                   </div>
+                  {d.verification && (
+                    <div className={`text-[11px] font-semibold mb-0.5 ${VERIFICATION_CHIP[d.verification].className}`}>
+                      {t(VERIFICATION_CHIP[d.verification].key)}
+                    </div>
+                  )}
                   <div className="font-semibold text-[15px] truncate">{d.title}</div>
                   <div className="text-xs text-muted-c truncate">{d.description}</div>
                 </div>

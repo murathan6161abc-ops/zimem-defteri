@@ -9,6 +9,8 @@ import { CATEGORY_META } from '@/lib/debts';
 import type { Category } from '@/types';
 import AdminCharts from '@/components/admin/AdminCharts';
 import ResearchReportPanel from '@/components/admin/ResearchReportPanel';
+import VerificationPanel from '@/components/admin/VerificationPanel';
+import StuckPledgesPanel from '@/components/admin/StuckPledgesPanel';
 
 export interface SubmissionRow {
   id: string;
@@ -310,6 +312,9 @@ export default function AdminPage() {
       {error && (
         <div className="glass p-4 mb-4 border-red-400/30 text-red-300 text-sm">{error}</div>
       )}
+
+      <VerificationPanel />
+      <StuckPledgesPanel />
 
       <div className="flex gap-2 flex-wrap mb-4">
         {(['all', 'gida', 'egitim', 'fatura', 'saglik'] as const).map((c) => (

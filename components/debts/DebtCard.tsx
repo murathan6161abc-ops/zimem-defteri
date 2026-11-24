@@ -10,11 +10,17 @@ const URGENCY_KEY = { 1: 'debt.low', 2: 'debt.medium', 3: 'debt.high' } as const
 function DebtCard({
   debt,
   onSelect,
+  onRealPay,
+  canPayReal,
 }: {
   debt: Debt;
   onSelect: (id: string, partialAmount?: number | null) => void;
+  // Muhtar onaylı borç: esnafa doğrudan gerçek ödeme (simülasyon akışı kapalı).
+  onRealPay: (debt: Debt) => void;
+  canPayReal: boolean;
 }) {
   const { t, locale } = useI18n();
+  const verified = debt.verification === 'verified';
   const kind = kindOf(debt);
   const meta = KIND_META[kind];
   const partialPaid = useZimemStore((s) => s.partialPayments[debt.id] || 0);
@@ -67,6 +73,9 @@ function DebtCard({
               {t(URGENCY_KEY[debt.urgency])} {t('debt.urgency_suffix')}
             </span>
           </div>
+          {verified && (
+            <div className="text-[11px] font-semibold text-emerald-300 mb-0.5">{t('realpay.badge_verified')}</div>
+          )}
           <div className="font-semibold text-[15px] truncate">{debt.title}</div>
           <div className="text-xs text-muted-c truncate">{debt.description}</div>
         </div>
@@ -85,6 +94,22 @@ function DebtCard({
         </div>
       )}
 
+      {verified ? (
+        <div className="mt-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onRealPay(debt)}
+              disabled={!canPayReal}
+              className="btn btn-gold flex-1 sm:flex-none whitespace-nowrap !text-[13px] !px-4 !py-2 disabled:opacity-50"
+            >
+              💳 {t('realpay.pay_btn')}
+            </button>
+            <span className="text-[11px] text-muted-c basis-full sm:basis-auto">{t('realpay.real_note')}</span>
+          </div>
+          {!canPayReal && <div className="text-[11px] text-amber-200/80 mt-2">{t('realpay.adult_only_note')}</div>}
+        </div>
+      ) : (
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         <button
           type="button"
@@ -103,8 +128,9 @@ function DebtCard({
           {t('debt.partial_pay')}
         </button>
       </div>
+      )}
 
-      {partialOpen && (
+      {partialOpen && !verified && (
         <div className="mt-3 p-3 rounded-xl bg-white/5 border border-amber-500/20">
           <div className="text-xs text-muted-c mb-2">
             {t('debt.partial_hint')}

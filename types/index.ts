@@ -14,6 +14,10 @@ export type DebtKind =
   | 'ulasim'
   | 'diger';
 
+// Muhtar doğrulaması: borcu muhtar yerinde teyit eder, yönetici işaretler.
+// Onaylı borç yalnızca esnafa doğrudan yapılan gerçek ödemeyle kapanır.
+export type Verification = 'pending' | 'verified' | 'rejected';
+
 export interface Debt {
   id: string;
   category: Category;
@@ -23,6 +27,8 @@ export interface Debt {
   urgency: 1 | 2 | 3;
   icon?: string; // yoksa türden türetilir (iconOf)
   kind?: DebtKind; // yoksa category'den türetilir (eski kayıtlar)
+  verification?: Verification; // yoksa (göç çalıştırılmamış / demo) doğrulanmamış sayılır
+  verifiedAt?: string;
 }
 
 export interface PreTestData {
